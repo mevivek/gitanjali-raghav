@@ -5,6 +5,37 @@ one scroll-snapped strip. [README.md](./README.md) explains how it is built and
 [CONTENT.md](./CONTENT.md) explains how to change what it says. This file is
 only the things that will bite you.
 
+## Where it stands
+
+The tape is finished and live at <https://mevivek.dev/gitanjali-raghav>. `main`
+and the deployed site are in sync. Nine screens: a title card, six reels that
+are each interactive in their own way, an interval for the day job, end credits.
+
+**Three things are waiting on her, and none of them are code.** Do not decide
+any of them on her behalf:
+
+1. **`approved: false` in `src/data/site.ts`** keeps every page `noindex`. It
+   flips when she has seen the site and wants to be findable. Hers to say.
+2. **Reel 04's "posted · 10.7k" badge names her follower count.** Nobody has
+   asked whether she is happy with that on a public page. One string in
+   `src/data/tape.ts`.
+3. **A headshot.** `portrait.jpg` is her Instagram avatar at 320×320 — the
+   lowest-resolution image here, shown in the cassette window at ~284px and in
+   the share image. Anything 1000px+ is the single biggest upgrade available and
+   needs only a file swap (then re-render `og.jpg` and bump `ASSET_VERSION`).
+
+`CONTENT.md` has the longer list of smaller unknowns — her Highspring start
+year, what she studied at MJPRU.
+
+**One open question from the last session.** The reels used to show a sliver of
+their neighbours on iOS Safari. It was fixed by measuring `visualViewport.height`
+into `--screen-h` rather than trusting `100dvh`, plus re-snapping by hand on
+resize. That was verified in Chromium, which cannot reproduce the original
+symptom — so **if a sliver is still showing on a real iPhone, that fix is the
+place to start.** Whether the bleed is even along the tape or grows the further
+along you are tells you which half is wrong: even means the height, growing means
+the re-snap is not firing.
+
 ## Branches and deploying
 
 - **`main` is the default branch.** It was briefly
@@ -82,9 +113,27 @@ is re-rendered — and `site.description` and `og:image:alt` quote it too.
   recognisable in them. Nobody can consent by proxy — ask the people in them
   first. `palace.jpg` is in the repo but unused by the current cut; leave it.
 
+## Two more that cost time last session
+
+**The build emits no `.js` files, and that is correct.** Every component script
+is standalone and small enough that Astro inlines them into `index.html` (48KB,
+12KB gzipped). `find dist -name '*.js'` returning nothing is not a broken build.
+
+**Browser UI colour is not something the page controls.** `theme-color` and
+`color-scheme: dark` are both set and correct. iOS Safari honours them; **Chrome
+on iOS ignores `theme-color` entirely** and follows the system appearance, and
+desktop Chrome only applies it to installed-PWA window frames. There is nothing
+left to fix here, so do not go looking — the only route to a genuinely chromeless
+shell is Add to Home Screen, which would need a manifest that does not exist yet.
+
 ## When something looks wrong on the live site
 
 Check whether the browser is showing a stale build before debugging the code —
 HTML is cached for ten minutes, and phones hold on longer. Append a query string
-to bypass it. Several rounds of this session were spent on symptoms that turned
-out to be a cached page.
+to bypass it (`?x=1`). Several rounds of last session were spent on symptoms that
+turned out to be a cached page — including two screenshots of a build three
+deploys old.
+
+`npm run deploy` is the only thing that changes the live site. A merge to `main`
+does not: check `git log origin/gh-pages -1` to see which commit is actually
+serving.
