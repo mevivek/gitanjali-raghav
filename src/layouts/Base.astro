@@ -11,13 +11,13 @@ interface Props {
 const { title = site.title, description = site.description } = Astro.props;
 
 /*
- * While any placeholder remains, the page is a draft about a real person —
- * so it asks search engines to skip it. This is evaluated at build time and
- * disappears on its own once the content is complete; nobody has to remember
- * to remove it.
+ * The page asks search engines to skip it until two things are true: no
+ * placeholder text remains, and she has actually seen the site and approved
+ * it (`approved` in site.ts). Being factually complete is not the same as
+ * being wanted in search results, and that second call is hers, not ours.
  */
 const { placeholders } = scanContent();
-const isDraft = placeholders.length > 0;
+const isDraft = placeholders.length > 0 || !site.approved;
 
 // Astro.site + base are set in astro.config.mjs; this yields absolute URLs
 // for the social tags, which require them.

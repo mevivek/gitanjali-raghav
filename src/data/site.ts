@@ -1,84 +1,81 @@
 /**
  * Every site-wide fact lives here. Nothing factual belongs in a component.
  *
- * Anything still unknown is written as a placeholder string, prefixed with
- * the marker that `npm run check` looks for. That check fails while any
- * remain, so the site cannot be published with a placeholder still showing.
- * Replace the text, keep the quotes.
+ * Some of this prose was written from her LinkedIn and Instagram rather than
+ * by her — it is accurate, but it is not yet her voice. Anything marked with
+ * a comment below is worth replacing with her own words.
  *
- * See CONTENT.md for what each field means and how to write it.
+ * `approved` controls whether search engines are allowed to index the page.
+ * Leave it false until she has read the site and is happy with it.
  */
 
 export interface SocialLink {
   label: string;
   href: string;
-  /** Shown next to the link; keep it to a few words. */
-  note?: string;
+}
+
+export interface Fact {
+  icon: string;
+  text: string;
 }
 
 export const site = {
   /**
-   * Spelled as on her LinkedIn profile. Her Instagram — and this repository —
-   * spell it "Gitanjali"; she evidently uses both. LinkedIn's spelling wins
-   * here because this is the professional-facing site. One-line change if
-   * she'd rather it were the other way.
+   * Spelled as on her LinkedIn. Her Instagram — and this repository — spell
+   * it "Gitanjali"; she uses both. LinkedIn's spelling wins here because
+   * this is the professional-facing site.
    */
   name: 'Geetanjali Raghav',
-
-  /** Pronouns used throughout the copy. */
+  firstName: 'Geetanjali',
   pronouns: 'she/her',
 
-  /** Browser tab + search results. Keep under ~60 characters. */
   title: 'Geetanjali Raghav',
 
   /**
-   * The one line under her name. Her own words are better than anything
-   * written for her — this should sound like her, not like a job ad.
+   * The line under her name, in her own voice ideally. This one is drafted
+   * from what her profiles show — order-to-cash work, a pull towards the
+   * sea, a camera never far away. Replace it with hers when you can.
    */
-  tagline: 'TODO: one line describing what she does, in her own voice',
+  tagline:
+    'Order to Cash by day. Coastlines, cameras and a camera roll that is 90% sky the rest of the time.',
 
-  /** Search-result and link-preview description. Aim for 140–160 characters. */
   description:
-    'TODO: 1–2 sentences for search results and link previews. Her LinkedIn summary opens "As a Quality Associate at Highspring, contributed to global policy compliance by…" — get the full sentence from her and use it.',
+    'Geetanjali Raghav — Accounts Receivable and Order to Cash at Genpact, based in Delhi. Photographs, coastlines, and the occasional excellent outfit.',
 
-  /**
-   * Current role, shown in the hero.
-   *
-   * Her LinkedIn still lists Highspring — it predates this move and has not
-   * been updated. Genpact, from 22 May 2026, is current.
-   */
   role: 'Accounts Receivable, Order to Cash',
   organisation: 'Genpact',
   location: 'Delhi, India',
 
+  /** Little chips under the hero. Keep them short and keep them fun. */
+  facts: [
+    { icon: '📍', text: 'Delhi, India' },
+    { icon: '🌊', text: 'Happiest near water' },
+    { icon: '🎧', text: 'Hindi film songs, always' },
+    { icon: '🎬', text: '10k on the other side of the camera' },
+  ] as Fact[],
+
   /**
-   * Two or three sentences for the About section. Write it the way she would
-   * introduce herself out loud.
+   * Public contact address. Left null deliberately — putting an email on a
+   * public page invites spam, and it is hers to volunteer. Set it to a
+   * string and the contact button appears automatically.
    */
-  intro: 'TODO: two or three sentences introducing her.',
+  email: null as string | null,
 
-  /** Public contact address. Only add this with her explicit consent. */
-  email: 'TODO: public contact email, or delete this field to hide the button',
-
-  /** Primary call to action in the contact section. */
-  ctaLabel: 'Say hello',
+  ctaLabel: 'Come say hi',
 
   socials: [
-    {
-      label: 'Instagram',
-      href: 'https://www.instagram.com/gitanjaliraghav/',
-    },
-    {
-      label: 'LinkedIn',
-      href: 'https://www.linkedin.com/in/geetanjaliraghav/',
-    },
+    { label: 'Instagram', href: 'https://www.instagram.com/gitanjaliraghav/' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/geetanjaliraghav/' },
   ] as SocialLink[],
 
-  /**
-   * Optional resume in /public. Set to null to hide the download button.
-   * Example: 'gitanjali-raghav-cv.pdf'
-   */
+  /** Optional CV in /public. Null hides the download button. */
   resume: null as string | null,
+
+  /**
+   * Flip to true once she has seen the site and is happy for it to be found
+   * in search. Until then every page carries a noindex tag.
+   */
+  approved: false,
 } as const;
 
 export type Site = typeof site;

@@ -3,14 +3,17 @@
 Personal and professional website for Gitanjali Raghav.
 
 A static site built with [Astro](https://astro.build) and Tailwind CSS,
-published to GitHub Pages. Its signature element is a **two-lane timeline**:
-career on one side, life on the other, sharing a single year axis.
+published to GitHub Pages. It leads with a photo wall and keeps the work
+history to a few lines — a personal site that mentions a job, rather than a CV
+with a hobbies section bolted on.
 
-> **Status: structure complete, content pending.**
-> The design, layout and build pipeline are finished. The biographical content
-> is not — see [CONTENT.md](./CONTENT.md) for exactly what is still needed and
-> where each piece goes. `npm run check` fails while any placeholder remains,
-> so the site cannot accidentally be published half-finished.
+> **Status: live, and readable — but the voice is not hers yet.**
+> The tagline and the life cards were written *from* her public profiles, not
+> *by* her. They are accurate but generic, and replacing them is the single
+> biggest improvement left. See [CONTENT.md](./CONTENT.md).
+>
+> The page also carries a `noindex` tag until `approved` in `src/data/site.ts`
+> is set to `true`, so it stays out of search until she has seen it.
 
 ## Getting started
 
@@ -31,30 +34,32 @@ npm run dev      # http://localhost:4321/gitanjali-raghav
 All of it lives in text files — no component ever needs touching:
 
 ```
-src/data/site.ts            name, tagline, role, contact, social links
-src/content/timeline/*.md   one file per timeline event
+src/data/site.ts            name, tagline, facts, contact, social links
+src/data/work.ts            roles, companies, years
+src/data/gallery.ts         the photo wall
 src/content/life/*.md       hobby and interest cards
-src/content/notes/*.md      optional short writing
-public/img/                 photographs
+src/assets/photos/          image files
 ```
 
 [CONTENT.md](./CONTENT.md) explains every field in plain English.
 
 ## How it's put together
 
-- **Content as data.** Every fact lives in Markdown or `site.ts`, never inside
-  a component. Content collections are typed with Zod, so a missing or
-  malformed field fails the build loudly instead of rendering an empty section.
-- **Two safety nets.** `TODO` marks a known-missing fact and blocks publishing.
-  `draft: true` marks an unverified entry and excludes it from the built site.
+- **Content as data.** Every fact lives in `src/data/` or Markdown, never
+  inside a component. The life cards are a Zod-typed content collection, so a
+  malformed entry fails the build instead of rendering an empty section.
+- **Three safety nets.** `TODO` marks a missing fact and blocks publishing.
+  `draft: true` hides an unverified life card. `approved: false` keeps the
+  whole page out of search.
+- **Images are optimised, not just uploaded.** Photos live in `src/assets/` so
+  Astro re-encodes each to WebP at three widths with a `srcset`. Explicit
+  `width` caps the fallback — without it Astro ships the full 1080px original
+  as the base `src`, which alone was 900KB of the build.
 - **Motion is additive.** Every animation decorates a layout that is already
-  complete. With JavaScript disabled or `prefers-reduced-motion` set, the page
-  renders fully — nothing is hidden behind an animation that might not fire.
-- **Mobile first.** Below 768px the two lanes collapse to a single
-  chronological column, distinguished by colour.
-- **No third-party requests.** Fonts are self-hosted; there is no analytics, no
-  CDN and no tracking. The only client-side JavaScript is the observer driving
-  the timeline and the theme toggle.
+  complete. With JavaScript off or `prefers-reduced-motion` set, the page
+  renders fully.
+- **No third-party requests.** Fonts are self-hosted; no analytics, no CDN, no
+  tracking. The only client-side JavaScript is the theme toggle.
 
 ### Theming
 
@@ -104,19 +109,18 @@ working: `git show ed4f5bb:.github/workflows/deploy.yml`.
 
 ### Preview mode
 
-The site currently deploys while placeholders remain, so it can be reviewed on
-a real device. Two things make that safe:
+The page carries `<meta name="robots" content="noindex, nofollow">` while
+*either* of these is true:
 
-- **The page carries `<meta name="robots" content="noindex, nofollow">` for as
-  long as any placeholder exists.** It is computed at build time from the
-  content itself and vanishes on its own when the last `TODO` is filled — there
-  is nothing to remember to remove. A draft about a real person stays out of
-  search results.
-- `npm run deploy` runs the content check in warn-only mode: it lists what is
-  unfilled without blocking the deploy.
+1. any `TODO` placeholder remains, or
+2. `approved` in `src/data/site.ts` is `false`.
 
-**When the content is complete**, run `npm run check` (without `--warn-only`)
-before deploying, and it becomes a hard gate again — any unfilled field fails.
+Both are evaluated at build time. The first clears itself; the second is a
+deliberate human decision — being factually complete is not the same as being
+ready to be found in search, and that call is hers.
+
+`npm run deploy` runs the content check in warn-only mode, so it lists what is
+outstanding without blocking a preview deploy.
 
 > A GitHub Pages site on a public repository is public. Anyone with the URL can
 > read it, indexed or not. Keep the repository private until she is happy with

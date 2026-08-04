@@ -1,17 +1,18 @@
 # Filling in the site
 
-Everything on this website comes from text files. You never need to touch a
-component to change what the page says.
+Everything on this website comes from a handful of text files. You never need
+to touch a component to change what the page says.
 
 Two rules the build enforces for you:
 
-- **`TODO` blocks publishing.** Anything still unknown is written as a `TODO`.
-  `npm run check` fails while any remain, so an unfinished page cannot go live.
-- **`draft: true` hides an entry.** Drafts stay in the repo and stay visible to
-  you, but never reach the built site. Anything not yet confirmed by Gitanjali
-  is marked this way.
+- **`TODO` blocks publishing.** Anything unknown is written as a `TODO`, and
+  `npm run check` fails while any remain.
+- **`approved: false` in `src/data/site.ts` keeps the page out of search.**
+  Every page carries a `noindex` tag until you flip it to `true`. Being
+  factually complete is not the same as being ready to be found — that call is
+  hers.
 
-Run `npm run check` any time to see exactly what is left.
+Run `npm run check` any time to see what is outstanding.
 
 ---
 
@@ -19,133 +20,98 @@ Run `npm run check` any time to see exactly what is left.
 
 | Field | What to write |
 |---|---|
-| `tagline` | One line under her name. Her own words, not a job description. This is the single most important sentence on the site. |
-| `description` | 140–160 characters. Shows up in Google results and link previews. |
-| `role` | Her exact job title. |
-| `organisation` | Currently `Genpact`. |
-| `location` | City, country. |
-| `intro` | Two or three sentences, the way she'd introduce herself out loud. |
-| `email` | Only add this **with her consent** — it goes on a public page. Delete the field to hide the contact button entirely. |
-| `socials` | Instagram is already filled in. Add the LinkedIn URL. |
-| `resume` | Filename of a PDF placed in `public/`, or leave as `null`. |
+| `tagline` | The line under her name. **Currently written from her profiles, not by her** — this is the single best thing to replace with her own words. |
+| `facts` | The little chips under the tagline. Short and fun. Four is about right. |
+| `description` | 140–160 characters, for search results and link previews. |
+| `role`, `organisation`, `location` | Shown in metadata and the work list. |
+| `email` | `null` by default so no address is exposed. Set a string and the contact button appears. |
+| `socials` | Instagram and LinkedIn are in. |
+| `resume` | Filename of a PDF in `public/`, or `null` to hide the button. |
+| `approved` | `false` until she has seen the site. |
 
-## 2. The timeline — `src/content/timeline/*.md`
+## 2. Work — `src/data/work.ts`
 
-The centrepiece. One file per event. Career events appear on one side, life
-events on the other, sharing a year axis.
+Deliberately just role, place and years. **No descriptions** — this is a
+personal site, not a CV, and bullet points are what make those read like
+paperwork.
 
-```markdown
----
-year: 2023              # required — the number on the axis, and the sort key
-lane: career            # required — "career" or "life"
-title: Programme Lead   # required — short headline
-org: Genpact            # optional — employer or place
-dateLabel: 2023 — now   # optional — shown under the title
-order: 0                # optional — orders entries within the same year
-image: goa-2024.jpg     # optional — filename in public/img/
-imageAlt: On the beach  # required whenever image is set
-draft: false            # true hides it from the site
----
-
-Two or three sentences. Concrete beats vague: what she owned, who she worked
-with, what changed because she was there. Numbers if there are any.
+```ts
+{
+  role: 'Accounts Receivable, Order to Cash',
+  company: 'Genpact',
+  years: 'May 2026 — now',
+  current: true,          // adds the "now" badge
+  note: 'formerly X',     // optional aside
+}
 ```
 
-**Currently in place:**
+`study` below it works the same way. Its `what` field is optional — right now
+only the university and dates are shown, because LinkedIn gave the institution
+but not the subject.
 
-| File | Lane | Status |
-|---|---|---|
-| `2012-earlier-study.md` | career | Draft — LinkedIn has the dates, not the institution |
-| `2013-earlier-study.md` | career | Draft — LinkedIn has the dates, not the institution |
-| `2015-mjpru.md` | career | Dates confirmed; needs the degree subject |
-| `2022-highspring.md` | career | Title confirmed; needs start year and description |
-| `2024-coastline.md` | life | Live — written from Instagram, rewrite in her voice |
-| `2026-genpact.md` | career | Start date confirmed; needs description |
-| `2026-reels.md` | life | Live — written from Instagram, rewrite in her voice |
+## 3. Photos — `src/data/gallery.ts`
 
-To add a year, add a file. Nothing else needs changing.
+Images live in `src/assets/photos/` (**not** `public/`) so Astro optimises
+them: each is re-encoded to WebP at three widths and served with a `srcset`.
+That is why the whole site is ~1.3MB instead of several times that.
 
-> **Note on employers.** Highspring and Vaco Binary Semantics are the same
-> company: Vaco Holdings rebranded on 31 March 2025 and Vaco Binary Semantics
-> became Highspring India. Both names will appear on her CV, so the entry
-> carries both. Genpact, from 22 May 2026, is the current role — her LinkedIn
-> has not caught up with the move yet.
+```ts
+import newPhoto from '../assets/photos/new-photo.jpg';
 
-## 3. Life cards — `src/content/life/*.md`
+{
+  src: newPhoto,
+  alt: 'A plain description, for people who cannot see it',
+  caption: 'Her caption — optional',
+}
+```
 
-Short standalone cards: hobbies, what's on repeat, what she's into right now.
+`alt` and `caption` do different jobs. The caption is her voice; the alt text
+describes what is in the frame. Never make them the same string, or a screen
+reader just reads the emoji aloud.
+
+**Nine photos were pulled from her Instagram; eight are in use.**
+`src/assets/photos/glam.jpg` is downloaded but not shown — it is the most
+glamour-forward of the set and felt like a call she should make rather than
+me. Add it in one line if she wants it.
+
+## 4. Life cards — `src/content/life/*.md`
+
+Short cards: what she is into, in her voice.
 
 ```markdown
 ---
-title: Currently
-icon: '✨'      # a single emoji
-order: 0        # lower numbers appear first
-draft: false
+title: Salt water
+icon: '🌊'      # a single emoji
+order: 1        # lower first
+draft: false    # true hides it
 ---
 
 A sentence or two.
 ```
 
-## 4. Writing — `src/content/notes/*.md`
-
-Optional. The whole section hides itself when nothing is published, so if she
-doesn't want it, delete the folder and it simply disappears.
-
-## 5. Photos
-
-`public/img/portrait.jpg` is currently her Instagram profile picture, at its
-original **320×320**. That is small: it is displayed at 152px so it stays
-sharp, but it cannot go bigger without looking soft. **A proper headshot at
-1000px or more is the single biggest visual upgrade available to this site** —
-drop one in as `portrait.jpg` and nothing else needs changing.
-
-Put other image files in `public/img/` and reference them by filename. Two
-things matter:
-
-- **Self-host them.** Instagram's image URLs are signed and expire after a few
-  days, so they cannot be linked to directly. Download, then commit the file.
-- **Every image needs `imageAlt`.** The build fails without it. Describe what's
-  in the picture, not "photo of Gitanjali".
-
-> Her Instagram being public does not make its photos free to republish. Get
-> her explicit yes on each image before it goes on the site.
-
 ---
 
-## What we still need from her
+## Still worth getting from her
 
-This is the whole list. Nothing here can be looked up — it has to come from her.
+**Her words.** The tagline and all four life cards are currently written *from*
+her public profiles rather than *by* her. They are accurate, but they are not
+her voice, and on a personal site that is the difference between good and
+right. Each file says so in a comment.
 
-**Positioning**
-- [ ] Exact job title at Genpact, and her team or function
-- [ ] City she's based in
-- [ ] The one-line description of what she does, in her voice
-- [ ] Who the site is really for — recruiters, clients, collaborators, friends
-- [ ] Whether `she/her` is right
-
-**Career**
-- [ ] Genpact: her formal job title, and what she owns within Order to Cash
-- [ ] Highspring / Vaco Binary Semantics: the year she joined, and what she did
-- [ ] Anything before that
-- [ ] What she studied at MJPRU — LinkedIn lists the university, not the subject
-- [ ] The two earlier education entries (2013–2015, 2012–2013) — LinkedIn
-      returned these with the institution names blank
-- [ ] Certifications, awards, recognitions
-- [ ] Skills, tools, languages spoken
-
-**Life**
-- [ ] Hobbies and creative outlets
-- [ ] Travel — where she's been, where she's from, favourites
-- [ ] What she's reading, learning or listening to right now
-- [ ] Fun facts, quirks, pets, causes she cares about
-- [ ] **Anything that must not go on a public page**
+**Facts**
+- [ ] The year she joined Highspring (Vaco Binary Semantics) — the end date is known, the start is not
+- [ ] What she studied at MJPRU
+- [ ] The two earlier education entries LinkedIn returned with dates but no institution: 2013–2015 and 2012–2013
+- [ ] A contact email, if she wants one public
 
 **Assets**
-- [ ] A headshot, plus any candids she's happy to publish
-- [ ] Colours or fonts she likes — the current palette is a starting point, not a decision
-- [ ] Public contact email, with her consent
-- [ ] Custom domain, if she wants one
+- [ ] **A proper headshot.** `portrait.jpg` is her Instagram profile picture at
+      320×320 — displayed at 220px so it stays sharp, but it cannot go larger.
+      A photo at 1000px+ is the biggest single upgrade available and needs only
+      a file swap.
+- [ ] Any photos she would rather have than the ones pulled from Instagram
 
-**The fastest way to supply most of this:** open her LinkedIn profile →
-**More → Save to PDF**, and drop the file in the repo. That covers almost the
-entire career section in one step.
+**Permissions**
+- [ ] Confirm she is happy with all eight photographs being on a public page
+- [ ] Confirm she is happy for the follower count to be mentioned
+- [ ] Then set `approved: true`

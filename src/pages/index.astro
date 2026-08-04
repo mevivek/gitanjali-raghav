@@ -2,9 +2,9 @@
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import Hero from '../components/Hero.astro';
-import DualTrack from '../components/DualTrack.astro';
+import Gallery from '../components/Gallery.astro';
 import LifeGrid from '../components/LifeGrid.astro';
-import Notes from '../components/Notes.astro';
+import Work from '../components/Work.astro';
 import Contact from '../components/Contact.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 ---
@@ -12,10 +12,15 @@ import SiteFooter from '../components/SiteFooter.astro';
 <Base>
   <SiteHeader slot="header" />
 
+  {/*
+    Order is deliberate: this is a personal site that happens to mention a
+    job, not a CV with a hobbies section bolted on. The photographs come
+    first and the work history sits near the bottom, kept to a few lines.
+  */}
   <Hero />
-  <DualTrack />
+  <Gallery />
   <LifeGrid />
-  <Notes />
+  <Work />
   <Contact />
 
   <SiteFooter slot="footer" />

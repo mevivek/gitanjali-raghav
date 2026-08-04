@@ -1,10 +1,8 @@
 ---
 import { site } from '../data/site';
 
-const showEmail = !site.email.startsWith('TODO');
-// A `TODO:` href would render as a broken link, so those are dropped here.
-// `npm run check` is what stops them being forgotten.
-const socials = site.socials.filter((s) => !s.href.startsWith('TODO'));
+const showEmail = Boolean(site.email);
+const socials = site.socials;
 ---
 
 <section class="contact" id="contact" aria-labelledby="contact-heading">
@@ -12,7 +10,11 @@ const socials = site.socials.filter((s) => !s.href.startsWith('TODO'));
     <div>
       <h2 id="contact-heading">{site.ctaLabel}</h2>
       <p class="measure contact__blurb">
-        The best way to reach {site.name.split(' ')[0]} is below.
+        {
+          showEmail
+            ? 'Email is best, but either of these will reach me.'
+            : 'Instagram or LinkedIn — both reach me.'
+        }
       </p>
     </div>
 
