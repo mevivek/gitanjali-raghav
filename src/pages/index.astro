@@ -158,11 +158,12 @@ const creditsIndex = reelCount + 3;
         paint(best);
       },
       /*
-       * The viewport, not the track. Which element does the scrolling changes
-       * with the breakpoint — the document on a phone, the track above 900px —
-       * and an observer's root cannot be changed after it is built. Measuring
-       * against the viewport is correct either way: a screen scrolled past
-       * vertically and a screen slid off sideways are both simply not on screen.
+       * The viewport, not the track — even though the track is what scrolls.
+       * The two are the same rectangle: `.tape` is exactly one viewport tall and
+       * clips the track to it, so a screen out of the track is also off screen.
+       * Using the viewport keeps this correct whichever element ends up owning
+       * the scroll, which has now changed twice; an observer's root cannot be
+       * changed after it is built, so the less it assumes the better.
        */
       { root: null, threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
@@ -194,20 +195,21 @@ const creditsIndex = reelCount + 3;
        */
       if (!instant && i !== current) blip(noise);
 
+      /*
+       * The track is the scroller at both widths; only the axis differs.
+       * `offsetTop`/`offsetLeft` are measured against it directly, because
+       * `.tape__track` is positioned and is therefore the screens' own
+       * `offsetParent`.
+       */
       if (wide.matches) {
-        // The track scrolls sideways; centre the panel in it.
+        // Sideways: centre the panel in the track.
         track!.scrollTo({
           left: target.offsetLeft - (track!.clientWidth - target.clientWidth) / 2,
           behavior,
         });
       } else {
-        /*
-         * The document scrolls. Measured from the viewport rather than read off
-         * `offsetTop`, which is relative to whichever ancestor happens to be
-         * positioned and would be wrong the moment the layout around it changes.
-         */
-        const top = target.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top, behavior });
+        // Vertically: one screen fills the track, so the offset *is* the target.
+        track!.scrollTo({ top: target.offsetTop, behavior });
       }
 
       /*
@@ -335,20 +337,21 @@ const creditsIndex = reelCount + 3;
     /* ------------------------------------------------- the visible height */
 
     /*
-     * Measures what the visitor can actually see and hands it to the CSS, then
-     * puts the reel that was in front back in front.
+     * Measures what the visitor can actually see, hands it to the CSS, then puts
+     * the reel that was in front back in front.
      *
      * Both halves are needed. On iOS Safari with `viewport-fit=cover`, `100dvh`
-     * and the genuinely visible area disagree, so screens came out shorter than
+     * and the genuinely visible area disagree, so the tape came out shorter than
      * the window and left a sliver of the previous reel above and the next one
      * below. `visualViewport.height` is by definition the visible area, so it
      * cannot disagree.
      *
-     * And a layout change moves every snap position at once: eleven screens that
-     * each grew by the height of a collapsing toolbar put the tape N × that
-     * far out, wrong by more the further along you are. Chromium re-snaps after
-     * a resize; Safari does not, so this does it by hand — instantly, because a
-     * smooth correction would fight the scroll that caused it.
+     * And any height change moves every snap position at once: eleven screens
+     * that each grew a little put the tape N × that far out, wrong by more the
+     * further along you are. A rotation, an on-screen keyboard or a resized
+     * window all do it. Chromium re-snaps afterwards; Safari does not, so this
+     * does it by hand — instantly, because a smooth correction would fight the
+     * scroll that caused it.
      */
     const viewport = window.visualViewport;
     let lastHeight = 0;

@@ -30,9 +30,8 @@ import { boot } from '../../data/tape';
 
 <style>
   /*
-   * Fixed, for the same reason as the chrome and the wear: on a phone the tape
-   * is eleven screens tall and the document is what scrolls, so an absolute
-   * overlay would cover the first screen and scroll away with it.
+   * Fixed, for the same reason as the chrome and the wear: it has to cover the
+   * viewport rather than one screen inside the scrolling strip.
    */
   .boot {
     position: fixed;

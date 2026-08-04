@@ -70,27 +70,42 @@ the re-snap is not firing.
 - `public/.nojekyll` must stay. Without it Pages runs Jekyll, Jekyll ignores
   `_astro/`, and the site deploys with no CSS and no fonts.
 
-## The scroll container is not where you would guess
+## The mobile letterbox is a decision, not a bug
 
-**On a phone the document scrolls; above 900px an inner element does.** That is
-load-bearing, not incidental: Safari and Chrome only collapse their own toolbars
-when *the page* scrolls, so a fixed-height tape with an inner scroller sits in a
-letterbox between full-size browser chrome forever. Three things follow, and
-undoing any of them breaks the layout in a way that is not obvious from the diff:
+**`.tape__track` is the scroller, at every width. The document never scrolls.**
+`.tape` is one viewport tall with `overflow: hidden`, and the eleven screens'
+worth of overflow lives inside it.
 
-- The chrome and the wear overlays are `position: fixed`. On a phone the tape is
-  eleven screens tall, so `absolute` pins them to the top of the strip and they
-  scroll away with the first reel.
-- `html, body` use `min-height`, not `height`. `height: 100%` caps the document
-  at one screen and the snapping has nothing to scroll.
-- The `IntersectionObserver` in `index.astro` uses `root: null`. Which element
-  scrolls changes with the breakpoint and a root cannot be changed after the
-  observer is built, so measuring against the viewport is the only thing correct
-  at both sizes.
+**The visible consequence: on a phone, Safari and Chrome keep their full-size
+toolbars, and the tape sits letterboxed between them.** Those browsers only
+collapse their chrome when *the page* scrolls, and this page does not. If you
+arrive at this repo thinking "the tape is supposed to reach the edge of the
+glass, why is there browser furniture top and bottom" — that is this, and it was
+chosen.
 
-Screens are sized in `dvh` on purpose. `svh` would leave a band of background
-once the toolbars collapse and `lvh` would spill the next screen into view while
-they are still up.
+It has been both ways. `2e9534e` handed the scrolling to the document to win
+those 60–110px back; it worked, and was reverted after being seen on a real
+device. **Do not re-apply it without asking.** The argument for the other side is
+in that commit message in full, so it can be re-read rather than re-derived.
+
+Three things hold the current arrangement together:
+
+- `html, body` use `height: 100%`, not `min-height`. That cap is what stops the
+  document scrolling at all.
+- The chrome, the wear and the cold open are `position: fixed` — outside the
+  track. Anything positioned against the track travels with the reels.
+- The `IntersectionObserver` in `index.astro` uses `root: null`. `.tape` clips
+  the track to exactly the viewport, so the two rectangles agree; and a root
+  cannot be changed after the observer is built, so it is better off assuming as
+  little as possible about who scrolls — that has now changed twice.
+
+**`--screen-h` is a separate fix and survives either arrangement.** `.tape` takes
+its height from `visualViewport.height`, measured by the script, because on iOS
+with `viewport-fit=cover` `100dvh` and the genuinely visible area disagree and
+leave a sliver of the neighbouring reel. The screens themselves are plain
+`height: 100%` — the height is decided in exactly one place, because eleven
+screens each measuring themselves is eleven chances to disagree with the box
+around them. `dvh` is the no-script fallback; `svh` and `lvh` are both wrong here.
 
 ## Three things that are easy to get wrong
 

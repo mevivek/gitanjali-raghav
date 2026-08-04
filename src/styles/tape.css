@@ -56,72 +56,83 @@ html[data-osd='off'] {
 }
 
 /*
- * ON A PHONE THE DOCUMENT IS THE SCROLLER. This is not an implementation
- * detail — it is the only way to get an edge-to-edge tape in a browser tab.
+ * THE TAPE IS ONE VIEWPORT TALL AND THE STRIP SCROLLS INSIDE IT — at every
+ * width. The document itself never scrolls.
  *
- * Safari and Chrome collapse their own toolbars when *the page* scrolls. The
- * tape used to be a fixed 100dvh box with the strip scrolling inside it, which
- * meant the document never moved, so both browsers kept their full-size chrome
- * permanently and the tape sat in a letterbox between them. Handing the
- * scrolling to the document is what lets them get out of the way, and it
- * reclaims roughly 60–110px with nothing to install.
+ * This was tried the other way round and reverted. `2e9534e` handed the
+ * scrolling to the document on phones, because Safari and Chrome only collapse
+ * their own toolbars when *the page* moves, and that collapse is worth 60–110px.
+ * It works, but on a real device the cost outweighed it, so the tape went back
+ * to owning its own scroll.
  *
- * Above 900px it goes back to being a fixed viewport with the strip scrolling
- * sideways inside it, because there the tape is dragged rather than scrolled and
- * there is no browser chrome to reclaim.
+ * **The consequence is deliberate: on a phone both browsers keep their
+ * full-size toolbars, and the tape sits in a letterbox between them.** That is
+ * a chosen trade, not a bug to fix. Anything that reads "the tape should be
+ * edge to edge, why is there browser chrome" is describing this decision. The
+ * argument for the other side is in `2e9534e` if it is ever worth revisiting.
+ *
+ * `height` is the *measured* visible height rather than `100dvh`, which is a
+ * separate fix and independent of who scrolls: on iOS Safari with
+ * `viewport-fit=cover`, `dvh` and the genuinely visible area disagree, which
+ * showed up as a sliver of the neighbouring reel. `visualViewport.height` is by
+ * definition what the visitor can see, and the script writes it into
+ * `--screen-h`. `dvh` is the no-script fallback and close enough there, since
+ * nothing resizes. `svh` would leave a band of background if the toolbars ever
+ * did collapse and `lvh` would spill the next screen into view.
  */
-html {
-  scroll-snap-type: y mandatory;
-  /* Stops a flick at the top turning into pull-to-refresh. */
-  overscroll-behavior-y: contain;
-}
-
 .tape {
   position: relative;
   width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  height: var(--screen-h, 100dvh);
+  overflow: hidden;
   background-color: var(--tape-black);
 }
 
 /* -------------------------------------------------------------- the strip */
 
 .tape__track {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Phone: one full-bleed reel at a time, swiped vertically. */
+  scroll-snap-type: y mandatory;
+  /* Keeps a flick inside the tape instead of bouncing the page behind it. */
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.tape__track::-webkit-scrollbar {
+  display: none;
 }
 
 /*
- * Only a scrollable element needs to be focusable for the keyboard (WCAG
- * 2.1.1), and on a phone this one is not — the document is, and that is always
- * reachable. The outline is here for the wide layout, where the track does own
- * the scrolling.
+ * The track is a scrollable region at every width, so it has to be focusable to
+ * be usable from a keyboard (WCAG 2.1.1). With this, arrow keys and Page Up/Down
+ * move along the tape natively — no script involved. The handler in index.astro
+ * upgrades that to whole-screen jumps.
  */
 .tape__track:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: -3px;
 }
 
+/*
+ * One screen fills the track exactly. The height is decided once, on `.tape`
+ * above — deliberately not repeated here, because eleven screens each measuring
+ * themselves is eleven chances to disagree with the box holding them, which is
+ * precisely how a sliver of the next reel gets in.
+ */
 .screen {
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  /*
-   * `--screen-h` is the *measured* visible height, written by the script from
-   * `visualViewport.height`. It exists because the viewport units are not
-   * trustworthy enough here.
-   *
-   * dvh is the right idea — svh would size every screen to the viewport with the
-   * toolbars showing and leave a band of background once they collapse, lvh
-   * would spill the next screen into view while they are still up — but on iOS
-   * Safari with `viewport-fit=cover` dvh and the actually-visible area disagree,
-   * which showed up as a sliver of the previous reel above and the next one
-   * below. `visualViewport.height` is by definition what the visitor can see.
-   *
-   * The dvh fallback is what a browser with no script gets, and is close enough
-   * there because nothing resizes.
-   */
-  height: 100vh;
-  height: 100dvh;
-  height: var(--screen-h, 100dvh);
+  height: 100%;
   padding: var(--pad-screen);
   display: flex;
   flex-direction: column;
@@ -150,32 +161,13 @@ html {
  * alone cannot do at the ends of a scroller.
  */
 @media (min-width: 900px) {
-  /* The document goes back to being one screen tall and not snapping. */
-  html {
-    scroll-snap-type: none;
-  }
-
-  .tape {
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-  }
-
+  /* Only the axis changes — the track is already the scroller. */
   .tape__track {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
     cursor: grab;
-  }
-
-  .tape__track::-webkit-scrollbar {
-    display: none;
   }
 
   .tape__track::before,
