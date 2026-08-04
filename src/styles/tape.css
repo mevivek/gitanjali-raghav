@@ -110,6 +110,20 @@ html[data-osd='off'] {
 }
 
 /*
+ * With `viewport-fit=cover` the page now reaches the physical edges of the
+ * screen, which is what a full-bleed photograph wants — but it means a notch or
+ * a rounded corner can land on top of the words. `max()` takes whichever is
+ * larger, the design's padding or the inset the device reports, so on a flat
+ * screen (where every inset is 0) nothing changes at all.
+ *
+ * It matters most in landscape, where the corners bite into the sides.
+ */
+.screen {
+  padding-left: max(var(--pad-x), env(safe-area-inset-left));
+  padding-right: max(var(--pad-x), env(safe-area-inset-right));
+}
+
+/*
  * Wide: the tape turns on its side and you drag along it, with the reels
  * either side peeking in. The pseudo-elements are spacers — they let the
  * first and last screens sit dead centre, which `scroll-snap-align: center`

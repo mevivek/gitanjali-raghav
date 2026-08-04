@@ -79,7 +79,17 @@ const icon = (file: string) => `${path(file)}?v=${ASSET_VERSION}`;
 <html lang="en" dir="ltr" data-grade={look.grade} data-osd={look.osd ? 'on' : 'off'}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/*
+      `viewport-fit=cover` lets the page paint all the way into the physical
+      edges of the screen — behind the notch, under the rounded corners, past
+      the home indicator — instead of being letterboxed inside the safe area.
+      A full-bleed photograph should reach the edge of the glass.
+
+      It puts the onus on the CSS to keep anything you have to read or press out
+      from under that furniture, which is what the `env(safe-area-inset-*)`
+      padding in tape.css does.
+    */}
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />

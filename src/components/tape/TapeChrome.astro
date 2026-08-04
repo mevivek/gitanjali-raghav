@@ -99,12 +99,14 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     display: none;
     gap: 3px;
     padding: var(--pad-bar);
+    /* Clear of the notch, for the same reason as the transport. */
+    padding-top: max(11px, env(safe-area-inset-top));
     /* The bar is part of the on-screen display; the rail is not. */
     opacity: var(--osd-op, 0);
   }
 
   .rail {
-    right: 7px;
+    right: max(7px, env(safe-area-inset-right));
     top: 50%;
     transform: translateY(-50%);
     display: flex;
@@ -159,6 +161,12 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     justify-content: center;
     gap: 9px;
     padding: var(--pad-transport);
+    /*
+     * Lifted clear of the home indicator. Since `viewport-fit=cover` the page
+     * extends under it, and these are the one thing on the tape you have to be
+     * able to hit accurately.
+     */
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
     background: linear-gradient(to top, rgb(8 4 13 / 92%), transparent);
     /* The gradient is decoration; only the controls inside should take input. */
     pointer-events: none;
