@@ -8,16 +8,30 @@
  * ask the people in them first.
  *
  * Images live in src/assets/photos/ (not public/) so Astro optimises them:
- * each is re-encoded to WebP at three widths and served with a srcset.
+ * each is re-encoded to WebP at 400/720/1080 and served with a srcset. The
+ * files here are the untouched 1080px originals — never pre-shrink them.
  *
- * `caption` is her own Instagram caption wherever one exists — her voice
- * beats anything written for her. `alt` is a plain description for screen
- * readers and is deliberately never the same text, or a screen reader just
- * reads the emoji aloud.
+ * CAPTION CONVENTION: a short `label` naming what it was, plus a `date`.
+ * They render on separate lines, so a narrow two-column phone layout breaks
+ * them deliberately rather than wrapping one long string into three ragged
+ * lines. `label` is omitted when there is nothing to name.
  *
- * Order below is the order on the page. It is arranged for contrast rather
- * than chronology: the motorcycle opens, and no two photographs from the same
- * trip sit next to each other.
+ * Her Instagram captions are not reused verbatim. They were written for a
+ * feed, where the reader has context and the post is ephemeral; set under a
+ * photograph on a website they read as fragments — a bare hashtag, a
+ * motivational line with no bearing on the picture, "Day 2" of a series whose
+ * other days are not on this page. Where her own words genuinely name the
+ * thing in frame ("Stone temple", "In the air", "Republic Day") they are kept
+ * and a date appended. Otherwise the date stands alone rather than inventing
+ * a description.
+ *
+ * Dates are exact, taken from each post's `takenAt`. Place names would be
+ * better than a bare month — "Goa, March 2024" beats "The coast" — but they
+ * are not known, and guessing at where a real person was is not acceptable.
+ * Ask her, then fold them in.
+ *
+ * `alt` is a plain description for screen readers and is deliberately never
+ * the same text as the caption.
  */
 
 import type { ImageMetadata } from 'astro';
@@ -35,84 +49,104 @@ import republicDay from '../assets/photos/republic-day.jpg';
 import stoneTemple from '../assets/photos/stone-temple.jpg';
 import redAndGold from '../assets/photos/red-and-gold.jpg';
 import sareeStreet from '../assets/photos/saree-street.jpg';
-import laapata from '../assets/photos/laapata.jpg';
+import closeUp from '../assets/photos/close-up.jpg';
 
 export interface Photo {
   src: ImageMetadata;
   /** Plain description, for people who cannot see the image. */
   alt: string;
-  /** Her caption. Shown under the photo. */
-  caption?: string;
+  /** Short label naming what it was. Optional — omitted when there is
+   *  nothing to name beyond the date. */
+  label?: string;
+  /** Month and year, from the post's `takenAt`. Always present. */
+  date: string;
 }
 
 export const gallery: Photo[] = [
   {
     src: royalEnfield,
     alt: 'Sitting astride a Royal Enfield in a cap and sunglasses, hands on the bars',
-    caption: '#bullet',
+    label: 'On the bullet',
+    date: 'January 2020',
   },
   {
     src: inTheSea,
     alt: 'Standing barefoot on rocks in the shallows, in a blue printed dress',
-    caption: 'Day 2️⃣ 🌊',
+    label: 'The coast',
+    date: 'March 2024',
   },
   {
     src: metro,
     alt: 'Black and white photograph, holding the overhead strap on a moving metro train',
-    caption: 'You gotta keep your head up ✌🏾',
+    label: 'On the metro',
+    date: 'March 2021',
   },
   {
     src: policeBox,
     alt: 'In a bright pink top beside an old blue police call box, hand on hip',
-    caption: 'Calling Police 😁',
+    label: 'Calling Police',
+    date: 'June 2023',
   },
   {
     src: basketball,
     alt: 'In a Levi’s t-shirt and shorts, holding a basketball under one arm',
-    caption: 'Don’t change who you are to impress someone',
+    date: 'February 2021',
   },
   {
-    // Her caption on this one was "🏔️☮️" — emoji only, so no caption is
-    // used. `caption` is optional and the photo renders fine without it.
     src: hills,
     alt: 'Leaning on a railing with her back to the camera, looking out over forested hills',
+    label: 'The hills',
+    date: 'May 2023',
   },
   {
     src: holi,
     alt: 'Streaks of Holi colour through her hair and across one cheek',
-    caption: 'Playing with colour ♥️💚💖🌈',
+    label: 'Holi',
+    date: 'March 2024',
   },
   {
     src: palace,
     alt: 'Sitting in the courtyard of a white palace in a yellow jumper',
-    caption: 'Beauty that defies the passage of time 💫',
+    label: 'The palace',
+    date: 'March 2024',
   },
   {
     src: inTheAir,
     alt: 'Suspended high above a forested valley, small against the mountainside',
-    caption: 'In the air 🏔️',
+    label: 'In the air',
+    date: 'June 2023',
   },
   {
     src: republicDay,
     alt: 'In a yellow and black saree on a sunlit street',
-    caption: 'Republic Day 🎉',
+    label: 'Republic Day',
+    date: 'January 2020',
   },
   {
     src: stoneTemple,
     alt: 'Seated on the steps of an old stone temple against a bright sky',
-    caption: 'Stone temple 🙏🏻🌸',
+    label: 'Stone temple',
+    date: 'June 2023',
   },
   {
-    src: laapata,
+    // Her caption was a Hindi lyric, "Main arse se khud se zara laapata
+    // hoon". Dropped: romanised, "arse" reads as English profanity to anyone
+    // who does not know the song, which on a public page under her own name
+    // is not worth the risk for a line most visitors cannot parse anyway.
+    src: closeUp,
     alt: 'Smiling close up, head tilted, hair falling loose across the frame',
-    caption: 'Main arse se khud se zara laapata hoon',
+    date: 'December 2023',
   },
   {
+    // Same afternoon as the Republic Day photograph above, so the occasion is
+    // not repeated here.
     src: sareeStreet,
     alt: 'In a saree, turning towards the camera on a street in low afternoon sun',
+    date: 'January 2020',
   },
   {
     src: redAndGold,
     alt: 'In red and gold with stacked bangles along one arm',
+    date: 'September 2023',
   },
 ];

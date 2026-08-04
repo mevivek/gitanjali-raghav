@@ -69,10 +69,23 @@ import newPhoto from '../assets/photos/new-photo.jpg';
 describes what is in the frame. Never make them the same string, or a screen
 reader just reads the emoji aloud.
 
-**Captions must contain words.** Several of her Instagram captions are pure
-emoji — `🏔️☮️`, `🌠💫`, `💖💖✨`. Those are left off entirely rather than
-printed under a photograph, where they say nothing and read as noise. `caption`
-is optional; a photo without one looks fine.
+**Caption convention: what it was, and when.** For example
+`On the bullet — January 2020`, `Holi — March 2024`, or just `February 2021`
+when there is nothing to name.
+
+Do **not** paste Instagram captions in verbatim. They are written for a feed,
+where the reader has context and the post is ephemeral. Under a photograph on
+a website they become fragments — a bare hashtag, a motivational line with no
+bearing on the picture, `Day 2️⃣` of a series whose other days are not on the
+page, or pure emoji like `🏔️☮️`. Where her own words genuinely name the thing
+in frame — "Stone temple", "In the air", "Republic Day" — keep them and append
+the date.
+
+Dates come from each post's `takenAt`, so they are exact. **Place names would
+be better than a bare month** — "Goa, March 2024" beats "The coast" — but they
+are not known. Ask her rather than guessing where a real person was.
+
+`caption` is optional; a photo without one renders fine.
 
 **Photographs are committed at full resolution** — 1080×1080, exactly as
 downloaded, never resized on disk. Astro generates 400 / 720 / 1080 variants at
