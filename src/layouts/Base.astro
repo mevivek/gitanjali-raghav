@@ -1,15 +1,21 @@
 ---
 import '../styles/global.css';
-import { site } from '../data/site';
+import { ASSET_VERSION, site } from '../data/site';
 import { look } from '../data/tape';
 import { scanContent } from '../../scripts/scan.mjs';
 
 interface Props {
   title?: string;
   description?: string;
+  /**
+   * Forces `noindex` regardless of the publish gate. The 404 sets it: a "tape not
+   * found" page has nothing worth indexing even once the tape itself is public,
+   * and search engines that do index one tend to report it as a soft 404.
+   */
+  noindex?: boolean;
 }
 
-const { title = site.title, description = site.description } = Astro.props;
+const { title = site.title, description = site.description, noindex = false } = Astro.props;
 
 /*
  * The page asks search engines to skip it until two things are true: no
@@ -18,7 +24,7 @@ const { title = site.title, description = site.description } = Astro.props;
  * being wanted in search results, and that second call is hers, not ours.
  */
 const { placeholders } = scanContent();
-const isDraft = placeholders.length > 0 || !site.approved;
+const isDraft = noindex || placeholders.length > 0 || !site.approved;
 
 // Astro.site + base are set in astro.config.mjs; this yields absolute URLs
 // for the social tags, which require them.
@@ -34,26 +40,11 @@ const path = (file: string) => `${import.meta.env.BASE_URL}/${file}`.replace(/\/
 const asset = (file: string) => new URL(path(file), Astro.site);
 
 /*
- * Cache-buster for the hand-made files in public/. **Increment this whenever
- * og.jpg, favicon.svg or apple-touch-icon.png changes.**
- *
- * Cloudflare fronts mevivek.dev and serves images with
- * `cache-control: max-age=14400` — four hours. Everything Astro builds is
- * content-hashed and so immune, but these three live under fixed names, so
- * replacing one in place leaves the old file being served for hours: the HTML
- * is cached for only ten minutes, so it updates first and then spends the rest
- * of the window asking for a stale image. That is exactly what happened when
- * the cassette mark replaced the old favicon.
- *
- * A query string makes it a new URL, so the change lands as soon as the HTML
- * does. There is no way to purge that cache from here — the zone is not ours.
- *
- * It matters most for og.jpg, and not only because of Cloudflare: Slack,
- * WhatsApp and LinkedIn cache a preview against the image URL more or less
- * indefinitely, so a redrawn share image under an unchanged name would go on
- * showing the old headline to everyone who had already shared the link.
+ * The cache-buster now lives in src/data/site.ts, because EndCredits.astro needs
+ * the same number for the video and two copies of it would eventually disagree.
+ * The reasoning — Cloudflare's four-hour cache on fixed-name files in public/, and
+ * why og.jpg matters most — is in the comment there.
  */
-const ASSET_VERSION = 5;
 
 /**
  * The share image. A JPEG, not a PNG: it is mostly a photograph and a
@@ -110,9 +101,14 @@ const icon = (file: string) => `${path(file)}?v=${ASSET_VERSION}`;
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    {/*
+      Describes public/og.jpg in words, so it has to be changed whenever that
+      image is redrawn — it used to say "a VHS cassette labelled 'geetanjali
+      raghav'", which stopped being true when the title card became a poster.
+    */}
     <meta
       property="og:image:alt"
-      content="A VHS cassette labelled 'geetanjali raghav' beside the words 'No plot, just good footage'"
+      content="A film poster: Geetanjali Raghav close up in red and gold, beside the words 'No plot, just good footage'"
     />
     <meta name="twitter:card" content="summary_large_image" />
     {/* Twitter falls back to og:image, but is happier told outright. */}

@@ -25,8 +25,8 @@ import inTheAir from '../assets/photos/in-the-air.jpg';
 import inTheSea from '../assets/photos/in-the-sea.jpg';
 import laapata from '../assets/photos/laapata.jpg';
 import metro from '../assets/photos/metro.jpg';
+import playbackPortrait from '../assets/photos/playback-portrait.jpg';
 import policeBox from '../assets/photos/police-box.jpg';
-import portrait from '../assets/photos/portrait.jpg';
 import redAndGold from '../assets/photos/red-and-gold.jpg';
 import republicDay from '../assets/photos/republic-day.jpg';
 import royalEnfield from '../assets/photos/royal-enfield.jpg';
@@ -34,11 +34,21 @@ import sareeStreet from '../assets/photos/saree-street.jpg';
 import stoneTemple from '../assets/photos/stone-temple.jpg';
 
 /*
- * palace.jpg is the one approved photograph this cut of the tape does not
- * use — it was a contact-sheet thumbnail on the old reel 01, and the reels
- * that replaced it have no thumbnail strip. The file is deliberately left in
- * src/assets/photos/: it was reviewed and approved, and dropping it is not a
- * decision that belongs in a redesign.
+ * Two approved photographs this cut of the tape does not use, both deliberately
+ * still on disk. A file that was reviewed and approved is not something a redesign
+ * should quietly delete.
+ *
+ *   palace.jpg      a contact-sheet thumbnail on the old reel 01, and the reels
+ *                   that replaced it have no thumbnail strip.
+ *   portrait.jpg    her 320×320 Instagram avatar. It was the cassette window on
+ *                   the old title card and the whole of reel 06; the poster
+ *                   card has no window and reel 06 now has a real photograph, so
+ *                   nothing asks for it any more. Which is the good outcome —
+ *                   it was the lowest-resolution image on the site.
+ *
+ * The third handoff's photograph arrived three times under three names, all
+ * byte-identical. Only one copy is committed, as playback-portrait.jpg, and reel 06
+ * uses it whole — so there is no second file here holding the same picture.
  */
 
 /* ------------------------------------------------------------- the look */
@@ -46,10 +56,11 @@ import stoneTemple from '../assets/photos/stone-temple.jpg';
 /**
  * How worn the tape looks. These were adjustable knobs in the design tool.
  *
- * Note these are *not* simply whatever the latest handoff shipped with. The
- * second handoff came with `grain: 46` and `osd: true`; both were reviewed and
- * turned down, so the tape keeps the heavier grain and the clean photographs it
- * already had. Each is still a one-word change if that is ever revisited.
+ * Note these are *not* simply whatever the latest handoff shipped with. `osd`
+ * has now been asked for by three handoffs running and turned down each time.
+ * `grain` went the other way: it was held at 80 against the second bundle's 46,
+ * and the third bundle's 14 was taken — but only because that bundle also
+ * arrived with the reason to take it. See `wear` at the foot of this file.
  */
 export const look = {
   /**
@@ -67,14 +78,29 @@ export const look = {
    */
   grade: 'poster' as 'clean' | 'poster' | 'tape',
 
-  /** Film grain over everything, 0–80. */
-  grain: 80 as number,
+  /**
+   * Film grain, 0–80 — but no longer flat across the tape. This is the base
+   * figure, and `wear` at the foot of this file multiplies it per screen, so
+   * the grain is heaviest at the head and tail and thinnest in the middle.
+   *
+   * That is why 14 is enough where 80 was needed before. A single number for
+   * eleven screens has to be loud enough to read as wear on the screen you
+   * happen to be looking at; a curve is doing the work here instead, and the
+   * peak lands at 14 × 1.42 ≈ 20 on the title card. Set `wear` to all 1s to get
+   * the old flat behaviour back, and put this number up if you do.
+   */
+  grain: 14 as number,
 
   /**
-   * The on-screen display: "reel 01 / 07", the running timecode, and the
-   * progress bar on wide screens. Off by default — it was off when the tape
-   * was first built, and turning it on is the single biggest change to how the
-   * site reads, so it stays a deliberate decision rather than a default.
+   * The on-screen display: "reel 01 / 07", the running timecode and the burnt-in
+   * date stamps. Off by default — it was off when the tape was first built, and
+   * turning it on is the single biggest change to how the site reads, so it
+   * stays a deliberate decision rather than a default.
+   *
+   * It used to gate a progress bar too. The third handoff removed both the bar
+   * and the phone's segment rail in favour of the two spools on the transport,
+   * which wind between each other as you move along the tape — so position is
+   * now shown by something that is visible whatever this is set to.
    *
    * The readouts that are part of an interaction — the odometer, the
    * thermometer, the take number, the splash counter, the combo — ignore this
@@ -101,45 +127,58 @@ export function stepFor(steps: Step[], value: number): string {
 /* ----------------------------------------------------------- title card */
 
 /*
- * There is deliberately no line above the cassette. It used to read
- * "home video" on the left and "delhi · e-180" on the right — the first of
- * which is the design tool's internal name for the file and means nothing to a
- * visitor, which is the same reason it is kept out of `site.title`. Both halves
- * went together; a lone catalogue number is not worth a row of its own.
+ * The title card is a film poster, and as of the third handoff that is all it
+ * is. It used to be a drawn cassette — shell, two turning spools, a REC dot and
+ * a paper label with the tape's old name struck out. That cassette is in the git
+ * history; the poster replaced it because the tape can say what it is by looking
+ * like a poster for itself, and a full-bleed photograph of her does more work at
+ * the top of the page than an illustration of an object.
+ *
+ * There is still deliberately no line above the photograph. The third bundle put
+ * "home video" and "e-180 · side a" back along the top; that strip was removed
+ * on purpose in 5cb2778 and is staying removed. "Home video" is the design
+ * tool's internal name for the file and means nothing to a visitor — the same
+ * reason it is kept out of `site.title` — and a lone catalogue number is not
+ * worth a row of its own. The billing block below carries the running time and
+ * the certificate, which is what that strip was really for.
  */
 export const title = {
+  /** Above the headline, in her hand, gold and slightly crooked. */
+  name: 'geetanjali raghav',
+
   /**
    * Three lines, and the field names say which is which because they are not
    * interchangeable: the outer two are stencilled display type with a
    * mis-registered colour fringe, and the middle one is her handwriting, gold
-   * and slightly crooked, wedged between them.
+   * and slightly crooked, wedged between them. Left-aligned on the poster,
+   * where they used to be centred over the cassette.
    */
   headingTop: 'No plot,',
   headingHand: 'just good',
   headingBottom: 'footage',
 
-  intro:
-    'Seven reels. Salt water, hill roads, one motorcycle, a song — and a short interval about the job.',
+  /**
+   * The billing block, under a gold hairline: what a poster prints in small caps
+   * along the bottom. This replaced a plain intro sentence — the seven reels are
+   * named here instead of summarised, which is the same information doing more
+   * work. `site.description` still carries the sentence version for search and
+   * link previews, where a list of seven names would read badly.
+   */
+  billReels:
+    'in seven reels · salt water · two wheels · any excuse · take four · cold air · playback · side a',
+  billFooter:
+    'filmed on location in delhi, the hills and the sea · one interval · running time 45 min · u/a',
 
-  /** Written on the cassette's paper label, in her hand. */
-  labelName: 'geetanjali raghav',
-  labelCode: 'E-180',
-  /** The label's second line: what it said before, struck out, and the span. */
-  labelWas: 'portfolio_final_v3',
-  labelYears: '2019 — 2026',
-  scribble: "that's me",
-
-  playLabel: 'play',
+  playLabel: 'play the tape',
 
   /**
-   * Her Instagram profile picture at 320×320 — the lowest-resolution image on
-   * the site, and now the only one used twice. It sits in the cassette window
-   * at roughly 284px, where it holds, and fills the whole frame on reel 06,
-   * where it does not really. A photograph at 1000px or more is the biggest
-   * single upgrade available here and needs nothing but a file swap.
+   * Reel 03's Diwali photograph, cropped hard into her face and the bangles
+   * stacked against it. Same file, a different crop and a different job, so it
+   * gets its own alt text — see the note under `alt` in CONTENT.md.
    */
-  photo: portrait as ImageMetadata,
-  alt: 'Geetanjali Raghav, straight to camera',
+  photo: redAndGold as ImageMetadata,
+  alt: 'Geetanjali Raghav close up in red and gold, a bangled arm raised beside her face',
+  pos: '67% 11%',
 } as const;
 
 /* ------------------------------------------------- 01 · salt water (tap) */
@@ -154,7 +193,12 @@ export const salt = {
   label: 'Salt water',
   tc: '00:03:18',
   accent: 'var(--tape-cyan)',
-  edge: 'rgb(62 224 232 / 34%)',
+  /*
+   * No `edge` on this reel or the next two: that colour is the inner hairline of
+   * a photograph's frame, and reels 01–03 are full bleed, so there is no frame to
+   * draw it on. `bg` still matters — it is what shows behind the photograph while
+   * it decodes, and on a short landscape screen where cover cannot fill.
+   */
   bg: 'radial-gradient(120% 90% at 70% 0%, #0d2230 0%, #0a1119 50%, #08040d 100%)',
 
   title: 'Salt water',
@@ -206,13 +250,15 @@ export const wheels = {
   label: 'Two wheels',
   tc: '00:09:12',
   accent: 'var(--tape-gold)',
-  edge: 'rgb(255 197 61 / 34%)',
   bg: 'radial-gradient(120% 90% at 60% 0%, #2e1c0c 0%, #170d09 52%, #08040d 100%)',
 
   title: 'Two wheels',
   photo: royalEnfield as ImageMetadata,
   alt: 'Sitting astride a Royal Enfield in a cap and sunglasses, hands on the bars',
-  pos: '50% 42%',
+  /** Full bleed wants a shade lower than the framed crop did. */
+  pos: '50% 44%',
+  /** The burnt-in camera stamp, top right. New with the third handoff. */
+  readout: 'JAN 2020  ROLL 08',
 
   throttleLabel: 'hold the throttle',
   /** Where the odometer starts. Shown with Indian digit grouping. */
@@ -247,8 +293,13 @@ export const excuse = {
   num: '03',
   label: 'Any excuse',
   tc: '00:15:40',
-  accent: 'var(--tape-pink)',
-  edge: 'rgb(255 46 136 / 34%)',
+  /*
+   * Orange as of the third handoff, where it was pink. Three consecutive reels
+   * were the same pink — 03, 04 and 06 — and separating them is what lets the
+   * middle of the tape read as four different reels rather than one long one.
+   * No `edge`: this reel is full bleed, so there is no frame — see reel 01.
+   */
+  accent: 'var(--tape-orange)',
   bg: 'radial-gradient(120% 90% at 40% 0%, #350f24 0%, #1b0715 52%, #08040d 100%)',
 
   title: 'Any excuse',
@@ -318,8 +369,9 @@ export const takes = {
   num: '04',
   label: 'Take four',
   tc: '00:22:06',
-  accent: 'var(--tape-pink)',
-  edge: 'rgb(255 46 136 / 30%)',
+  /** Coral, a step off reel 06's pink — see the note on reel 03's accent. */
+  accent: 'var(--tape-coral)',
+  edge: 'rgb(255 92 122 / 30%)',
   bg: 'radial-gradient(120% 90% at 55% 0%, #2a1030 0%, #150a1c 52%, #08040d 100%)',
 
   title: 'Take four',
@@ -472,15 +524,30 @@ export const playback = {
   bg: 'radial-gradient(120% 90% at 50% 0%, #3a1026 0%, #1c0a17 52%, #08040d 100%)',
 
   title: 'Playback',
-  /** The same 320×320 file as the title card — see the note on `title.photo`. */
-  photo: portrait as ImageMetadata,
   /*
-   * The design called this one "close up", which it is on the title card, where
-   * the cassette window crops in tight. Full bleed in a portrait frame the same
-   * square file shows all of her, so the alt text says what is actually there.
+   * A real photograph at last, and the one asset that was outstanding from the day
+   * this reel was built. It arrived with the third handoff at 3120×4160, and it is
+   * used at its full frame — a whole standing figure in a café, not a headshot.
+   *
+   * It was briefly a 1080×1350 head-and-shoulders crop of the same file, on the
+   * reasoning that the reel is about her face stepping from bare to in character.
+   * The full frame was chosen instead: it is the photograph she was given, the room
+   * around her is most of what makes it read as a mirror somewhere real, and the
+   * bulbs and the key light do the work of pointing at her without the crop having
+   * to. Astro still generates the same three widths, so nothing is served large.
+   *
+   * Note the bundle's alt text calls this a "close up". It is not, and the alt
+   * text below says what is actually in the frame.
    */
-  alt: 'Geetanjali Raghav in a black dress and pale blue jacket, straight to camera',
-  pos: '50% 8%',
+  photo: playbackPortrait as ImageMetadata,
+  alt: 'Geetanjali Raghav standing in a café in a black top and pale striped jacket, one hand on her hip',
+  /*
+   * The bundle's framing, and it is chosen for both orientations: the source is 3:4
+   * and the frame is narrower than that on a phone — so `cover` crops the sides and
+   * only the 46% matters, pulling her back towards the middle — and wider than it on
+   * a desktop, where it crops top and bottom and the 20% is what keeps her head in.
+   */
+  pos: '46% 20%',
 
   /** Accessible name for the invisible button over the photograph. */
   action: 'Tap on the beat',
@@ -542,11 +609,14 @@ export const playback = {
 export interface Track {
   n: string;
   line: string;
+  /** Running time in seconds. Sets how wide this track sits on the strip. */
+  sec: number;
 }
 
 /**
  * The cassette inlay card: six songs, on a loop, at volume. Tapping a line
- * plays it, which is to say a little VU meter twitches next to it.
+ * plays it, which is to say a little VU meter twitches next to it and the
+ * playhead on the strip above jumps to where that track starts.
  *
  * Titles, not lyrics. The card used to print fragments of the words — they
  * were her captions, so they belonged to the site more than a title does — but
@@ -558,20 +628,56 @@ export const sideA = {
   num: '07',
   label: 'Side A',
   tc: '00:38:20',
-  accent: 'var(--tape-gold)',
+  /** Brass rather than the tape's gold: this is ink on paper, not a lit readout. */
+  accent: 'var(--tape-brass)',
 
   title: 'Side A',
-  inlayTitle: 'on repeat, at volume',
-  inlayLength: '45 MIN',
+
+  /**
+   * The card's spine, printed across the top edge. Her name is initialled here
+   * and nowhere else on the tape: a spine is a few millimetres of card read
+   * edge-on, and the fourth handoff shortened it so the title beside it survives
+   * instead of being ellipsed away on a phone.
+   */
+  inlaySpine: 'g. raghav · no plot, just good footage',
+  inlaySide: 'side a',
+  inlayNote: 'on repeat, at volume',
+  /** Boxed, top right. NR is the noise reduction an E-180 would print. */
+  inlayCode: 'e-180 · nr',
+
+  /**
+   * The length of the side, in seconds, and the number the strip is drawn
+   * against — not the sum of the six tracks.
+   *
+   * That distinction is the whole point and the bundle got it wrong: it labelled
+   * the strip 00:00 to 45:00 and then sized the six segments as fractions of
+   * their own total, so they filled the strip end to end and the card claimed a
+   * 45-minute side with 45 minutes on it. The six tracks come to 25:42. Sizing
+   * them against 45:00 leaves the last third of the strip empty, which is what
+   * makes `hands.idle` below true — and a home-made tape with a blank tail is
+   * more honest than one recorded exactly to the end.
+   */
+  sideSeconds: 45 * 60,
 
   tracks: [
-    { n: '01', line: 'Nal Nachna' },
-    { n: '02', line: 'Ishqa Ve' },
-    { n: '03', line: 'Sawaal' },
-    { n: '04', line: 'Mahiye' },
-    { n: '05', line: 'Meri Bheegi Bheegi Si' },
-    { n: '06', line: 'Dil Chura Le' },
+    { n: '01', line: 'Nal Nachna', sec: 222 },
+    { n: '02', line: 'Ishqa Ve', sec: 258 },
+    { n: '03', line: 'Sawaal', sec: 236 },
+    { n: '04', line: 'Mahiye', sec: 304 },
+    { n: '05', line: 'Meri Bheegi Bheegi Si', sec: 272 },
+    { n: '06', line: 'Dil Chura Le', sec: 250 },
   ] as Track[],
+
+  /** Under the strip. `{at}`, `{side}` and `{recorded}` are filled in. */
+  stripIdle: 'tap a track',
+  readoutIdle: '{recorded} recorded',
+  readoutPlaying: '{at} / {side}',
+
+  /** Her hand at the foot of the card, one for each state. */
+  hands: {
+    idle: 'rest of the side is blank — on purpose',
+    playing: 'this one gets the volume knob',
+  },
 
   lines: {
     idle: 'Six songs, on a loop, at volume, until everybody in the car has learned them. Tap one — most of these have been a caption at some point.',
@@ -588,10 +694,9 @@ export const sideA = {
 export const interval = {
   kicker: 'interval',
   tc: '00:41:02',
-  /** Printed opposite the kicker. The quality-check card is screen 2. */
-  screenTag: 'screen 1',
+  /** Printed opposite the kicker, where the reels print a timecode. */
+  screenTag: 'house lights up',
   heading: 'Interval',
-  hand: 'the bit where I actually go to work',
 
   /**
    * A three-minute countdown, purely for the joke — nothing on the tape waits
@@ -603,14 +708,18 @@ export const interval = {
   clockLabel: 'interval ends in',
   clockOver: 'interval over',
 
-  /** Column headings over the rows, like a cinema listing. */
-  columnRole: 'showing',
-  columnYears: 'times',
+  /**
+   * The programme board's own header. The fourth handoff turned the listing into
+   * a lit board in a foyer, so the two column headings became one title and the
+   * screen number moved across to sit under it.
+   */
+  boardTitle: "today's programme",
+  boardScreen: 'screen 1',
 
-  /** The status chip at the right of each row. */
+  /** The status line under each row's dates. */
   nowBadge: 'now showing',
-  endedBadge: 'ended',
-  archiveBadge: 'archive',
+  endedBadge: 'last show',
+  archiveBadge: 'archive print',
 
   body: 'Quality checks, the report that has to be right before Friday. I am good at it and it pays for the train tickets — it is just not the interesting part.',
 
@@ -626,7 +735,7 @@ export const interval = {
 /* --------------------------------------------- interval · b-side (form) */
 
 export interface Check {
-  /** Form reference, printed in the left column. */
+  /** Stable key for the wiring. Not printed — the rows are numbered 1–6. */
   id: string;
   item: string;
   verdict: 'pass' | 'fail';
@@ -634,44 +743,87 @@ export interface Check {
   note: string;
 }
 
+export interface Particular {
+  k: string;
+  v: string;
+}
+
 /**
- * The interval's b-side: the quality-assurance form, turned on herself. Press
- * `check` on a line and the verdict lands as a rubber stamp with a note beside
- * it. Three pass, three fail, and it gets signed off regardless — which is the
- * joke, and also the point of putting it directly after the day job.
+ * The interval's b-side: a film certificate, made out to herself.
  *
- * The summary strings are templates rather than sentences because the numbers
- * in them are counted at runtime. `{n}`, `{done}`, `{total}`, `{pass}` and
- * `{fail}` are substituted; everything else is the wording.
+ * The third handoff rebuilt this screen. It was a carbon-paper QA form with a
+ * `check` button on every line; it is now the card the censor board staples to
+ * the front of a print — a board name, a certificate number, a U/A rating, the
+ * particulars of the film, and the six checks as "conditions of certification".
+ * The joke is the same joke and lands harder for being on a government form:
+ * three of the six fail and it is certified anyway.
+ *
+ * It also fits the tape better than the form did. Every Hindi film opens on one
+ * of these, so the screen now looks like something you would actually see before
+ * a picture starts — and it is the one screen that was already pretending to be
+ * a document, so making it a real kind of document costs nothing.
+ *
+ * The summary strings are templates because the numbers are counted at runtime:
+ * `{done}`, `{total}`, `{pass}` and `{fail}` are substituted.
  */
 export const qualityCheck = {
   kicker: 'interval · b-side',
   tc: '00:44:30',
 
-  /** Two lines of stencilled type at the head of the form. */
-  heading: 'Quality',
-  headingSecond: 'check',
+  /** Small caps across the top, centred, over a short rule. */
+  board: 'central board of self certification',
 
-  formCode: 'form gr/qa/26',
-  formSubject: 'subject: self',
-  signedYes: 'signed: yes',
-  signedNo: 'signed: no',
+  heading: 'Certificate',
+  code: 'no. gr/qa/2026',
+  /** Beside the number, and it changes when the last condition is stamped. */
+  signedPending: 'pending examination',
+  signedDone: 'certified',
 
-  intro:
-    'Catching what everybody else missed is the job. Turning it on myself is the hobby — tap a line.',
+  /**
+   * The rating, boxed at the right. U/A is the real Indian certificate for
+   * "parental guidance for under-12s", which is the correct rating for a tape
+   * whose worst offence is the language on the b-side.
+   */
+  rating: 'U/A',
+  ratingNote: 'supervision advised',
 
-  runLabel: 'check',
-  runAllLabel: 'run all',
-  clearLabel: 'clear',
+  /** The particulars block, as a certificate prints them. */
+  particulars: [
+    { k: 'title', v: 'No plot, just good footage' },
+    { k: 'applicant', v: 'Geetanjali Raghav' },
+    { k: 'length', v: '7 reels · 45 min · one interval' },
+    { k: 'language', v: 'Hindi, English, sarcasm' },
+  ] as Particular[],
 
-  summaryIdle: '{n} checks outstanding',
-  summaryRun: '{done} of {total} run · {pass} pass · {fail} fail',
+  conditionsLabel: 'conditions of certification',
+
+  /**
+   * The stamp comes down on the next unexamined line, one press at a time,
+   * rather than all six at once. A rubber stamp is a single action — and going
+   * through them in order is what makes the three fails land one after another
+   * instead of arriving as a batch.
+   */
+  pressLabel: 'press the stamp',
+  resetLabel: 're-examine',
+
+  summaryPartial: '{done} of {total}',
+  summaryAll: '{pass} pass · {fail} fail',
+
+  /** Slammed across the card, crooked, once every line has been examined. */
+  verdictTop: 'passed with remarks',
+  verdictNote: 'three fails · certified anyway',
 
   signedLabel: 'signed',
-  verdict: 'three fails, signed off anyway',
   /**
-   * Dated the day the form was filled in, which is how a signed form works —
-   * it is not meant to track today. One string if that is ever wrong.
+   * Her name in her hand on the signature rule. It is a joke signature on a
+   * joke certificate rather than anything that purports to be hers — but it is
+   * still her name in handwriting on a public page, so it is one string here if
+   * she would rather it were initials or a scrawl.
+   */
+  signature: 'Geetanjali Raghav',
+  /**
+   * Dated the day the certificate was made out, which is how a signed document
+   * works — it is not meant to track today. One string if that is ever wrong.
    */
   date: '04.08.26',
 
@@ -712,10 +864,49 @@ export const credits: Credit[] = [
   { role: 'quality control', who: 'see interval' },
 ];
 
+/**
+ * The footage behind the end credits, and the only moving picture on the tape.
+ *
+ * It plays under the roll, graded almost to black so the names stay legible — the
+ * point is that the last screen is the one place the tape stops being made of
+ * stills. It is muted and has no audio track at all, loops, and is `aria-hidden`:
+ * nothing in it carries meaning, so a screen reader is told nothing and loses
+ * nothing.
+ *
+ * Three things gate it, all in EndCredits.astro:
+ *
+ *   - **reduced motion** — never loaded. A full-screen moving background is the
+ *     single most motion-heavy thing here.
+ *   - **a metered or 2g connection** — never loaded, the same test TapePrefetch
+ *     uses before warming the photographs. 15MB is a real amount of somebody's
+ *     data plan, and this is decoration.
+ *   - **arriving at the screen** — the source is not set until the credits are the
+ *     screen in front, and playback pauses the moment they are not. Nothing
+ *     downloads 15MB for a visitor who never reaches the end of the tape, and
+ *     nothing decodes video four reels away.
+ *
+ * `poster` is deliberately absent: the first frame would be a second network
+ * request for an image that is covered by a near-opaque scrim anyway.
+ */
+export const footage = {
+  /** Under public/, so it is served as-is rather than processed by Astro. */
+  src: 'video/garden.mp4',
+} as const;
+
 export const ending = {
   kicker: 'end of tape',
-  /** Not printed anywhere; it is the last stop for the transport counter. */
-  tc: '00:47:55',
+  /**
+   * Not printed anywhere; it is the last stop for the transport counter.
+   *
+   * 45:00 rather than the 47:55 it read until the fourth handoff, because the
+   * title card's billing block says "running time 45 min" and the counter is the
+   * one thing that can contradict it. The bundle fixed the same mismatch by going
+   * back to spreading the whole runtime arithmetically across eleven screens; this
+   * keeps the counter reading each screen's own printed timecode — which is the
+   * property worth having, since it means the counter and a reel's readout cannot
+   * drift apart — and just corrects the one number that was wrong.
+   */
+  tc: '00:45:00',
   headingTop: 'Cast &',
   headingBottom: 'crew',
   signoff: 'shot on a phone, mostly in winter, mostly on the way somewhere',
@@ -751,6 +942,28 @@ export const boot = {
   /** Milliseconds before it clears itself. */
   hold: 1500,
   dismissLabel: 'Skip the opening',
+} as const;
+
+/* ------------------------------------------------------------ tape not found */
+
+/**
+ * The 404, which arrived with the third handoff and is the only screen on the
+ * site that is not part of the tape.
+ *
+ * It borrows the cold open's untuned blue rather than the tape's black, which is
+ * the right instinct: a wrong address is not a reel, so it should look like the
+ * deck failing to find a picture rather than like a page of the site. GitHub Pages
+ * serves it for any unknown path under the project.
+ */
+export const notFound = {
+  kicker: 'no signal',
+  headingTop: 'Tape',
+  headingBottom: 'not found',
+  hand: 'somebody taped over this bit',
+  body: 'Nothing at this address. Rewind to the start of the tape and pick a reel.',
+  rewindLabel: 'rewind to start',
+  /** The tab title. Not `site.title`, because this is not the tape. */
+  title: 'Tape not found',
 } as const;
 
 /* ---------------------------------------------------------------- sound */
@@ -880,3 +1093,37 @@ export const positions: readonly string[] = [
 export function timecode(index: number): string {
   return positions[Math.max(0, Math.min(positions.length - 1, index))];
 }
+
+/**
+ * How worn each screen is, as a multiplier on `look.grain`. One entry per
+ * screen, in tape order.
+ *
+ * A real cassette is not evenly worn. The head and the tail of the tape are what
+ * the machine grabs, threads and spools past the heads every single time, so they
+ * are scuffed; the middle has been played fewer times and is cleaner. So the
+ * grain is heaviest on the title card and the credits and thinnest around reels
+ * 05 and 06 — which happens to put the least noise over the two reels with the
+ * most going on in them.
+ *
+ * `index.astro` writes the value for whichever screen is in front into
+ * `--wear`, and TapeGrain multiplies its base opacity by it. Set every entry to
+ * 1 for flat grain, and put `look.grain` back up if you do — 14 is only enough
+ * because of the peak at the ends.
+ *
+ * One entry per screen, so this has to stay `screenCount` long. A short table is
+ * survivable rather than fatal: index.astro leaves `--wear` alone for any screen
+ * this does not cover, so the grain holds its last value instead of clearing.
+ */
+export const wear: readonly number[] = [
+  1.42, // title — the leader, handled every time
+  0.96,
+  0.82,
+  0.74,
+  0.66,
+  0.6, // cold air — the cleanest part of the tape
+  0.68,
+  0.8,
+  0.92,
+  1.06,
+  1.3, // end of tape, second only to the leader
+];

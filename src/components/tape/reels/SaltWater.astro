@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { look, reelCount, salt, slugs, stepFor } from '../../../data/tape';
+import { reelCount, salt, slugs, stepFor } from '../../../data/tape';
 
 interface Props {
   index: number;
@@ -8,21 +8,18 @@ interface Props {
 
 const { index } = Astro.props;
 
-const osdHidden = look.osd ? undefined : true;
-
 /* Server-rendered at zero splashes, which is also the no-script state. */
 const start = 0;
 
 const vars = [
   `--accent: ${salt.accent}`,
-  `--edge: ${salt.edge}`,
   `--reel-bg: ${salt.bg}`,
   `--photo-pos: ${salt.pos}`,
 ].join('; ');
 ---
 
 <section
-  class="screen screen--reel"
+  class="screen screen--reel screen--bleed"
   id={slugs[index]}
   data-screen
   data-active="false"
@@ -36,66 +33,78 @@ const vars = [
   style={vars}
   aria-label={`Reel ${salt.num} of ${reelCount} — ${salt.label}`}
 >
-  <div class="reel__osd" aria-hidden={osdHidden}>
-    <span>reel {salt.num} / {String(reelCount).padStart(2, '0')}</span>
-    <span class="reel__osd-tc">{salt.tc}</span>
-  </div>
-
-  <div class="reel__frame">
-    <Image
-      class="reel__photo photo"
-      src={salt.photo}
-      alt={salt.alt}
-      width={1080}
-      widths={[400, 720, 1080]}
-      sizes="(min-width: 900px) min(44vw, 560px), 100vw"
-      loading="eager"
-      decoding="async"
-    />
-
-    {/*
-      A real button rather than a listener on the photograph, so it can be
-      reached and pressed from a keyboard. It has no visible border of its own
-      — the photograph is the surface — but it does take a focus ring, which is
-      the only way a keyboard user would know it is here at all.
-
-      Hidden without script: an invisible button that does nothing is worse
-      than no button. The reel still reads without it.
-    */}
-    <button class="water" type="button" data-nodrag data-salt-tap>
-      <span class="sr-only">{salt.action}</span>
-    </button>
-
-    {/* Ripples are appended here, then removed when their animation ends. */}
-    <div class="ripples" data-salt-ripples aria-hidden="true"></div>
-
-    <div class="reel__scan" aria-hidden="true"></div>
-    <div class="reel__sink" aria-hidden="true"></div>
-
-    <p class="reel__stamp" aria-hidden="true">{salt.readout}</p>
-
-    <div class="reel__caption">
-      <h2 class="reel__title">{salt.title}</h2>
-      <p class="reel__hand" data-salt-hand>{stepFor(salt.hands, start)}</p>
-    </div>
-  </div>
+  {/*
+    Full bleed since the third handoff: the photograph is the screen rather than
+    a picture in a frame on it. The skeleton is in src/styles/tape.css — see the
+    note there on why reels 01–03 bleed and 04–06 do not.
+  */}
+  <Image
+    class="bleed__photo photo"
+    src={salt.photo}
+    alt={salt.alt}
+    width={1080}
+    widths={[400, 720, 1080]}
+    sizes="(min-width: 900px) min(44vw, 560px), 100vw"
+    loading="eager"
+    decoding="async"
+  />
 
   {/*
-    The prompt and the splash count. Part of the interaction rather than the
-    on-screen display, so `look.osd` does not hide them — without them there is
-    no sign the tape noticed you.
+    A real button rather than a listener on the photograph, so it can be
+    reached and pressed from a keyboard. It has no visible border of its own
+    — the photograph is the surface — but it does take a focus ring, which is
+    the only way a keyboard user would know it is here at all.
 
-    aria-live so the count is announced as it changes; a screen reader user
-    pressing the button gets the same feedback a sighted one does.
+    It covers the whole screen now. In the framed layout it had to stop 84px
+    short of the bottom to keep the caption selectable; the caption has moved out
+    of the photograph and onto the plate above this, which turns pointer events
+    back on only for itself, so the water can have the rest.
+
+    Hidden without script: an invisible button that does nothing is worse
+    than no button. The reel still reads without it.
   */}
-  <p class="gauge reel__controls" data-nodrag>
-    <span data-salt-prompt>{stepFor(salt.prompts, start)}</span>
-    <span class="gauge__count" aria-live="polite" data-salt-count
-      >splash {String(start).padStart(2, '0')}</span
-    >
-  </p>
+  <button class="water" type="button" data-nodrag data-salt-tap>
+    <span class="sr-only">{salt.action}</span>
+  </button>
 
-  <p class="reel__line" data-salt-line>{stepFor(salt.lines, start)}</p>
+  {/* Ripples are appended here, then removed when their animation ends. */}
+  <div class="ripples" data-salt-ripples aria-hidden="true"></div>
+
+  <div class="bleed__scrim" aria-hidden="true"></div>
+  <div class="bleed__scan" aria-hidden="true"></div>
+
+  <div class="bleed__plate">
+    <p class="bleed__top">
+      <span class="bleed__reel">reel {salt.num} / {String(reelCount).padStart(2, '0')}</span>
+      <span class="bleed__stamp">{salt.readout}</span>
+    </p>
+
+    <span class="bleed__gap"></span>
+
+    <div class="bleed__words">
+      <div class="bleed__caption">
+        <h2 class="reel__title">{salt.title}</h2>
+        <p class="reel__hand" data-salt-hand>{stepFor(salt.hands, start)}</p>
+      </div>
+
+      {/*
+        The prompt and the splash count. Part of the interaction rather than the
+        on-screen display, so `look.osd` does not hide them — without them there
+        is no sign the tape noticed you.
+
+        aria-live so the count is announced as it changes; a screen reader user
+        pressing the button gets the same feedback a sighted one does.
+      */}
+      <p class="gauge reel__controls" data-nodrag>
+        <span data-salt-prompt>{stepFor(salt.prompts, start)}</span>
+        <span class="gauge__count" aria-live="polite" data-salt-count
+          >splash {String(start).padStart(2, '0')}</span
+        >
+      </p>
+
+      <p class="reel__line" data-salt-line>{stepFor(salt.lines, start)}</p>
+    </div>
+  </div>
 </section>
 
 <style>
@@ -119,8 +128,6 @@ const vars = [
     border: 0;
     background: transparent;
     cursor: pointer;
-    /* The caption below must stay selectable, so this stops short of it. */
-    bottom: 84px;
     /* A press on a photograph should not offer to copy it or select round it. */
     user-select: none;
     -webkit-user-select: none;
@@ -174,7 +181,7 @@ const vars = [
   }
 
   .gauge__count {
-    color: #6f8f99;
+    color: #9fbcc4;
   }
 </style>
 
@@ -182,10 +189,10 @@ const vars = [
   /*
    * The copy tables arrive on a data attribute rather than by importing
    * src/data/tape.ts. Importing it would pull that module into the client
-   * bundle's graph, and because it imports fifteen photographs, the build then
-   * emits all fifteen originals as assets — 2.6MB of files nothing references.
-   * Vite tree-shakes the bindings out of the JS, but the asset emission
-   * happens anyway. So no client script here reaches into the data module.
+   * bundle's graph, and because it imports the photographs, the build then emits
+   * every original as an asset — megabytes of files nothing references. Vite
+   * tree-shakes the bindings out of the JS, but the asset emission happens
+   * anyway. So no client script here reaches into the data module.
    */
   type Step = { min: number; text: string };
 

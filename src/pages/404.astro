@@ -1,0 +1,209 @@
+---
+import Base from '../layouts/Base.astro';
+import TapeGrain from '../components/tape/TapeGrain.astro';
+import { notFound } from '../data/tape';
+
+/*
+ * The only page on the site that is not part of the tape.
+ *
+ * GitHub Pages serves this for any unknown path under the project, which is why
+ * it is a real page rather than a screen on the strip: it has to exist at its own
+ * address and cannot be reached by scrolling to it.
+ *
+ * It is painted in the cold open's untuned blue rather than the tape's black on
+ * purpose. A wrong address is not a reel — it should read as the deck failing to
+ * find a picture, not as somewhere the tape goes.
+ *
+ * `noindex` is forced here rather than left to the publish gate. Even once the
+ * tape is approved and findable, a "tape not found" page is not, and a search
+ * engine that indexes one usually reports it as a soft 404.
+ */
+const home = `${import.meta.env.BASE_URL}/`.replace(/\/+/g, '/');
+---
+
+<Base title={notFound.title} noindex>
+  <main class="lost">
+    <div class="lost__lines" aria-hidden="true"></div>
+    <div class="lost__band" aria-hidden="true"></div>
+
+    <div class="lost__words">
+      <p class="kicker">{notFound.kicker}</p>
+
+      <h1 class="heading">
+        {notFound.headingTop}<br />{notFound.headingBottom}
+      </h1>
+
+      <p class="hand">{notFound.hand}</p>
+
+      <p class="body">
+        {notFound.body}<span class="caret" aria-hidden="true">_</span>
+      </p>
+
+      {/*
+        Back to the title card. A plain link to the site root rather than a
+        fragment: there is no tape on this page to move, so nothing to intercept,
+        and it has to work with no script like every other anchor here.
+      */}
+      <a class="rewind" href={home}>
+        <span aria-hidden="true">&#9664;&#9664;</span>{notFound.rewindLabel}
+      </a>
+    </div>
+  </main>
+
+  {/* The same wear as the tape, so the two feel like one machine. */}
+  <TapeGrain />
+</Base>
+
+<style>
+  /*
+   * `html, body { height: 100% }` is global — it is the cap that stops the
+   * document scrolling behind the tape — so this page cannot rely on the document
+   * to scroll either. It scrolls itself instead, and centres with `safe` so a
+   * short window loses the bottom rather than clipping the heading off the top.
+   */
+  .lost {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: safe center;
+    gap: 18px;
+    height: 100%;
+    padding: 40px 24px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    text-align: center;
+    background: radial-gradient(120% 90% at 50% 0%, #123073 0%, #0b1c4a 56%, #061029 100%);
+  }
+
+  .lost__lines,
+  .lost__band {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .lost__lines {
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 5.5%) 0 2px,
+      transparent 2px 5px
+    );
+  }
+
+  /*
+   * The tracking bar rolling down an untuned picture, the same one the cold open
+   * uses — slower here, because this screen is not about to clear itself.
+   */
+  .lost__band {
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: linear-gradient(rgb(255 255 255 / 42%), rgb(255 255 255 / 4%));
+    filter: blur(2px);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .lost__band {
+      animation: tape-track 3.4s linear infinite;
+    }
+  }
+
+  /* Under reduced motion the bar would sit frozen over the words. */
+  @media (prefers-reduced-motion: reduce) {
+    .lost__band {
+      display: none;
+    }
+  }
+
+  .lost__words {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .kicker {
+    font-family: var(--font-osd);
+    font-size: var(--osd-lg);
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--tape-gold);
+  }
+
+  .heading {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 12vw, 104px);
+    font-weight: 400;
+    line-height: 0.84;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--tape-cream);
+    text-shadow:
+      3px 0 0 var(--tape-pink),
+      -3px 0 0 var(--tape-cyan);
+  }
+
+  .hand {
+    font-family: var(--font-hand);
+    font-weight: 600;
+    font-size: clamp(21px, 5vw, 27px);
+    line-height: 1.2;
+    color: var(--tape-gold);
+    transform: rotate(-1.6deg);
+  }
+
+  .body {
+    max-width: 38ch;
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.5;
+    color: #cdd8ee;
+  }
+
+  .caret {
+    color: var(--tape-pink);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .caret {
+      animation: tape-blink 1.1s steps(1) infinite;
+    }
+  }
+
+  .rewind {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 24px;
+    border-radius: 3px;
+    background-color: var(--tape-pink);
+    color: var(--tape-black);
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 0 #a4165a;
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .rewind:hover {
+    background-color: var(--tape-gold);
+    color: var(--tape-black);
+    box-shadow: 0 4px 0 #a67918;
+  }
+
+  .rewind:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #a4165a;
+  }
+
+  .rewind span {
+    font-size: 13px;
+  }
+</style>

@@ -11,6 +11,13 @@ import { look } from '../../data/tape';
  * The noise is an inline SVG turbulence filter as a data URI rather than a
  * PNG: it costs about 200 bytes, needs no extra request, and scales to any
  * screen density without going soft.
+ *
+ * The grain is no longer flat across the tape. This is the base figure; the
+ * `--wear` multiplier is set by index.astro from the table in src/data/tape.ts as
+ * each screen comes to the front, so the head and tail of the tape are scuffed
+ * and the middle is clean. Falling back to 1 matters: with no script nothing sets
+ * `--wear`, and the whole tape should be grained at the base figure rather than
+ * clear.
  */
 const grainOpacity = Math.min(Math.max(look.grain, 0), 80) / 100;
 
@@ -47,9 +54,15 @@ const noise =
    */
   .grain {
     inset: -20%;
-    opacity: var(--grain-op, 0);
+    opacity: calc(var(--grain-op, 0) * var(--wear, 1));
     mix-blend-mode: overlay;
     background-image: var(--noise);
+    /*
+     * Eased, so crossing from a clean reel to a worn one is the grain coming up
+     * rather than a step change. Slower than the snap itself on purpose — the
+     * wear should settle after you arrive, not race the reel in.
+     */
+    transition: opacity 0.7s ease;
   }
 
   @media (prefers-reduced-motion: no-preference) {

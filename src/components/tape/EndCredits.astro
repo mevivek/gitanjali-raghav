@@ -1,6 +1,6 @@
 ---
-import { credits, ending, slugs } from '../../data/tape';
-import { site } from '../../data/site';
+import { credits, ending, footage, slugs } from '../../data/tape';
+import { ASSET_VERSION, site } from '../../data/site';
 
 interface Props {
   /** Position on the strip. */
@@ -8,6 +8,22 @@ interface Props {
 }
 
 const { index } = Astro.props;
+
+/*
+ * The video source rides on a data attribute rather than being written into the
+ * `src` here, for two reasons. It must not load until the credits are the screen
+ * in front — a 15MB fetch for somebody who never reaches the end of the tape would
+ * be indefensible — and the path has to be resolved against the site's base, which
+ * a hand-written relative src would get wrong on a project page.
+ *
+ * `?v=` matters more here than on any other file in public/. Cloudflare caches this
+ * path for four hours, and it will cache a *404* just as happily as the video: ask
+ * for the URL once before GitHub Pages has finished publishing the file and every
+ * visitor gets that 404 for the rest of the window, with no way to purge it from
+ * here. Versioning the URL is the only lever available. See `ASSET_VERSION`.
+ */
+const video =
+  `${import.meta.env.BASE_URL}/${footage.src}`.replace(/\/+/g, '/') + `?v=${ASSET_VERSION}`;
 ---
 
 <section
@@ -17,8 +33,30 @@ const { index } = Astro.props;
   data-active="false"
   data-credits
   data-roll-delay={ending.rollDelay}
+  data-footage={video}
   aria-label="End credits"
 >
+  {/*
+    The one moving picture on the tape. It sits under the roll, graded down and
+    scrimmed enough that light type stays readable over it — but no further than
+    that, because a background you cannot see is not worth 15MB. `aria-hidden` and
+    muted: nothing in it carries meaning, and it has no audio track to unmute.
+
+    No `src` attribute — the script sets it on arrival. See the note on `footage`
+    in src/data/tape.ts for the three things that stop it loading at all.
+  */}
+  <video
+    class="footage"
+    muted
+    loop
+    playsinline
+    preload="none"
+    aria-hidden="true"
+    tabindex="-1"
+    data-credits-footage></video>
+
+  <div class="footage__scrim" aria-hidden="true"></div>
+
   <div class="stage">
     <div class="roll" data-credits-roll>
       <p class="kicker">{ending.kicker}</p>
@@ -43,16 +81,32 @@ const { index } = Astro.props;
   </div>
 
   <div class="actions">
-    <div class="links">
+    {/*
+      The last two lines of the roll, set as a film's slug lines rather than as
+      two buttons side by side — which is what they were until the fourth handoff.
+      As rows they belong to the credits above them instead of sitting underneath
+      as furniture, and they have room to say which of the two is which.
+
+      Still real links to real places, so `rel="me"` and an explicit accessible
+      name: the visible handle is not the platform, and "@gitanjaliraghav" alone
+      does not say where it goes.
+    */}
+    <div class="slugs">
       {
-        site.socials.map((social, i) => (
+        site.socials.map((social) => (
           <a
-            class:list={['link', i === 0 ? 'link--primary' : 'link--secondary']}
+            class="slug"
             href={social.href}
             target="_blank"
             rel="me noopener noreferrer"
+            aria-label={`${social.label} — ${social.who}`}
           >
-            {social.label}
+            <span class="slug__role">{social.role}</span>
+            <span class="slug__what">
+              <span class="slug__who">{social.who}</span>
+              <span class="slug__note">{social.note}</span>
+            </span>
+            <span class="slug__arrow" aria-hidden="true">&#8599;</span>
           </a>
         ))
       }
@@ -73,15 +127,118 @@ const { index } = Astro.props;
 </section>
 
 <style>
+  /* ------------------------------------------------------------- the footage */
+
+  /*
+   * Behind everything on the screen, and only visible at all once the script has
+   * given it a source — an empty `<video>` paints nothing, so there is no black
+   * rectangle waiting over the gradient in the meantime.
+   *
+   * Graded down and sat under a scrim, but only as far as it has to be. The credits
+   * are light type over a moving background, so something has to give them a floor —
+   * and the roll's own text-shadow does most of that job now, which is what leaves
+   * the footage actually visible.
+   */
+  .footage {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+    /*
+     * `--footage-lum` and the scrim's two stops are the knobs to reach for if this
+     * ever needs tuning again, and they are set from a contrast requirement rather
+     * than by eye — which matters, because the footage cannot be viewed in this
+     * container at all.
+     *
+     * The bundle asked for brightness .42 under a 72–86% scrim. On a real phone that
+     * was so dark the footage may as well not have been there: worst-case backdrop
+     * luminance ≈ 1.0 × .42 × .22 ≈ 0.09, i.e. nearly black whatever is playing.
+     *
+     * These values roughly double that — .58 × .32 ≈ 0.19 against the brightest
+     * frame a video can have — which is about as far as it can go. Above ~0.2 the
+     * credits stop clearing AA: cream type sits at ≈0.87 relative luminance and gold
+     * at ≈0.63, so a 0.19 floor buys ratios near 4:1 and 3:1, and a 0.3 floor buys
+     * 2.5:1 and 1.8:1, which is unreadable. A light background cannot be fixed with
+     * lighter text — there is nothing above white to move to.
+     */
+    filter: saturate(var(--footage-sat, 0.8)) contrast(1.04)
+      brightness(var(--footage-lum, 0.58));
+    pointer-events: none;
+  }
+
+  .footage__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      rgb(8 4 13 / var(--footage-scrim-top, 58%)),
+      rgb(8 4 13 / var(--footage-scrim-foot, 70%))
+    );
+  }
+
+  /*
+   * Both are inert without a source, but the scrim would still darken the
+   * screen's own gradient — so it only comes in once the video is actually
+   * playing, which is what the attribute the script sets means.
+   */
+  .footage__scrim {
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
+
+  [data-footage-playing='true'] .footage__scrim {
+    opacity: 1;
+  }
+
+  /* Everything else on the screen sits above the footage. */
+  .stage,
+  .actions {
+    position: relative;
+    z-index: 1;
+  }
+
+  /*
+   * With footage behind them the muted greys are the first thing to go — they are
+   * the smallest type on the screen and the dimmest, which is a bad combination over
+   * anything but flat black. They are lifted only while video is actually playing;
+   * over the plain gradient the muted palette is correct and stays as it is.
+   */
+  [data-footage-playing='true'] .kicker,
+  [data-footage-playing='true'] .credit__role,
+  [data-footage-playing='true'] .slug__role,
+  [data-footage-playing='true'] .slug__note {
+    color: var(--tape-body);
+  }
+
+  [data-footage-playing='true'] .slug__arrow {
+    color: var(--tape-body);
+  }
+
   /* --------------------------------------------------------------- the roll */
 
   .stage {
     position: relative;
     flex: 1 1 auto;
-    min-height: 0;
+    /*
+     * A floor, so the roll always has somewhere to run. Without it the slug lines
+     * and the sticker below can squeeze the stage to nothing on a short window and
+     * the credits vanish rather than scroll.
+     */
+    min-height: 300px;
     overflow: hidden;
   }
 
+  /*
+   * The roll carries its own shadow rather than relying on the scrim to darken the
+   * whole screen for it. That is what lets the footage underneath be visible at all:
+   * legibility is attached to the type, so the background only has to be *dimmer*
+   * than the text rather than nearly black. Applies with or without video — over the
+   * plain gradient it is invisible.
+   */
   .roll {
     position: absolute;
     left: 0;
@@ -92,6 +249,9 @@ const { index } = Astro.props;
     align-items: center;
     gap: 16px;
     text-align: center;
+    text-shadow:
+      0 1px 2px rgb(8 4 13 / 92%),
+      0 2px 14px rgb(8 4 13 / 76%);
     /*
      * The same place the animation's first frame puts it, so the held moment
      * before the roll starts and the roll's own beginning are identical — and
@@ -257,59 +417,99 @@ const { index } = Astro.props;
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding-top: 12px;
+    gap: var(--slug-gap);
+    padding-top: var(--slug-gap);
+    --slug-gap: 10px;
   }
 
-  .links {
+  /* Ruled top and bottom, as a block of slug lines is set. */
+  .slugs {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    border-top: 1px solid rgb(111 91 128 / 50%);
+    border-bottom: 1px solid rgb(111 91 128 / 50%);
   }
 
-  .link {
-    flex: 1 1 0;
-    min-height: 48px;
-    padding: 14px 8px;
-    display: grid;
-    place-items: center;
-    text-align: center;
-    border-radius: 2px;
-    font-family: var(--font-display);
-    font-size: 15px;
-    letter-spacing: 0.1em;
+  .slug {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 46px;
+    padding: 11px 2px;
+    /* Over the footage as well, so the same floor the roll gets. */
+    text-shadow: 0 1px 3px rgb(8 4 13 / 88%);
+    transition: background-color 0.2s ease;
+  }
+
+  .slug + .slug {
+    border-top: 1px dotted rgb(111 91 128 / 40%);
+  }
+
+  .slug:first-child:hover {
+    background-color: rgb(255 46 136 / 9%);
+  }
+
+  .slug:last-child:hover {
+    background-color: rgb(62 224 232 / 8%);
+  }
+
+  /* Right-aligned against the gutter, the way a credit's role is set. */
+  .slug__role {
+    flex: 0 0 auto;
+    width: 106px;
+    text-align: right;
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      color 0.2s ease;
+    white-space: nowrap;
+    color: var(--tape-muted-dim);
   }
 
-  .link--primary {
-    border: 2px solid var(--tape-pink);
-    background-color: var(--tape-pink);
-    color: var(--tape-black);
+  .slug__what {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
   }
 
-  .link--primary:hover {
-    border-color: var(--tape-gold);
-    background-color: var(--tape-gold);
-    color: var(--tape-black);
-  }
-
-  .link--secondary {
-    border: 2px solid var(--tape-muted-dim);
-    background-color: transparent;
+  .slug__who {
+    font-family: var(--font-display);
+    font-size: 17px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--tape-body);
   }
 
-  .link--secondary:hover {
-    border-color: var(--tape-cyan);
-    color: var(--tape-cyan);
+  /* Instagram is the one that gets the colour, as it did as a filled button. */
+  .slug:first-child .slug__who {
+    color: var(--tape-pink);
+  }
+
+  .slug__note {
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tape-muted);
+  }
+
+  .slug__arrow {
+    flex: 0 0 auto;
+    font-family: var(--font-osd);
+    font-size: 15px;
+    color: var(--tape-muted-dim);
+  }
+
+  .slug:hover .slug__arrow {
+    color: var(--tape-cream);
   }
 
   .rewind {
-    min-height: 52px;
-    padding: 9px 8px;
+    min-height: 46px;
+    padding: var(--sticker-pad, 9px 8px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -352,6 +552,38 @@ const { index } = Astro.props;
     letter-spacing: 0.2em;
     opacity: 0.7;
   }
+
+  /*
+   * A short window: the roll needs a floor or it collapses to nothing behind the
+   * slug lines, and the slug lines give up their sub-line and some air.
+   */
+  @media (max-height: 700px) {
+    /*
+     * Enough for the roll to move in, and no more: the slug lines and the sticker
+     * below need the rest, and if this is left generous the sticker ends up under
+     * the transport keys.
+     */
+    .stage {
+      min-height: 130px;
+    }
+
+    .actions {
+      --slug-gap: 6px;
+      --sticker-pad: 6px 8px;
+    }
+
+    .slug {
+      padding: 5px 2px;
+    }
+
+    .slug__role {
+      width: 100px;
+    }
+
+    .slug__note {
+      display: none;
+    }
+  }
 </style>
 
 <script>
@@ -362,6 +594,62 @@ const { index } = Astro.props;
     const delay = Number(credits.dataset.rollDelay ?? 2500);
 
     let waiting: number | null = null;
+
+    /* ------------------------------------------------------------- footage */
+
+    /*
+     * The video behind the roll. Three things have to be true before 15MB is
+     * fetched, and the first two are decided once, here.
+     */
+    const video = credits.querySelector<HTMLVideoElement>('[data-credits-footage]');
+    const source = credits.dataset.footage;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /*
+     * The same test TapePrefetch makes before warming the photographs: not on a
+     * metered connection, and not on 2g. That rule exists for ~3.5MB of images the
+     * visitor will probably look at; it applies with far more force to 15MB of
+     * decoration behind the last screen. Where the browser will not say, this goes
+     * ahead — absence of the API is not evidence of a slow line.
+     */
+    type NetworkInfo = { saveData?: boolean; effectiveType?: string };
+    const link = (navigator as Navigator & { connection?: NetworkInfo }).connection;
+    const thrifty = Boolean(
+      link?.saveData || (link?.effectiveType && /(^|-)2g$/.test(link.effectiveType)),
+    );
+
+    const wanted = Boolean(video && source) && !reduce.matches && !thrifty;
+
+    /**
+     * Attaches the source the first time the credits are reached, and plays.
+     *
+     * `play()` can still be rejected — a browser that will not autoplay even a
+     * muted video, or one that cannot decode this file — and that is survivable:
+     * the screen keeps its own gradient and the roll is unaffected, so the promise
+     * is caught and dropped rather than reported.
+     */
+    function rollFootage() {
+      if (!wanted || !video) return;
+      if (!video.src) {
+        video.src = source!;
+        video.load();
+      }
+      void video.play().then(
+        () => {
+          credits!.dataset.footagePlaying = 'true';
+        },
+        () => {
+          /* no autoplay, or no decoder for this file — the screen stands alone */
+        },
+      );
+    }
+
+    /* Off-screen video is exactly what this repo's timers rule is about. */
+    function holdFootage() {
+      if (!video || !video.src) return;
+      video.pause();
+    }
 
     function stop() {
       if (waiting !== null) {
@@ -375,9 +663,18 @@ const { index } = Astro.props;
        * wherever it had got to.
        */
       delete roll.dataset.rolling;
+      holdFootage();
     }
 
     function start() {
+      /*
+       * The footage starts immediately while the roll still waits out its hold —
+       * arriving on a static frame and having it start moving a beat later is the
+       * point of that delay, and the picture behind it coming up at the same moment
+       * would make the whole screen lurch at once.
+       */
+      rollFootage();
+
       if (waiting !== null || roll.dataset.rolling === 'true') return;
       waiting = window.setTimeout(() => {
         waiting = null;

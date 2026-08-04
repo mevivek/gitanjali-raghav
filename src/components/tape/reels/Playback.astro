@@ -53,17 +53,28 @@ const dots = Array.from({ length: playback.dots }, (_, i) => i);
 
   <div class="reel__frame">
     {/*
-      The same 320×320 file as the cassette window on the title card, and the
-      only place on the tape it is asked to fill a whole frame. No `widths`:
-      there is nothing to pick between, and asking for 1080 would only upscale
-      it on disk as well as on screen. See CONTENT.md — this is the reason the
-      headshot moved to the top of the assets list.
+      A real photograph, finally, used at its full frame *and* its full resolution.
+      This was her 320×320 Instagram avatar upscaled two to three times to fill the
+      screen, and it was the softest thing on the site by a distance.
+
+      Unlike every other reel this one is not capped at 1080. The rest of the
+      photographs are 1080×1080 originals, so 1080 is all there is to give; this one
+      is 3120×4160, and stopping the srcset at 1080 would have thrown away most of
+      what was supplied — a phone at 3× device pixel ratio wants about 1170px for
+      this slot and would have been handed a 1080 and upscaled again, which is the
+      exact problem the new photograph was brought in to fix.
+
+      The browser still picks: a 1× desktop takes the 720, a 3× phone takes the
+      1620, and only a large high-density display ever asks for the 3120. Nobody is
+      served more than their screen can show.
     */}
     <Image
       class="reel__photo photo"
       src={playback.photo}
       alt={playback.alt}
-      width={320}
+      width={3120}
+      widths={[400, 720, 1080, 1620, 2160, 3120]}
+      sizes="(min-width: 900px) min(44vw, 560px), 100vw"
       loading="lazy"
       decoding="async"
     />
@@ -151,12 +162,21 @@ const dots = Array.from({ length: playback.dots }, (_, i) => i);
     filter: saturate(1.45) contrast(1.06) brightness(0.95);
   }
 
+  /*
+   * The mirror's key light, coming up as the bulbs light.
+   *
+   * Aimed at her rather than at the middle of the frame. The photograph is a whole
+   * standing figure in a room, so a glow centred on the frame lands on the ceiling
+   * and lights the café instead of the person — and this reel's whole mechanic is
+   * that the light comes up on *her* as the combo climbs. Tighter than it was, for
+   * the same reason: a wide wash over a wide shot reads as exposure, not as a lamp.
+   */
   .glow {
     position: absolute;
     inset: 0;
     pointer-events: none;
     mix-blend-mode: screen;
-    background: radial-gradient(60% 46% at 50% 34%, rgb(255 224 160 / 55%), transparent 70%);
+    background: radial-gradient(42% 30% at 46% 38%, rgb(255 224 160 / 62%), transparent 72%);
     opacity: calc(var(--lit) / var(--bulbs) * 0.5);
     transition: opacity 0.25s linear;
   }

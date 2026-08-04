@@ -1,14 +1,12 @@
 ---
 import { getImage } from 'astro:assets';
-import { excuse, look, reelCount, slugs } from '../../../data/tape';
+import { excuse, reelCount, slugs } from '../../../data/tape';
 
 interface Props {
   index: number;
 }
 
 const { index } = Astro.props;
-
-const osdHidden = look.osd ? undefined : true;
 
 const SIZES = '(min-width: 900px) min(44vw, 560px), 100vw';
 
@@ -41,14 +39,13 @@ const payload = excuse.occasions.map((occasion, i) => ({
 
 const vars = [
   `--accent: ${excuse.accent}`,
-  `--edge: ${excuse.edge}`,
   `--reel-bg: ${excuse.bg}`,
   `--photo-pos: ${open.pos}`,
 ].join('; ');
 ---
 
 <section
-  class="screen screen--reel"
+  class="screen screen--reel screen--bleed"
   id={slugs[index]}
   data-screen
   data-active="false"
@@ -58,57 +55,68 @@ const vars = [
   style={vars}
   aria-label={`Reel ${excuse.num} of ${reelCount} — ${excuse.label}`}
 >
-  <div class="reel__osd" aria-hidden={osdHidden}>
-    <span>reel {excuse.num} / {String(reelCount).padStart(2, '0')}</span>
-    <span class="reel__osd-tc">{excuse.tc}</span>
-  </div>
+  <img
+    class="bleed__photo photo"
+    src={shots[initial].src}
+    srcset={shots[initial].srcSet.attribute}
+    sizes={SIZES}
+    alt={open.alt}
+    width="1080"
+    height="1080"
+    loading="lazy"
+    decoding="async"
+    data-excuse-photo
+  />
 
-  <div class="reel__frame">
-    <img
-      class="reel__photo photo"
-      src={shots[initial].src}
-      srcset={shots[initial].srcSet.attribute}
-      sizes={SIZES}
-      alt={open.alt}
-      width="1080"
-      height="1080"
-      loading="lazy"
-      decoding="async"
-      data-excuse-photo
-    />
+  <div class="bleed__scrim" aria-hidden="true"></div>
+  <div class="bleed__scan" aria-hidden="true"></div>
 
-    <div class="reel__scan" aria-hidden="true"></div>
-    <div class="reel__sink" aria-hidden="true"></div>
+  <div class="bleed__plate">
+    {/*
+      The date stamp is the right-hand half of this row, and unlike the reel
+      number beside it, it is not hidden when `look.osd` is off — it changes with
+      the occasion you pick, so it is feedback rather than furniture.
+    */}
+    <p class="bleed__top">
+      <span class="bleed__reel">reel {excuse.num} / {String(reelCount).padStart(2, '0')}</span>
+      <span class="bleed__stamp" data-excuse-stamp>{open.stamp}</span>
+    </p>
 
-    <p class="reel__stamp" data-excuse-stamp>{open.stamp}</p>
+    <span class="bleed__gap"></span>
 
-    <div class="reel__caption">
-      <h2 class="reel__title">{excuse.title}</h2>
-      <p class="reel__hand" data-excuse-hand>{open.hand}</p>
+    <div class="bleed__words">
+      <div class="bleed__caption">
+        <h2 class="reel__title">{excuse.title}</h2>
+        <p class="reel__hand" data-excuse-hand>{open.hand}</p>
+      </div>
+
+      {/*
+        Buttons with aria-pressed rather than a tablist: there is no panel to
+        associate them with — they change one photograph in place — and pressed
+        state is what a visitor actually needs announced.
+      */}
+      <div class="chips reel__controls" role="group" aria-label="Pick an occasion" data-nodrag>
+        {
+          excuse.occasions.map((occasion, i) => (
+            <button
+              class="chip"
+              type="button"
+              aria-pressed={i === initial ? 'true' : 'false'}
+              data-excuse-pick={i}
+            >
+              {occasion.name}
+            </button>
+          ))
+        }
+      </div>
+
+      {/*
+        Held at a minimum height so swapping between a one-line and a two-line
+        paragraph does not shunt the chips up and down under the visitor's finger.
+      */}
+      <p class="reel__line line" data-excuse-line>{open.line}</p>
     </div>
   </div>
-
-  {/*
-    Buttons with aria-pressed rather than a tablist: there is no panel to
-    associate them with — they change one photograph in place — and pressed
-    state is what a visitor actually needs announced.
-  */}
-  <div class="chips reel__controls" role="group" aria-label="Pick an occasion" data-nodrag>
-    {
-      excuse.occasions.map((occasion, i) => (
-        <button
-          class="chip"
-          type="button"
-          aria-pressed={i === initial ? 'true' : 'false'}
-          data-excuse-pick={i}
-        >
-          {occasion.name}
-        </button>
-      ))
-    }
-  </div>
-
-  <p class="reel__line" data-excuse-line>{open.line}</p>
 </section>
 
 <style>
@@ -117,7 +125,7 @@ const vars = [
   }
 
   .photo {
-    filter: saturate(1.45) contrast(1.06) brightness(0.95);
+    filter: saturate(1.5) contrast(1.06) brightness(0.95);
   }
 
   .chips {
@@ -129,15 +137,17 @@ const vars = [
     flex: 1 1 auto;
     min-height: 44px;
     padding: 0 12px;
-    border: 1px solid #5a2440;
+    border: 1px solid rgb(255 138 61 / 40%);
     border-radius: 3px;
-    background-color: rgb(30 10 22 / 70%);
-    color: #e7b9cd;
+    background-color: rgb(24 12 6 / 62%);
+    color: #f0d3b8;
     font-family: var(--font-osd);
     font-size: 16px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     cursor: pointer;
+    /* The chips sit on a photograph now, so they need to hold their own edge. */
+    backdrop-filter: blur(4px);
     transition:
       background-color 0.18s ease,
       color 0.18s ease,
@@ -145,14 +155,30 @@ const vars = [
   }
 
   .chip:hover {
-    border-color: var(--tape-pink);
+    border-color: var(--tape-orange);
     color: #fff;
   }
 
   .chip[aria-pressed='true'] {
-    border-color: var(--tape-pink);
-    background-color: var(--tape-pink);
-    color: var(--tape-black);
+    border-color: var(--tape-orange);
+    background-color: var(--tape-orange);
+    color: #1c0e04;
+  }
+
+  .line {
+    min-height: 74px;
+  }
+
+  @media (min-width: 900px) {
+    .line {
+      min-height: 83px;
+    }
+  }
+
+  @media (max-height: 700px) {
+    .line {
+      min-height: 65px;
+    }
   }
 </style>
 
