@@ -11,6 +11,7 @@ import IntervalCard from '../components/tape/IntervalCard.astro';
 import EndCredits from '../components/tape/EndCredits.astro';
 import TapeChrome from '../components/tape/TapeChrome.astro';
 import TapeGrain from '../components/tape/TapeGrain.astro';
+import TapePrefetch from '../components/tape/TapePrefetch.astro';
 import { reelCount } from '../data/tape';
 
 /*
@@ -55,6 +56,9 @@ const creditsIndex = reelCount + 2;
     <TapeChrome />
     <TapeGrain />
   </div>
+
+  {/* Behaviour only, renders nothing — warms the photographs after load. */}
+  <TapePrefetch />
 </Base>
 
 <script>

@@ -191,9 +191,28 @@ const vars = [
     letter-spacing: 0.22em;
     text-transform: uppercase;
     cursor: pointer;
+    /*
+     * Holding a button is, to the browser, the start of a drag — so it was
+     * selecting the label, and on a long press iOS was offering the copy
+     * callout on top of that. Neither belongs on a throttle.
+     */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
     transition:
       background-color 0.15s linear,
       color 0.15s linear;
+  }
+
+  /*
+   * The button alone is not enough: once the pointer slides off it mid-hold,
+   * the drag continues across the paragraph below and selects that instead. So
+   * selection is suspended across the whole reel for as long as it is held, and
+   * restored the moment it is let go.
+   */
+  [data-holding='true'] {
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .throttle[aria-pressed='true'] {
@@ -266,6 +285,9 @@ const vars = [
       if (holding === on) return;
       holding = on;
       button!.setAttribute('aria-pressed', String(on));
+      // Suspends text selection across the reel for the duration — see the CSS.
+      if (on) screen!.dataset.holding = 'true';
+      else delete screen!.dataset.holding;
       if (frame === null) {
         last = performance.now();
         frame = requestAnimationFrame(tick);

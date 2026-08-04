@@ -15,10 +15,12 @@ const { index } = Astro.props;
   id={`screen-${index}`}
   data-screen
   data-active="false"
+  data-credits
+  data-roll-delay={ending.rollDelay}
   aria-label="End credits"
 >
   <div class="stage">
-    <div class="roll">
+    <div class="roll" data-credits-roll>
       <p class="kicker">{ending.kicker}</p>
 
       <h2 class="heading">{ending.headingTop}<br />{ending.headingBottom}</h2>
@@ -80,6 +82,13 @@ const { index } = Astro.props;
     align-items: center;
     gap: 18px;
     text-align: center;
+    /*
+     * The same place the animation's first frame puts it, so the held moment
+     * before the roll starts and the roll's own beginning are identical — and
+     * so removing the animation to replay it lands back here rather than
+     * jumping.
+     */
+    transform: translateY(6%);
   }
 
   /*
@@ -102,8 +111,13 @@ const { index } = Astro.props;
     }
   }
 
+  /*
+   * Only rolls once the script says so — when this screen is the one in front,
+   * and after it has been held still for a beat. See the note on
+   * `ending.rollDelay` in src/data/tape.ts.
+   */
   @media (prefers-reduced-motion: no-preference) {
-    .roll {
+    .roll[data-rolling='true'] {
       animation: creep 34s linear infinite;
     }
 
@@ -119,6 +133,15 @@ const { index } = Astro.props;
     }
   }
 
+  /*
+   * Two cases where the roll never runs, and both need the same fallback: a
+   * plain static list in a box you can scroll.
+   *
+   * Under reduced motion it must not animate at all. With no script, nothing
+   * will ever set `data-rolling`, so it would sit frozen on its first frame
+   * with every name below the fold clipped away and no way to reach them —
+   * which would be worse than the animation this replaced.
+   */
   @media (prefers-reduced-motion: reduce) {
     .stage {
       overflow-y: auto;
@@ -126,7 +149,17 @@ const { index } = Astro.props;
 
     .roll {
       position: static;
+      transform: none;
     }
+  }
+
+  :global(html:not(.js)) .stage {
+    overflow-y: auto;
+  }
+
+  :global(html:not(.js)) .roll {
+    position: static;
+    transform: none;
   }
 
   /* ----------------------------------------------------------------- words */
@@ -271,3 +304,52 @@ const { index } = Astro.props;
     color: var(--tape-black);
   }
 </style>
+
+<script>
+  const credits = document.querySelector<HTMLElement>('[data-credits]');
+
+  if (credits) {
+    const roll = credits.querySelector<HTMLElement>('[data-credits-roll]')!;
+    const delay = Number(credits.dataset.rollDelay ?? 2500);
+
+    let waiting: number | null = null;
+
+    function stop() {
+      if (waiting !== null) {
+        clearTimeout(waiting);
+        waiting = null;
+      }
+      /*
+       * Dropping the attribute drops the animation, which returns the roll to
+       * the transform in its base rule — the same frame the animation starts
+       * from. So the next arrival replays from the top instead of resuming
+       * wherever it had got to.
+       */
+      delete roll.dataset.rolling;
+    }
+
+    function start() {
+      if (waiting !== null || roll.dataset.rolling === 'true') return;
+      waiting = window.setTimeout(() => {
+        waiting = null;
+        roll.dataset.rolling = 'true';
+      }, delay);
+    }
+
+    /*
+     * `data-active` is maintained by the observer in index.astro, which already
+     * works out which screen is in front. Watching the attribute keeps that
+     * knowledge in one place rather than having this component decide again.
+     */
+    const watch = new MutationObserver(() => {
+      if (credits.dataset.active === 'true') start();
+      else stop();
+    });
+
+    watch.observe(credits, { attributes: true, attributeFilter: ['data-active'] });
+
+    // Covers landing straight here via a #screen-8 link, where the attribute
+    // may already be set before this script runs.
+    if (credits.dataset.active === 'true') start();
+  }
+</script>

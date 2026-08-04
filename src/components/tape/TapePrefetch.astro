@@ -1,0 +1,88 @@
+---
+/*
+ * Warms every photograph on the tape once the page has settled, so moving
+ * between reels and swapping an occasion or a take happens against cache
+ * instead of the network.
+ *
+ * There is nothing to render — this is behaviour only. It lives in its own
+ * component so the reels do not each have to know about it.
+ */
+---
+
+<script>
+  /*
+   * Two kinds of image need warming, for two different reasons.
+   *
+   * The reel photographs are in the DOM already but marked `loading="lazy"`,
+   * which is right for first paint — eagerly loading fourteen photographs would
+   * make the title card wait on reels nobody has reached. The cost is a visible
+   * pop when you swipe to one. Flipping the attribute to `eager` after the page
+   * has finished loading asks the browser to fetch them now, and it picks the
+   * right srcset candidate itself, which is why this does not build any URLs.
+   *
+   * The occasion and take photographs are not in the DOM at all: those reels
+   * keep one <img> and re-point it, so only the one on screen has ever been
+   * fetched. Their alternatives are warmed through a detached Image, which puts
+   * them in the HTTP cache under exactly the URL the swap will ask for.
+   */
+  function warm() {
+    // In tape order, so the next screen is ready before the last one.
+    const lazy = document.querySelectorAll<HTMLImageElement>('.tape img[loading="lazy"]');
+    lazy.forEach((img) => {
+      img.loading = 'eager';
+    });
+
+    document.querySelectorAll<HTMLElement>('[data-swap]').forEach((screen) => {
+      const sizes = screen.dataset.swapSizes ?? '';
+      let shots: Array<{ src: string; srcset: string }> = [];
+      try {
+        shots = JSON.parse(screen.dataset.swap ?? '[]');
+      } catch {
+        return; // malformed payload is the reel's problem, not the cache's
+      }
+
+      shots.forEach((shot) => {
+        const probe = new Image();
+        // sizes and srcset before src, so the browser resolves the candidate
+        // list rather than fetching the fallback and then the right one.
+        if (sizes) probe.sizes = sizes;
+        if (shot.srcset) probe.srcset = shot.srcset;
+        probe.src = shot.src;
+      });
+    });
+  }
+
+  /*
+   * Not on a metered or slow connection. Fifteen photographs is a real amount
+   * of somebody's data plan to spend on screens they may never reach, and the
+   * lag this avoids is a smaller problem than the bill. Where the browser will
+   * not say, it goes ahead — absence of the API is not evidence of a fast line,
+   * but treating every unknown connection as slow would disable this nearly
+   * everywhere.
+   */
+  type NetworkInfo = { saveData?: boolean; effectiveType?: string };
+  const link = (navigator as Navigator & { connection?: NetworkInfo }).connection;
+
+  const thrifty = Boolean(
+    link?.saveData || (link?.effectiveType && /(^|-)2g$/.test(link.effectiveType)),
+  );
+
+  if (!thrifty) {
+    /*
+     * After `load`, so this never competes with the fonts, the stylesheet or
+     * the photographs the first screen actually needs; and then in idle time,
+     * so it does not hold up whatever the browser would rather be doing. The
+     * timeout is the fallback for Safari, which has no requestIdleCallback.
+     */
+    const queue = () => {
+      const idle = (
+        window as Window & { requestIdleCallback?: (cb: () => void, o?: object) => number }
+      ).requestIdleCallback;
+      if (idle) idle(warm, { timeout: 2000 });
+      else window.setTimeout(warm, 500);
+    };
+
+    if (document.readyState === 'complete') queue();
+    else window.addEventListener('load', queue, { once: true });
+  }
+</script>
