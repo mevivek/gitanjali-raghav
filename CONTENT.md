@@ -55,11 +55,13 @@ with, what changed because she was there. Numbers if there are any.
 
 | File | Lane | Status |
 |---|---|---|
+| `2012-earlier-study.md` | career | Draft — LinkedIn has the dates, not the institution |
+| `2013-earlier-study.md` | career | Draft — LinkedIn has the dates, not the institution |
 | `2015-mjpru.md` | career | Dates confirmed; needs the degree subject |
 | `2022-highspring.md` | career | Title confirmed; needs start year and description |
+| `2024-coastline.md` | life | Live — written from Instagram, rewrite in her voice |
 | `2026-genpact.md` | career | Start date confirmed; needs description |
-| `2024-by-the-sea.md` | life | Draft — inferred from Instagram, confirm |
-| `2026-making-things.md` | life | Draft — inferred from Instagram, confirm |
+| `2026-reels.md` | life | Live — written from Instagram, rewrite in her voice |
 
 To add a year, add a file. Nothing else needs changing.
 
@@ -91,8 +93,14 @@ doesn't want it, delete the folder and it simply disappears.
 
 ## 5. Photos
 
-Put image files in `public/img/` and reference them by filename. Two things
-matter:
+`public/img/portrait.jpg` is currently her Instagram profile picture, at its
+original **320×320**. That is small: it is displayed at 152px so it stays
+sharp, but it cannot go bigger without looking soft. **A proper headshot at
+1000px or more is the single biggest visual upgrade available to this site** —
+drop one in as `portrait.jpg` and nothing else needs changing.
+
+Put other image files in `public/img/` and reference them by filename. Two
+things matter:
 
 - **Self-host them.** Instagram's image URLs are signed and expire after a few
   days, so they cannot be linked to directly. Download, then commit the file.

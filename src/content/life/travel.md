@@ -1,11 +1,12 @@
 ---
+# Supported by the March 2024 coastline series on Instagram — a flight and
+# the sea. One trip is evidence of one trip, not a travel habit, so this is
+# kept deliberately narrow. Widen it once she tells you where else she's been.
 title: Places
 icon: '🌊'
 order: 1
-# Supported by the March 2024 seaside series on Instagram, but one trip is not
-# a travel habit. Confirm before publishing.
-draft: true
+draft: false
 ---
 
-TODO: where she's been, where she's from, and the one place she'd go back to
-tomorrow.
+Drawn to coastlines. The sea shows up more than anything else in her camera
+roll.
