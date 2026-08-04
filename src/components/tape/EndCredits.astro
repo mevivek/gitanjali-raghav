@@ -1,6 +1,6 @@
 ---
 import { credits, ending, footage, slugs } from '../../data/tape';
-import { site } from '../../data/site';
+import { ASSET_VERSION, site } from '../../data/site';
 
 interface Props {
   /** Position on the strip. */
@@ -15,8 +15,15 @@ const { index } = Astro.props;
  * in front — a 15MB fetch for somebody who never reaches the end of the tape would
  * be indefensible — and the path has to be resolved against the site's base, which
  * a hand-written relative src would get wrong on a project page.
+ *
+ * `?v=` matters more here than on any other file in public/. Cloudflare caches this
+ * path for four hours, and it will cache a *404* just as happily as the video: ask
+ * for the URL once before GitHub Pages has finished publishing the file and every
+ * visitor gets that 404 for the rest of the window, with no way to purge it from
+ * here. Versioning the URL is the only lever available. See `ASSET_VERSION`.
  */
-const video = `${import.meta.env.BASE_URL}/${footage.src}`.replace(/\/+/g, '/');
+const video =
+  `${import.meta.env.BASE_URL}/${footage.src}`.replace(/\/+/g, '/') + `?v=${ASSET_VERSION}`;
 ---
 
 <section

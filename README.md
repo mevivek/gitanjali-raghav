@@ -351,7 +351,7 @@ the same mark for iOS home screens, share sheets, and the scrapers that reach
 for an apple-touch-icon when a page offers no other raster icon.
 
 > **Changed `og.jpg`, `favicon.svg` or `apple-touch-icon.png`? Bump
-> `ASSET_VERSION` in `src/layouts/Base.astro`.**
+> `ASSET_VERSION` in `src/data/site.ts`.**
 > Cloudflare fronts `mevivek.dev` and serves images with
 > `cache-control: max-age=14400` — four hours. Everything Astro builds is
 > content-hashed and so immune, but these three live in `public/` under fixed

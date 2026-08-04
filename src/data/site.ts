@@ -11,6 +11,28 @@
  * Leave it false until she has read the site and is happy with it.
  */
 
+/**
+ * Cache-buster for the hand-made files in `public/`. **Increment this whenever
+ * `og.jpg`, `favicon.svg`, `apple-touch-icon.png` or `video/garden.mp4` changes.**
+ *
+ * Cloudflare fronts mevivek.dev and serves these with `max-age=14400` — four hours.
+ * Everything Astro builds is content-hashed and so immune; these live under fixed
+ * names, so replacing one in place leaves the old file being served. A query string
+ * makes it a new URL, so the change lands as soon as the HTML does.
+ *
+ * It lives here, rather than in the layout that first needed it, because two files
+ * now depend on it — Base.astro for the icons and the share image, EndCredits.astro
+ * for the video — and two copies of a number that must match is a number that will
+ * eventually not match.
+ *
+ * The video taught this the hard way. Its URL was requested once before GitHub
+ * Pages had finished publishing the file, Cloudflare cached the resulting 404 under
+ * the bare path, and every visitor got that 404 instead of the video — for four
+ * hours, with no way to purge from here, because the zone is not ours. Versioning
+ * the URL sidesteps a poisoned key as well as a stale file.
+ */
+export const ASSET_VERSION = 7;
+
 export interface SocialLink {
   /** The platform, and the accessible name of the link. */
   label: string;

@@ -135,6 +135,15 @@ photograph on this site was individually approved and four were turned down beca
 someone other than her was recognisable. That check is still outstanding for this
 file. Watch it on a real device before the site is made findable.
 
+Its URL carries `?v=ASSET_VERSION`, and for this file that is not only about stale
+content. **Cloudflare will cache a 404 for the path just as happily as the video.**
+It did: the URL was checked once before GitHub Pages had finished publishing the
+file, and the resulting 404 was then served under the bare path — `cf-cache-status:
+HIT`, `content-type: text/html`, 5815 bytes, which is `404.html` — for four hours,
+with no way to purge it from here. Do not request a newly deployed asset's URL until
+Pages is serving it, and if you must, use a throwaway query string. Bumping the
+version is the only lever if it happens.
+
 If it ever needs to be smaller, the shape is a few seconds of VP9/WebM with an H.264
 fallback at a few hundred KB rather than the 15MB master — and note this container
 cannot re-encode it either, for the same codec reason.
@@ -209,8 +218,9 @@ a reel does
 would drag the data module into a second bundle; a global would need a
 load order. The event needs neither, and no-ops if the chrome's script never ran.
 
-**Bump `ASSET_VERSION` in `src/layouts/Base.astro` when you change `og.jpg`,
-`favicon.svg` or `apple-touch-icon.png`.** Cloudflare fronts `mevivek.dev` and
+**Bump `ASSET_VERSION` in `src/data/site.ts` when you change `og.jpg`,
+`favicon.svg`, `apple-touch-icon.png` or `video/garden.mp4`.** (It moved out of
+`Base.astro` once the video needed the same number.) Cloudflare fronts `mevivek.dev` and
 serves images with `max-age=14400` — four hours. Astro's own output is
 content-hashed and immune; these three live in `public/` under fixed names, so
 replacing one in place leaves the old file being served while the HTML (cached
