@@ -1,0 +1,273 @@
+---
+import { credits, ending } from '../../data/tape';
+import { site } from '../../data/site';
+
+interface Props {
+  /** Position on the strip. */
+  index: number;
+}
+
+const { index } = Astro.props;
+---
+
+<section
+  class="screen screen--credits screen--flat"
+  id={`screen-${index}`}
+  data-screen
+  data-active="false"
+  aria-label="End credits"
+>
+  <div class="stage">
+    <div class="roll">
+      <p class="kicker">{ending.kicker}</p>
+
+      <h2 class="heading">{ending.headingTop}<br />{ending.headingBottom}</h2>
+
+      <dl class="credits">
+        {
+          credits.map((credit) => (
+            <div class="credit">
+              <dt class="credit__role">{credit.role}</dt>
+              <dd class="credit__who">{credit.who}</dd>
+            </div>
+          ))
+        }
+      </dl>
+
+      <p class="signoff">{ending.signoff}</p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <div class="links">
+      {
+        site.socials.map((social, i) => (
+          <a
+            class:list={['link', i === 0 ? 'link--primary' : 'link--secondary']}
+            href={social.href}
+            target="_blank"
+            rel="me noopener noreferrer"
+          >
+            {social.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <a class="rewind" href="#screen-0" data-tape-go="0">
+      <span aria-hidden="true">&#9664;&#9664;</span> {ending.rewindLabel}
+    </a>
+  </div>
+</section>
+
+<style>
+  /* --------------------------------------------------------------- the roll */
+
+  .stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .roll {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    text-align: center;
+  }
+
+  /*
+   * This animation is the exception to the tape's "motion is decoration" rule:
+   * it is what moves the credits past you, so the global reduced-motion
+   * kill-switch must not simply freeze it — a frozen `creep` would leave the
+   * names parked off the top of the screen where nobody can read them.
+   *
+   * So the roll only ever animates under `no-preference`. Under `reduce` it
+   * falls back to a plain static list in a scrollable box, which reads
+   * better anyway.
+   */
+  @keyframes creep {
+    from {
+      transform: translateY(6%);
+    }
+
+    to {
+      transform: translateY(-104%);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .roll {
+      animation: creep 34s linear infinite;
+    }
+
+    /*
+     * WCAG 2.2.2: moving content that runs for more than five seconds needs a
+     * way to stop it. Hovering or tabbing into the credits does that, which
+     * also happens to be what you instinctively do when you want to read a
+     * name going past.
+     */
+    .stage:hover .roll,
+    .stage:focus-within .roll {
+      animation-play-state: paused;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage {
+      overflow-y: auto;
+    }
+
+    .roll {
+      position: static;
+    }
+  }
+
+  /* ----------------------------------------------------------------- words */
+
+  .kicker {
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--tape-muted-dim);
+  }
+
+  .heading {
+    font-family: var(--font-display);
+    font-size: var(--step-h2);
+    font-weight: 400;
+    line-height: 0.86;
+    text-transform: uppercase;
+    color: var(--tape-cream);
+    text-shadow:
+      2px 0 0 var(--tape-pink),
+      -2px 0 0 var(--tape-cyan);
+  }
+
+  .credits {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .credit {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .credit__role {
+    font-family: var(--font-osd);
+    font-size: var(--osd-sm);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--tape-muted);
+  }
+
+  .credit__who {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    color: var(--tape-gold);
+  }
+
+  .signoff {
+    max-width: 26ch;
+    font-family: var(--font-hand);
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 1.25;
+    color: var(--tape-cream);
+  }
+
+  /* --------------------------------------------------------------- actions */
+
+  .actions {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  .links {
+    display: flex;
+    gap: 8px;
+  }
+
+  .link {
+    flex: 1 1 0;
+    min-height: 48px;
+    padding: 14px 8px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    border-radius: 2px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .link--primary {
+    border: 2px solid var(--tape-pink);
+    background-color: var(--tape-pink);
+    color: var(--tape-black);
+  }
+
+  .link--primary:hover {
+    border-color: var(--tape-gold);
+    background-color: var(--tape-gold);
+    color: var(--tape-black);
+  }
+
+  .link--secondary {
+    border: 2px solid var(--tape-muted-dim);
+    background-color: transparent;
+    color: var(--tape-body);
+  }
+
+  .link--secondary:hover {
+    border-color: var(--tape-cyan);
+    color: var(--tape-cyan);
+  }
+
+  /* Flex, not grid: the glyph and the word share one line. */
+  .rewind {
+    min-height: 46px;
+    padding: 12px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    border: 2px solid var(--tape-cyan);
+    border-radius: 2px;
+    background-color: transparent;
+    color: var(--tape-cyan);
+    font-family: var(--font-osd);
+    font-size: 18px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .rewind:hover {
+    background-color: var(--tape-cyan);
+    color: var(--tape-black);
+  }
+</style>

@@ -1,92 +1,138 @@
 /*
  * Design tokens.
  *
- * Two accent hues carry the whole site, because the signature layout is a
- * two-lane timeline: one hue for the career lane, one for the life lane.
- * Everything else is paper, ink and a muted grey.
+ * The site is one thing: a Bollywood-VHS home-video tape. It is always dark —
+ * there is no light theme, because a cassette on a CRT does not have one.
  *
- * Each accent has two variants:
- *   --career / --life        decorative use (rules, dots, fills, borders)
- *   --career-text / --life-text   text use, darkened to clear AA (4.5:1) on paper
- * Use the -text variants for anything a person has to read.
+ * The palette is five colours over three near-blacks:
+ *   --tape-cream   the text
+ *   --tape-pink    reels 04/05, the REC dot, the active progress segment
+ *   --tape-cyan    reels 01/02, the "on air" badge, rewind
+ *   --tape-gold    reels 03/06, the interval, every link
+ *   --tape-mauve   everything muted
+ * Change those and the tape reskins. Per-reel gradients live in
+ * src/data/tape.ts, next to the copy they belong to.
  *
- * To reskin the site, change the six colour values in :root and
- * :root[data-theme='dark']. Nothing else needs touching.
+ * Sizes below are the design's literal values. They come in three sets:
+ * phone (the base), wide (>= 900px, where the tape turns sideways) and
+ * short (<= 700px tall, where a phone in landscape has no room). Short wins
+ * over wide, so it is declared last.
  */
 
 :root {
-  /* surfaces */
-  --paper: #fdfbf7; /* warm off-white, softer than pure white */
-  --paper-raised: #ffffff;
-  --paper-sunk: #f4f0e8;
+  /* surfaces — deepest to nearest */
+  --tape-black: #08040d;
+  --tape-void: #06030a;
+  --tape-panel: #0a0610;
 
   /* text */
-  --ink: #1a1a2e;
-  --ink-muted: #5a5a6e;
-  --rule: #e2dcd0;
+  --tape-cream: #f6efe6;
+  --tape-body: #d3c6de;
+  --tape-body-dim: #c9b8d6;
+  --tape-muted: #8a7799;
+  --tape-muted-dim: #6f5b80;
 
-  /* lanes */
-  --career: #2b4570;
-  --career-text: #24395e;
-  --life: #c75b39;
-  --life-text: #a8442a;
+  /* accents */
+  --tape-pink: #ff2e88;
+  --tape-cyan: #3ee0e8;
+  --tape-ice: #8fe8f2;
+  --tape-gold: #ffc53d;
 
-  /* focus ring — deliberately high-contrast against both lanes */
-  --focus: #0b63ce;
+  /* chrome — cassette shell, control borders, bezel */
+  --tape-edge: #4a3560;
+  --tape-shell: #2e2340;
+  --tape-shell-deep: #17101f;
+  --tape-label: #f4e7cf;
+  --tape-label-shade: #e3cfa6;
+  --tape-label-ink: #23142c;
+  --tape-label-mute: #8a6b3d;
+
+  /* the interval is the one screen that leaves the purple behind */
+  --int-near: #7a0f3d;
+  --int-mid: #3a0a22;
+  --int-far: #14060f;
+  --int-hand: #ffd9e7;
+  --int-org: #e3a8c2;
+  --int-years: #b78a9f;
+  --int-body: #f0c9d8;
+
+  /* focus ring — cyan clears AA on every background the tape uses */
+  --focus: #8fe8f2;
 
   /* type */
-  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Anton', Impact, 'Haettenschweiler', sans-serif;
+  --font-hand: 'Caveat Variable', 'Segoe Script', cursive;
+  --font-serif: 'Rozha One', Georgia, 'Times New Roman', serif;
+  --font-osd: 'VT323', ui-monospace, 'Courier New', monospace;
 
-  /* fluid type scale — clamp(min, preferred, max) */
-  --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.9rem);
-  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.11rem);
-  --step-1: clamp(1.2rem, 1.13rem + 0.35vw, 1.39rem);
-  --step-2: clamp(1.44rem, 1.33rem + 0.55vw, 1.73rem);
-  --step-3: clamp(1.73rem, 1.55rem + 0.9vw, 2.16rem);
-  --step-4: clamp(2.07rem, 1.8rem + 1.37vw, 2.7rem);
-  --step-5: clamp(2.49rem, 2.07rem + 2.09vw, 3.38rem);
-  --step-6: clamp(2.99rem, 2.38rem + 3.05vw, 4.22rem);
+  /* type sizes — phone */
+  --step-h1: clamp(34px, 10.5vw, 50px);
+  --step-h2: clamp(34px, 11vw, 54px);
+  --step-int: clamp(52px, 17vw, 88px);
+  --step-hand: 25px;
+  --step-body: 17px;
+  --step-role: 24px;
 
-  /* spacing rhythm */
-  --gutter: clamp(1.25rem, 0.9rem + 1.75vw, 2.5rem);
-  --section-gap: clamp(4rem, 3rem + 5vw, 8rem);
-  --measure: 62ch;
+  /* layout — phone */
+  --panel-w: 100%;
+  --pad-screen: 28px 20px 84px;
+  --pad-title: 30px 24px 88px;
+  --pad-bar: 11px 15px;
+  --pad-transport: 0 15px 16px;
+  --gap-title: 14px;
+  --gap-reel: 13px;
+  --cassette-w: min(66vw, 258px);
+
+  /* the tape's own furniture, same at every size */
+  --osd-sm: 13px;
+  --osd-md: 14px;
+  --osd-lg: 16px;
+  --scanline: repeating-linear-gradient(to bottom, rgb(0 0 0 / 34%) 0 1px, transparent 1px 3px);
 }
 
-:root[data-theme='dark'] {
-  --paper: #14141f;
-  --paper-raised: #1d1d2b;
-  --paper-sunk: #0e0e17;
+/*
+ * Wide: the tape lies on its side and you drag along it, with the
+ * neighbouring reels peeking in at either edge. 62vw capped at 720px is what
+ * leaves them visible without shrinking the current reel.
+ */
+@media (min-width: 900px) {
+  :root {
+    --step-h1: clamp(52px, 5.4vw, 82px);
+    --step-h2: clamp(46px, 5.2vw, 76px);
+    --step-int: clamp(62px, 8.4vw, 118px);
+    --step-hand: 28px;
+    --step-body: 19px;
+    --step-role: 28px;
 
-  --ink: #f0ede6;
-  --ink-muted: #a8a8bb;
-  --rule: #32323f;
-
-  --career: #86aade;
-  --career-text: #9dbce8;
-  --life: #e8906f;
-  --life-text: #f0a488;
-
-  --focus: #6fb4ff;
+    --panel-w: min(62vw, 720px);
+    --pad-screen: 44px 36px 88px;
+    --pad-title: 44px 44px 88px;
+    --pad-bar: 15px 36px;
+    --pad-transport: 0 36px 20px;
+    --gap-title: 18px;
+    --gap-reel: 13px;
+    --cassette-w: 300px;
+  }
 }
 
-/* Honour the OS preference when the user has not chosen explicitly. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --paper: #14141f;
-    --paper-raised: #1d1d2b;
-    --paper-sunk: #0e0e17;
+/*
+ * Short: a phone held sideways, or a very shallow window. Everything comes
+ * down a step and the contact-sheet thumbnails drop out entirely — there is
+ * no room for them and the photograph matters more.
+ */
+@media (max-height: 700px) {
+  :root {
+    --step-h1: clamp(30px, 6vw, 40px);
+    --step-h2: clamp(28px, 5vw, 38px);
+    --step-int: clamp(40px, 8vw, 58px);
+    --step-hand: 21px;
+    --step-body: 16px;
+    --step-role: 20px;
 
-    --ink: #f0ede6;
-    --ink-muted: #a8a8bb;
-    --rule: #32323f;
-
-    --career: #86aade;
-    --career-text: #9dbce8;
-    --life: #e8906f;
-    --life-text: #f0a488;
-
-    --focus: #6fb4ff;
+    --pad-screen: 22px 18px 74px;
+    --pad-title: 20px 20px 74px;
+    --gap-title: 10px;
+    --gap-reel: 9px;
+    --cassette-w: min(58vw, 210px);
   }
 }

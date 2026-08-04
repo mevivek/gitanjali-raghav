@@ -1,0 +1,202 @@
+/*
+ * The tape's transport: how nine screens sit on one strip, and how you move
+ * along it.
+ *
+ * These rules are global rather than scoped because a screen's <section> is
+ * rendered by one component (TitleCard, Reel, IntervalCard, EndCredits) while
+ * the strip that holds it is rendered by another (index.astro). Scoped styles
+ * cannot reach across that line. Everything *inside* a screen is scoped to
+ * the component that owns it.
+ *
+ * The prototype moved the strip with a JS-driven `translate3d` and an index in
+ * component state. This is a native scroll container with scroll snapping
+ * instead, which gets the same look and three things the prototype could not:
+ * it works with no JavaScript, it takes keyboard input on its own, and the
+ * flick has real platform momentum. The JS in index.astro then adds what
+ * genuinely needs it — knowing which reel is in front, and the transport
+ * buttons.
+ */
+
+/* ---------------------------------------------------------- wear and tear */
+
+/*
+ * `look.grade` and `look.osd` in src/data/tape.ts land on <html> as data
+ * attributes, and turn into these four numbers. Every overlay on the tape
+ * reads one of them, so the whole look is set in one place.
+ *
+ * Note that 'clean' and 'poster' are also the two grades that replace each
+ * reel's own `filter` with a single uniform one — that swap happens in
+ * Reel.astro, because it is a property of the image rather than an overlay.
+ */
+html[data-grade='clean'] {
+  --wash-op: 0.3;
+  --scan-op: 0;
+  --band-op: 0;
+}
+
+html[data-grade='poster'] {
+  --wash-op: 0.7;
+  --scan-op: 0;
+  --band-op: 0;
+}
+
+html[data-grade='tape'] {
+  --wash-op: 1;
+  --scan-op: 1;
+  --band-op: 0.5;
+}
+
+/* The on-screen display: reel numbers, timecodes, burnt-in date stamps. */
+html[data-osd='on'] {
+  --osd-op: 1;
+}
+
+html[data-osd='off'] {
+  --osd-op: 0;
+}
+
+.tape {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  /* dvh so mobile browser chrome sliding away does not clip a reel. */
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--tape-black);
+}
+
+/* -------------------------------------------------------------- the strip */
+
+.tape__track {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Phone: one full-bleed reel at a time, swiped vertically. */
+  scroll-snap-type: y mandatory;
+  /* Keeps a flick inside the tape instead of bouncing the page behind it. */
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.tape__track::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * The track is a scrollable region, so it has to be focusable to be usable
+ * from a keyboard (WCAG 2.1.1). With this, arrow keys and Page Up/Down move
+ * along the tape natively — no script involved. The handler in index.astro
+ * upgrades that to whole-screen jumps.
+ */
+.tape__track:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.screen {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
+  padding: var(--pad-screen);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-reel);
+  scroll-snap-align: start;
+}
+
+/*
+ * Wide: the tape turns on its side and you drag along it, with the reels
+ * either side peeking in. The pseudo-elements are spacers — they let the
+ * first and last screens sit dead centre, which `scroll-snap-align: center`
+ * alone cannot do at the ends of a scroller.
+ */
+@media (min-width: 900px) {
+  .tape__track {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    cursor: grab;
+  }
+
+  .tape__track::before,
+  .tape__track::after {
+    content: '';
+    flex: 0 0 calc((100% - var(--panel-w)) / 2);
+  }
+
+  .screen {
+    width: var(--panel-w);
+    scroll-snap-align: center;
+  }
+}
+
+/* Snapping is suspended mid-drag, then restored so the release settles. */
+.tape__track[data-dragging='true'] {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+  cursor: grabbing;
+}
+
+.tape__track[data-dragging='true'] .screen {
+  /* Stops a drag turning into a text selection across three reels. */
+  user-select: none;
+}
+
+/* ------------------------------------------------------------ the screens */
+
+/*
+ * The title and interval cards centre their contents and scroll internally
+ * if a short window cannot hold them — losing the bottom of the interval on
+ * a landscape phone would take the day job with it.
+ */
+.screen--title,
+.screen--interval {
+  justify-content: safe center;
+  overflow-y: auto;
+}
+
+.screen--title {
+  align-items: center;
+  gap: var(--gap-title);
+  padding: var(--pad-title);
+  background: radial-gradient(120% 90% at 50% 6%, #26122f 0%, #0e0715 54%, #08040d 100%);
+}
+
+.screen--interval {
+  background: radial-gradient(
+    130% 100% at 50% 0%,
+    var(--int-near) 0%,
+    var(--int-mid) 46%,
+    var(--int-far) 100%
+  );
+}
+
+.screen--credits {
+  /* The credits roll is clipped by this box as it creeps upward. */
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 100%, #1d1029 0%, #0c0613 56%, #08040d 100%);
+}
+
+/* --------------------------------------------------------- in front / not */
+
+/*
+ * Only the reel in front is at full strength; the rest sit back. Both rules
+ * are gated on `html.js` on purpose. With no script nothing ever updates
+ * `data-active`, so without the gate every screen but the first would be
+ * stuck dimmed — the exact failure the "motion is additive" rule exists to
+ * prevent. The server renders the first screen active, so with script the
+ * correct state is already painted and nothing flashes.
+ */
+html.js .screen--flat[data-active='false'] {
+  opacity: 0.5;
+}
+
+.screen--flat {
+  transition: opacity 0.5s ease;
+}

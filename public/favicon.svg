@@ -1,6 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GR">
-  <rect width="64" height="64" rx="14" fill="#fdfbf7" />
-  <!-- The two strands from the hero mark, converging — same idea at 64px. -->
-  <path d="M20 12 C20 32, 32 34, 32 44 L32 56" fill="none" stroke="#2b4570" stroke-width="5" stroke-linecap="round" />
-  <path d="M44 12 C44 32, 32 34, 32 44 L32 56" fill="none" stroke="#c75b39" stroke-width="5" stroke-linecap="round" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="A cassette tape">
+  <!--
+    A cassette, in the tape's own palette. The previous icon was the old site's
+    two-strand timeline mark on cream — a motif that no longer exists here, and
+    a light-mode icon sitting against a dark-mode site.
+
+    Drawn for 16px first: at that size only the silhouette, the pale label and
+    the two reels survive, so those three things carry the mark and everything
+    else is detail that disappears cleanly.
+  -->
+  <rect width="64" height="64" rx="13" fill="#17101f" />
+  <rect x="6" y="13" width="52" height="38" rx="4" fill="#241831" stroke="#4a3560" stroke-width="2" />
+
+  <!-- The paper label, stuck on slightly crooked, as on the title card. -->
+  <g transform="rotate(-1.5 32 24)">
+    <rect x="11" y="18" width="42" height="12" rx="2" fill="#f4e7cf" />
+    <rect x="14" y="22" width="26" height="2" rx="1" fill="#8a6b3d" opacity=".55" />
+  </g>
+
+  <!-- Two reels: pink and cyan, the tape's two signature accents. -->
+  <circle cx="23" cy="40" r="7" fill="#08040d" stroke="#ff2e88" stroke-width="2.5" />
+  <circle cx="41" cy="40" r="7" fill="#08040d" stroke="#3ee0e8" stroke-width="2.5" />
+  <circle cx="23" cy="40" r="1.6" fill="#ff2e88" />
+  <circle cx="41" cy="40" r="1.6" fill="#3ee0e8" />
 </svg>

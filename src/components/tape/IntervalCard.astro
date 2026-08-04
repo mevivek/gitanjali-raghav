@@ -1,0 +1,209 @@
+---
+import { interval, look } from '../../data/tape';
+import { study, work } from '../../data/work';
+
+interface Props {
+  /** Position on the strip. */
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+/*
+ * Jobs and study render as the same kind of row, which is how the design drew
+ * them — one unbroken list rather than a CV's two labelled blocks. They stay
+ * separate in the data, though: a university is not an employer, and flattening
+ * them in work.ts to save a few lines here would be a lie in the source.
+ */
+const rows = [
+  ...work.map((job) => ({
+    role: job.role,
+    org: job.note ? `${job.company} · ${job.note}` : job.company,
+    years: job.years,
+    now: job.current === true,
+  })),
+  ...study.map((s) => ({
+    // Subject leads when it is known; otherwise the institution stands alone
+    // rather than heading an empty row.
+    role: s.what ?? s.where,
+    org: s.what ? s.where : (s.place ?? ''),
+    years: s.years,
+    now: false,
+  })),
+];
+---
+
+<section
+  class="screen screen--interval screen--flat"
+  id={`screen-${index}`}
+  data-screen
+  data-active="false"
+  aria-label="Interval — the day job"
+>
+  <p class="kicker" aria-hidden={osdHidden}>{interval.kicker}</p>
+
+  <h2 class="heading">{interval.heading}</h2>
+
+  <p class="hand">{interval.hand}</p>
+
+  <ol class="rows">
+    {
+      rows.map((row) => (
+        <li class="row">
+          <div class="row__top">
+            <span class="row__role">{row.role}</span>
+            {row.now && <span class="badge">{interval.nowBadge}</span>}
+          </div>
+          <div class="row__meta">
+            <span>{row.org}</span>
+            <span class="row__years">{row.years}</span>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+
+  <p class="body">{interval.body}</p>
+
+  {/* An anchor for the same reason as the play button — it works unscripted. */}
+  <a class="resume" href="#screen-8" data-tape-go="8">
+    <span aria-hidden="true">&#9654;</span> {interval.resumeLabel}
+  </a>
+</section>
+
+<style>
+  .kicker {
+    align-self: flex-start;
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--tape-gold);
+    opacity: var(--osd-op, 0);
+  }
+
+  .heading {
+    font-family: var(--font-display);
+    font-size: var(--step-int);
+    font-weight: 400;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--tape-gold);
+    /* Knocked out against the black, with a cold edge on the far side. */
+    text-shadow:
+      4px 0 0 var(--tape-black),
+      -4px 0 0 rgb(62 224 232 / 55%);
+  }
+
+  .hand {
+    max-width: 30ch;
+    font-family: var(--font-hand);
+    font-weight: 600;
+    font-size: var(--step-hand);
+    color: var(--int-hand);
+    transform: rotate(-1deg);
+  }
+
+  /* ----------------------------------------------------------------- rows */
+
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    border-top: 2px solid rgb(255 197 61 / 40%);
+  }
+
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgb(255 197 61 / 22%);
+  }
+
+  /*
+   * Deliberately not a flex row. Her current title runs to two lines on a
+   * phone, and as a flex item the badge would be pushed onto a third line of
+   * its own; flowing them as inline content tucks it in after the last word
+   * however long the title is.
+   */
+  .row__role {
+    font-family: var(--font-serif);
+    font-size: var(--step-role);
+    line-height: 1.05;
+    color: var(--tape-cream);
+  }
+
+  .row__meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-osd);
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    color: var(--int-org);
+  }
+
+  .row__years {
+    color: var(--int-years);
+    white-space: nowrap;
+  }
+
+  .badge {
+    display: inline-block;
+    margin-left: 9px;
+    /* Sits with the cap height rather than the baseline. */
+    transform: translateY(-3px);
+    padding: 2px 8px;
+    border-radius: 2px;
+    background-color: var(--tape-cyan);
+    color: var(--tape-black);
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  /* ---------------------------------------------------------------- words */
+
+  .body {
+    max-width: 44ch;
+    font-family: var(--font-osd);
+    font-size: var(--step-body);
+    line-height: 1.4;
+    letter-spacing: 0.03em;
+    color: var(--int-body);
+  }
+
+  .resume {
+    align-self: flex-start;
+    min-height: 46px;
+    padding: 12px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid var(--tape-gold);
+    border-radius: 2px;
+    background-color: transparent;
+    color: var(--tape-gold);
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .resume:hover {
+    background-color: var(--tape-gold);
+    color: var(--int-near);
+  }
+</style>

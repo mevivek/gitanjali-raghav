@@ -1,9 +1,11 @@
 /**
- * Every site-wide fact lives here. Nothing factual belongs in a component.
+ * Site-wide facts and metadata. Nothing factual belongs in a component.
  *
- * Some of this prose was written from her LinkedIn and Instagram rather than
- * by her — it is accurate, but it is not yet her voice. Anything marked with
- * a comment below is worth replacing with her own words.
+ * This file used to carry the old site's hero copy — a tagline, a row of
+ * fact chips, a contact button. The tape has no room for any of that: its
+ * opening words are on the title card and its only outbound links are the
+ * two buttons on the end credits. What is left here is the page's identity
+ * and the publish gate.
  *
  * `approved` controls whether search engines are allowed to index the page.
  * Leave it false until she has read the site and is happy with it.
@@ -14,62 +16,43 @@ export interface SocialLink {
   href: string;
 }
 
-export interface Fact {
-  icon: string;
-  text: string;
-}
-
 export const site = {
   /**
    * Spelled as on her LinkedIn. Her Instagram — and this repository — spell
    * it "Gitanjali"; she uses both. LinkedIn's spelling wins here because
-   * this is the professional-facing site.
+   * this is the name a stranger is most likely to search for.
    */
   name: 'Geetanjali Raghav',
-  firstName: 'Geetanjali',
-  pronouns: 'she/her',
 
+  /**
+   * Her name and nothing else. This is the browser tab, the search result and
+   * the bold line of every share preview, so it is the one string a stranger
+   * is most likely to see before anything else.
+   *
+   * It briefly read "Geetanjali Raghav — Home Video". That was wrong twice
+   * over: "Home Video" is the *design's* internal name, meaningless to a
+   * visitor, and set in bold beside a photograph of her in a link preview it
+   * invites a reading nobody wants. The tape can call itself whatever it likes
+   * on the page; the title should just say who she is.
+   */
   title: 'Geetanjali Raghav',
 
   /**
-   * The line under her name, in her own voice ideally. This one is drafted
-   * from what her profiles show — order-to-cash work, a pull towards the
-   * sea, a camera never far away. Replace it with hers when you can.
+   * The grey line under the title in previews and search results. Keep it
+   * under ~155 characters or search truncates it mid-sentence.
+   *
+   * Deliberately not a job description: the page opens by saying it is not a
+   * CV, and a summary that led with the day job would contradict it before
+   * anyone arrived.
    */
-  tagline:
-    'Order to Cash by day. Coastlines, hill roads and a Royal Enfield the rest of the time.',
-
   description:
-    'Geetanjali Raghav — Accounts Receivable and Order to Cash at Genpact, based in Delhi. Photographs, coastlines, and the occasional excellent outfit.',
+    'Eight reels of hills, salt water, one motorcycle and a very short interval about the day job.',
 
-  role: 'Accounts Receivable, Order to Cash',
-  organisation: 'Genpact',
-  location: 'Delhi, India',
-
-  /** Little chips under the hero. Keep them short and keep them fun. */
-  facts: [
-    { icon: '📍', text: 'Delhi, India' },
-    { icon: '🌊', text: 'Happiest near water' },
-    { icon: '🏍️', text: 'Owns one very good motorcycle photo' },
-    { icon: '🎧', text: 'Hindi film songs, always' },
-  ] as Fact[],
-
-  /**
-   * Public contact address. Left null deliberately — putting an email on a
-   * public page invites spam, and it is hers to volunteer. Set it to a
-   * string and the contact button appears automatically.
-   */
-  email: null as string | null,
-
-  ctaLabel: 'Come say hi',
-
+  /** Shown as two buttons on the end credits. `rel="me"` on both. */
   socials: [
     { label: 'Instagram', href: 'https://www.instagram.com/gitanjaliraghav/' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/geetanjaliraghav/' },
   ] as SocialLink[],
-
-  /** Optional CV in /public. Null hides the download button. */
-  resume: null as string | null,
 
   /**
    * Flip to true once she has seen the site and is happy for it to be found
