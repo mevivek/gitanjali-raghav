@@ -19,7 +19,10 @@ import hills from '../assets/photos/hills.jpg';
 import holi from '../assets/photos/holi.jpg';
 import inTheAir from '../assets/photos/in-the-air.jpg';
 import inTheSea from '../assets/photos/in-the-sea.jpg';
-import laapata from '../assets/photos/laapata.jpg';
+// Renamed from laapata.jpg on the default branch. The old name came from her
+// Instagram caption; this one says what the photograph is, which is the more
+// useful thing for whoever opens this folder next.
+import closeUp from '../assets/photos/close-up.jpg';
 import metro from '../assets/photos/metro.jpg';
 import palace from '../assets/photos/palace.jpg';
 import policeBox from '../assets/photos/police-box.jpg';
@@ -252,7 +255,7 @@ export const reels: Reel[] = [
     hand: '10.7k of you 😅',
     stamp: 'REEL  0:00 / 0:14',
     line: 'I make reels. Fourteen seconds takes forty minutes, the good take is always the one where somebody walks past, and I will still post it.',
-    photo: laapata,
+    photo: closeUp,
     alt: 'Smiling close up, head tilted, hair falling loose across the frame',
     pos: '50% 26%',
     filter: 'saturate(1.45) contrast(1.08) brightness(.95)',
