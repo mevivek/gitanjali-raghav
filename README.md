@@ -65,17 +65,36 @@ those for anything a person has to read.
 
 ## Deploying
 
-**One-time setup** — go to **Settings → Pages → Build and deployment** and set
-*Source* to **GitHub Actions**. Nothing publishes until this is done; it cannot
-be enabled from code.
+Published from a branch, not GitHub Actions — Actions creates jobs on this
+repository but never assigns them a runner, so the build is done locally and
+the result is pushed to `gh-pages`.
 
-After that, every push to `main` or `claude/personal-professional-website-jlhzqu`
-runs `.github/workflows/deploy.yml`, which checks the content, builds, and
-publishes to:
+**One-time setup** — **Settings → Pages → Build and deployment**, set *Source*
+to **Deploy from a branch**, then pick **`gh-pages`** and **`/ (root)`**.
+Nothing is served until this is done; it cannot be enabled from code.
+
+**Every deploy after that:**
+
+```bash
+npm run deploy
+```
+
+That builds, reports any unfilled content, commits `dist/` to `gh-pages`, and
+pushes. It uses git plumbing rather than checking the branch out, so your
+working tree and current branch are never touched. Give it about a minute,
+then:
 
 ```
 https://mevivek.github.io/gitanjali-raghav
 ```
+
+> `public/.nojekyll` must stay where it is. GitHub Pages runs Jekyll by
+> default, and Jekyll ignores any directory beginning with an underscore —
+> which is where Astro puts every stylesheet and font (`_astro/`). Without
+> that file the site deploys with no styling at all.
+
+An Actions-based workflow lives in the git history if runners ever start
+working: `git show ed4f5bb:.github/workflows/deploy.yml`.
 
 ### Preview mode
 
@@ -87,11 +106,11 @@ a real device. Two things make that safe:
   content itself and vanishes on its own when the last `TODO` is filled — there
   is nothing to remember to remove. A draft about a real person stays out of
   search results.
-- CI runs `npm run check -- --warn-only`, which reports what is unfilled and
-  annotates the run without blocking it.
+- `npm run deploy` runs the content check in warn-only mode: it lists what is
+  unfilled without blocking the deploy.
 
-**When the content is complete**, drop `-- --warn-only` from the workflow. The
-check becomes a hard gate again and any unfilled field fails the deploy.
+**When the content is complete**, run `npm run check` (without `--warn-only`)
+before deploying, and it becomes a hard gate again — any unfilled field fails.
 
 > A GitHub Pages site on a public repository is public. Anyone with the URL can
 > read it, indexed or not. Keep the repository private until she is happy with
