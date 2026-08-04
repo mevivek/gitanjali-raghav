@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GR">
+  <rect width="64" height="64" rx="14" fill="#fdfbf7" />
+  <!-- The two strands from the hero mark, converging — same idea at 64px. -->
+  <path d="M20 12 C20 32, 32 34, 32 44 L32 56" fill="none" stroke="#2b4570" stroke-width="5" stroke-linecap="round" />
+  <path d="M44 12 C44 32, 32 34, 32 44 L32 56" fill="none" stroke="#c75b39" stroke-width="5" stroke-linecap="round" />
+</svg>

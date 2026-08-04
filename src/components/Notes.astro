@@ -1,0 +1,87 @@
+---
+import { getCollection } from 'astro:content';
+
+// Newest first. The whole section disappears when nothing is published, so
+// the site never shows an empty "Writing" heading.
+const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const formatter = new Intl.DateTimeFormat('en-GB', {
+  year: 'numeric',
+  month: 'long',
+});
+---
+
+{
+  notes.length > 0 && (
+    <section class="notes" aria-labelledby="notes-heading">
+      <div class="wrap">
+        <h2 id="notes-heading">Writing</h2>
+
+        <ul class="notes__list">
+          {notes.map((note) => (
+            <li class="note">
+              <h3 class="note__title">{note.data.title}</h3>
+              <p class="note__date">
+                <time datetime={note.data.date.toISOString()}>
+                  {formatter.format(note.data.date)}
+                </time>
+              </p>
+              {note.data.summary && <p class="note__summary">{note.data.summary}</p>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .notes {
+    padding-block: var(--section-gap);
+    border-top: 1px solid var(--rule);
+  }
+
+  .notes h2 {
+    font-size: var(--step-4);
+    margin: 0 0 2rem;
+  }
+
+  .notes__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .note {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .note:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .note__title {
+    margin: 0;
+    font-size: var(--step-2);
+    font-weight: 600;
+  }
+
+  .note__date {
+    margin: 0.35rem 0 0;
+    font-size: var(--step--1);
+    color: var(--career-text);
+    font-weight: 600;
+  }
+
+  .note__summary {
+    margin: 0.6rem 0 0;
+    color: var(--ink-muted);
+    max-width: var(--measure);
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Hero from '../components/Hero.astro';
+import DualTrack from '../components/DualTrack.astro';
+import LifeGrid from '../components/LifeGrid.astro';
+import Notes from '../components/Notes.astro';
+import Contact from '../components/Contact.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<Base>
+  <SiteHeader slot="header" />
+
+  <Hero />
+  <DualTrack />
+  <LifeGrid />
+  <Notes />
+  <Contact />
+
+  <SiteFooter slot="footer" />
+</Base>

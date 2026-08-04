@@ -1,0 +1,92 @@
+/*
+ * Design tokens.
+ *
+ * Two accent hues carry the whole site, because the signature layout is a
+ * two-lane timeline: one hue for the career lane, one for the life lane.
+ * Everything else is paper, ink and a muted grey.
+ *
+ * Each accent has two variants:
+ *   --career / --life        decorative use (rules, dots, fills, borders)
+ *   --career-text / --life-text   text use, darkened to clear AA (4.5:1) on paper
+ * Use the -text variants for anything a person has to read.
+ *
+ * To reskin the site, change the six colour values in :root and
+ * :root[data-theme='dark']. Nothing else needs touching.
+ */
+
+:root {
+  /* surfaces */
+  --paper: #fdfbf7; /* warm off-white, softer than pure white */
+  --paper-raised: #ffffff;
+  --paper-sunk: #f4f0e8;
+
+  /* text */
+  --ink: #1a1a2e;
+  --ink-muted: #5a5a6e;
+  --rule: #e2dcd0;
+
+  /* lanes */
+  --career: #2b4570;
+  --career-text: #24395e;
+  --life: #c75b39;
+  --life-text: #a8442a;
+
+  /* focus ring — deliberately high-contrast against both lanes */
+  --focus: #0b63ce;
+
+  /* type */
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* fluid type scale — clamp(min, preferred, max) */
+  --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.11rem);
+  --step-1: clamp(1.2rem, 1.13rem + 0.35vw, 1.39rem);
+  --step-2: clamp(1.44rem, 1.33rem + 0.55vw, 1.73rem);
+  --step-3: clamp(1.73rem, 1.55rem + 0.9vw, 2.16rem);
+  --step-4: clamp(2.07rem, 1.8rem + 1.37vw, 2.7rem);
+  --step-5: clamp(2.49rem, 2.07rem + 2.09vw, 3.38rem);
+  --step-6: clamp(2.99rem, 2.38rem + 3.05vw, 4.22rem);
+
+  /* spacing rhythm */
+  --gutter: clamp(1.25rem, 0.9rem + 1.75vw, 2.5rem);
+  --section-gap: clamp(4rem, 3rem + 5vw, 8rem);
+  --measure: 62ch;
+}
+
+:root[data-theme='dark'] {
+  --paper: #14141f;
+  --paper-raised: #1d1d2b;
+  --paper-sunk: #0e0e17;
+
+  --ink: #f0ede6;
+  --ink-muted: #a8a8bb;
+  --rule: #32323f;
+
+  --career: #86aade;
+  --career-text: #9dbce8;
+  --life: #e8906f;
+  --life-text: #f0a488;
+
+  --focus: #6fb4ff;
+}
+
+/* Honour the OS preference when the user has not chosen explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #14141f;
+    --paper-raised: #1d1d2b;
+    --paper-sunk: #0e0e17;
+
+    --ink: #f0ede6;
+    --ink-muted: #a8a8bb;
+    --rule: #32323f;
+
+    --career: #86aade;
+    --career-text: #9dbce8;
+    --life: #e8906f;
+    --life-text: #f0a488;
+
+    --focus: #6fb4ff;
+  }
+}

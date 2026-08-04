@@ -1,0 +1,103 @@
+---
+import { site } from '../data/site';
+
+const showEmail = !site.email.startsWith('TODO');
+// A `TODO:` href would render as a broken link, so those are dropped here.
+// `npm run check` is what stops them being forgotten.
+const socials = site.socials.filter((s) => !s.href.startsWith('TODO'));
+---
+
+<section class="contact" id="contact" aria-labelledby="contact-heading">
+  <div class="wrap contact__inner">
+    <div>
+      <h2 id="contact-heading">{site.ctaLabel}</h2>
+      <p class="measure contact__blurb">
+        The best way to reach {site.name.split(' ')[0]} is below.
+      </p>
+    </div>
+
+    <div class="contact__links">
+      {
+        showEmail && (
+          <a class="contact__email" href={`mailto:${site.email}`}>
+            {site.email}
+          </a>
+        )
+      }
+
+      {
+        socials.length > 0 && (
+          <ul class="contact__socials">
+            {socials.map((s) => (
+              <li>
+                <a href={s.href} rel="me noopener noreferrer" target="_blank">
+                  {s.label}
+                  {s.note && <span class="contact__note"> — {s.note}</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    padding-block: var(--section-gap);
+  }
+
+  .contact__inner {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .contact h2 {
+    font-size: var(--step-4);
+    margin: 0 0 0.5rem;
+  }
+
+  .contact__blurb {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  .contact__email {
+    display: inline-block;
+    font-size: var(--step-2);
+    font-weight: 600;
+    color: var(--life-text);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+    word-break: break-word;
+  }
+
+  .contact__socials {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .contact__socials a {
+    color: var(--ink);
+    font-weight: 600;
+    text-underline-offset: 0.2em;
+  }
+
+  .contact__note {
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+
+  @media (min-width: 48rem) {
+    .contact__inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+  }
+</style>

@@ -1,0 +1,118 @@
+@import './tokens.css';
+@import 'tailwindcss';
+
+/* Self-hosted variable fonts — no third-party requests from visitors. */
+@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource-variable/inter/wght.css';
+
+/*
+ * `inline` matters here: it makes the generated utilities emit
+ * `var(--paper)` rather than baking in the literal colour, so a single
+ * `data-theme` swap on <html> reskins every utility at once.
+ */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-career: var(--career);
+  --color-career-text: var(--career-text);
+  --color-life: var(--life);
+  --color-life-text: var(--life-text);
+  --color-focus: var(--focus);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+
+  --text-step--1: var(--step--1);
+  --text-step-0: var(--step-0);
+  --text-step-1: var(--step-1);
+  --text-step-2: var(--step-2);
+  --text-step-3: var(--step-3);
+  --text-step-4: var(--step-4);
+  --text-step-5: var(--step-5);
+  --text-step-6: var(--step-6);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Stops the sticky year marker from covering anchor targets. */
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--step-0);
+    line-height: 1.65;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    line-height: 1.1;
+    text-wrap: balance;
+    /* Fraunces' optical-size and soft axes — warmer than the default cut. */
+    font-variation-settings: 'SOFT' 30, 'WONK' 1;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--life);
+    color: var(--paper);
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@layer utilities {
+  .wrap {
+    width: min(100% - (var(--gutter) * 2), 72rem);
+    margin-inline: auto;
+  }
+
+  .measure {
+    max-width: var(--measure);
+  }
+}
+
+/*
+ * Global motion kill-switch. Every animation on the site is additive to a
+ * layout that is already complete and readable, so disabling motion never
+ * hides content.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

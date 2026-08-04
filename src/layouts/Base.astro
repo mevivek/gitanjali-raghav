@@ -1,0 +1,79 @@
+---
+import '../styles/global.css';
+import { site } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = site.title, description = site.description } = Astro.props;
+
+// Astro.site + base are set in astro.config.mjs; this yields absolute URLs
+// for the social tags, which require them.
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(`${import.meta.env.BASE_URL}/og.png`.replace(/\/+/g, '/'), Astro.site);
+---
+
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta name="theme-color" content="#fdfbf7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14141f" media="(prefers-color-scheme: dark)" />
+
+    <link rel="icon" href={`${import.meta.env.BASE_URL}/favicon.svg`} type="image/svg+xml" />
+
+    {/*
+      Runs before first paint so a stored theme preference never flashes the
+      wrong colours. Deliberately inline and tiny — this is the only script
+      in <head>.
+    */}
+    <script is:inline>
+      (() => {
+        // Marks that scripting is available. Reveal animations key off this,
+        // so with JS disabled the content renders plainly instead of staying
+        // stuck in its pre-animation hidden state.
+        document.documentElement.classList.add('js');
+
+        try {
+          const stored = localStorage.getItem('theme');
+          if (stored === 'light' || stored === 'dark') {
+            document.documentElement.dataset.theme = stored;
+          }
+        } catch {
+          /* localStorage unavailable (private mode) — fall back to OS setting */
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-paper-raised focus:px-4 focus:py-2 focus:text-ink focus:shadow-lg"
+    >
+      Skip to content
+    </a>
+
+    <slot name="header" />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <slot name="footer" />
+  </body>
+</html>

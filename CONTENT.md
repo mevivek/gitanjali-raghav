@@ -1,0 +1,134 @@
+# Filling in the site
+
+Everything on this website comes from text files. You never need to touch a
+component to change what the page says.
+
+Two rules the build enforces for you:
+
+- **`TODO` blocks publishing.** Anything still unknown is written as a `TODO`.
+  `npm run check` fails while any remain, so an unfinished page cannot go live.
+- **`draft: true` hides an entry.** Drafts stay in the repo and stay visible to
+  you, but never reach the built site. Anything not yet confirmed by Gitanjali
+  is marked this way.
+
+Run `npm run check` any time to see exactly what is left.
+
+---
+
+## 1. The basics — `src/data/site.ts`
+
+| Field | What to write |
+|---|---|
+| `tagline` | One line under her name. Her own words, not a job description. This is the single most important sentence on the site. |
+| `description` | 140–160 characters. Shows up in Google results and link previews. |
+| `role` | Her exact job title. |
+| `organisation` | Currently `Genpact`. |
+| `location` | City, country. |
+| `intro` | Two or three sentences, the way she'd introduce herself out loud. |
+| `email` | Only add this **with her consent** — it goes on a public page. Delete the field to hide the contact button entirely. |
+| `socials` | Instagram is already filled in. Add the LinkedIn URL. |
+| `resume` | Filename of a PDF placed in `public/`, or leave as `null`. |
+
+## 2. The timeline — `src/content/timeline/*.md`
+
+The centrepiece. One file per event. Career events appear on one side, life
+events on the other, sharing a year axis.
+
+```markdown
+---
+year: 2023              # required — the number on the axis, and the sort key
+lane: career            # required — "career" or "life"
+title: Programme Lead   # required — short headline
+org: Genpact            # optional — employer or place
+dateLabel: 2023 — now   # optional — shown under the title
+order: 0                # optional — orders entries within the same year
+image: goa-2024.jpg     # optional — filename in public/img/
+imageAlt: On the beach  # required whenever image is set
+draft: false            # true hides it from the site
+---
+
+Two or three sentences. Concrete beats vague: what she owned, who she worked
+with, what changed because she was there. Numbers if there are any.
+```
+
+**Currently in place:**
+
+| File | Lane | Status |
+|---|---|---|
+| `2020-vaco-binary.md` | career | Needs title, dates, description |
+| `2023-genpact.md` | career | Needs title, dates, description |
+| `2024-by-the-sea.md` | life | Draft — inferred from Instagram, confirm |
+| `2026-making-things.md` | life | Draft — inferred from Instagram, confirm |
+
+To add a year, add a file. Nothing else needs changing.
+
+## 3. Life cards — `src/content/life/*.md`
+
+Short standalone cards: hobbies, what's on repeat, what she's into right now.
+
+```markdown
+---
+title: Currently
+icon: '✨'      # a single emoji
+order: 0        # lower numbers appear first
+draft: false
+---
+
+A sentence or two.
+```
+
+## 4. Writing — `src/content/notes/*.md`
+
+Optional. The whole section hides itself when nothing is published, so if she
+doesn't want it, delete the folder and it simply disappears.
+
+## 5. Photos
+
+Put image files in `public/img/` and reference them by filename. Two things
+matter:
+
+- **Self-host them.** Instagram's image URLs are signed and expire after a few
+  days, so they cannot be linked to directly. Download, then commit the file.
+- **Every image needs `imageAlt`.** The build fails without it. Describe what's
+  in the picture, not "photo of Gitanjali".
+
+> Her Instagram being public does not make its photos free to republish. Get
+> her explicit yes on each image before it goes on the site.
+
+---
+
+## What we still need from her
+
+This is the whole list. Nothing here can be looked up — it has to come from her.
+
+**Positioning**
+- [ ] Exact job title at Genpact, and her team or function
+- [ ] City she's based in
+- [ ] The one-line description of what she does, in her voice
+- [ ] Who the site is really for — recruiters, clients, collaborators, friends
+- [ ] Whether `she/her` is right
+
+**Career**
+- [ ] Genpact: title, start date, and two or three things she's genuinely proud of
+- [ ] Vaco Binary Semantics: title, dates, what she did
+- [ ] Anything before Vaco Binary
+- [ ] Education — degrees, institutions, years
+- [ ] Certifications, awards, recognitions
+- [ ] Skills, tools, languages spoken
+
+**Life**
+- [ ] Hobbies and creative outlets
+- [ ] Travel — where she's been, where she's from, favourites
+- [ ] What she's reading, learning or listening to right now
+- [ ] Fun facts, quirks, pets, causes she cares about
+- [ ] **Anything that must not go on a public page**
+
+**Assets**
+- [ ] A headshot, plus any candids she's happy to publish
+- [ ] Colours or fonts she likes — the current palette is a starting point, not a decision
+- [ ] Public contact email, with her consent
+- [ ] Custom domain, if she wants one
+
+**The fastest way to supply most of this:** open her LinkedIn profile →
+**More → Save to PDF**, and drop the file in the repo. That covers almost the
+entire career section in one step.

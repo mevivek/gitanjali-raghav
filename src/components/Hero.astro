@@ -1,0 +1,231 @@
+---
+import { site } from '../data/site';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const showEmail = !site.email.startsWith('TODO');
+const showResume = Boolean(site.resume);
+
+// Driven by site.ts rather than hardcoded, so adding a social link in one
+// place adds it here too.
+const links = site.socials.filter((s) => !s.href.startsWith('TODO'));
+---
+
+<section class="hero">
+  <div class="wrap hero__inner">
+    <div class="hero__text">
+      <p class="hero__eyebrow">
+        {site.role}{' '}
+        <span class="hero__at">at</span>{' '}
+        <span class="hero__org">{site.organisation}</span>
+      </p>
+
+      <h1 class="hero__name">{site.name}</h1>
+
+      <p class="hero__tagline measure">{site.tagline}</p>
+
+      <p class="hero__location">{site.location}</p>
+
+      <div class="hero__actions">
+        {
+          showEmail && (
+            <a class="btn btn--primary" href={`mailto:${site.email}`}>
+              {site.ctaLabel}
+            </a>
+          )
+        }
+        {
+          links.map((link) => (
+            <a class="btn" href={link.href} rel="me noopener noreferrer" target="_blank">
+              {link.label}
+            </a>
+          ))
+        }
+        {
+          showResume && (
+            <a class="btn" href={`${base}/${site.resume}`} download>
+              Download CV
+            </a>
+          )
+        }
+      </div>
+    </div>
+
+    {/*
+      Two strands, one per lane, converging into the single spine the
+      timeline below is built on. Purely decorative, so it is hidden from
+      assistive tech.
+    */}
+    <div class="hero__mark" aria-hidden="true">
+      <svg viewBox="0 0 200 320" role="presentation" focusable="false">
+        <path class="strand strand--career" d="M60 0 C60 120, 100 140, 100 200 L100 320" />
+        <path class="strand strand--life" d="M140 0 C140 120, 100 140, 100 200 L100 320" />
+        <circle class="node" cx="100" cy="200" r="7" />
+      </svg>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(3.5rem, 2rem + 7vw, 7rem) var(--section-gap);
+    border-bottom: 1px solid var(--rule);
+    background:
+      radial-gradient(
+        ellipse 80% 60% at 15% 0%,
+        color-mix(in oklab, var(--life) 9%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 70% 55% at 85% 10%,
+        color-mix(in oklab, var(--career) 11%, transparent),
+        transparent 70%
+      );
+  }
+
+  .hero__inner {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .hero__eyebrow {
+    margin: 0 0 1rem;
+    font-size: var(--step-0);
+    font-weight: 600;
+    color: var(--career-text);
+    letter-spacing: 0.01em;
+  }
+
+  .hero__at {
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+
+  .hero__org {
+    color: var(--career-text);
+  }
+
+  .hero__name {
+    margin: 0;
+    font-size: var(--step-6);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    /* Fraunces' WONK axis dialled up — this is the one place on the page
+       where the type is allowed to have a bit of swagger. */
+    font-variation-settings: 'SOFT' 40, 'WONK' 1, 'opsz' 100;
+  }
+
+  .hero__tagline {
+    margin: 1.25rem 0 0;
+    font-size: var(--step-2);
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+
+  .hero__location {
+    margin: 1rem 0 0;
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background-color: var(--paper-raised);
+    color: var(--ink);
+    padding: 0.6rem 1.35rem;
+    font-size: var(--step-0);
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      transform 0.18s ease,
+      border-color 0.18s ease,
+      background-color 0.18s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--ink-muted);
+  }
+
+  .btn--primary {
+    background-color: var(--career);
+    border-color: var(--career);
+    /* --paper is the light surface in light mode and the dark one in dark
+       mode, which is exactly the contrast needed against --career either
+       way. */
+    color: var(--paper);
+  }
+
+  .btn--primary:hover {
+    border-color: var(--career);
+  }
+
+  .hero__mark {
+    display: none;
+  }
+
+  .strand {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  .strand--career {
+    stroke: var(--career);
+  }
+
+  .strand--life {
+    stroke: var(--life);
+  }
+
+  .node {
+    fill: var(--paper);
+    stroke: var(--ink-muted);
+    stroke-width: 2;
+  }
+
+  @media (min-width: 60rem) {
+    .hero__inner {
+      grid-template-columns: minmax(0, 1fr) 12rem;
+      gap: 3rem;
+    }
+
+    .hero__mark {
+      display: block;
+      justify-self: end;
+    }
+
+    .hero__mark svg {
+      width: 100%;
+      height: auto;
+      max-height: 20rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .strand {
+      stroke-dasharray: 420;
+      stroke-dashoffset: 420;
+      animation: draw 1.6s 0.2s ease-out forwards;
+    }
+
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+  }
+</style>
