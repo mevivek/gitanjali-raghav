@@ -52,7 +52,8 @@ height so stamping does not shunt the card, and giving the verdict stamp its own
 keyframe so the centring survives. Worth knowing, because it means the bundle and
 this repo are converging rather than fighting.
 
-**It also brought a 15MB `garden.mp4`** — see "The video is not in the repo" below.
+**It also brought a 15MB `garden.mp4`**, which now plays under the end credits —
+see "The video, and the three things that stop it loading" below.
 
 Seven things in the third bundle were deliberately **not** taken. Check `git log`
 before assuming a difference from a bundle is an oversight:
@@ -106,34 +107,37 @@ place to start.** Whether the bleed is even along the tape or grows the further
 along you are tells you which half is wrong: even means the height, growing means
 the re-snap is not firing.
 
-## The video is not in the repo
+## The video, and the three things that stop it loading
 
-The fourth handoff shipped `video/garden.mp4` — 15MB, H.264, one video track and
-no audio, about 726 frames. It is used as a muted looping backdrop in exactly one
-of three places, chosen by a `footage` prop that defaults to **behind the end
-credits**, loaded only once you reach the interval, and skipped entirely under
-reduced motion. That is a considerate design.
+`public/video/garden.mp4` — 15MB, H.264, one video track and no audio — plays under
+the end credits, graded almost to black. It is the only moving picture on the tape.
 
-**It was not adopted, and the reason is not that it is a bad idea.** Two things
-have to be settled first, and neither is a code question:
+**It is more than three times the weight of everything else here** (the rest of the
+build is ~4.4MB), so it is gated three ways, all in `EndCredits.astro`:
 
-1. **Nobody has been able to look at it.** This container's Chromium has no H.264
-   decoder (`canPlayType('video/mp4; codecs="avc1.42E01E"')` returns empty) and
-   the ffmpeg that ships with Playwright cannot demux MP4, so the footage could
-   not be viewed here at all. Every photograph on this site was individually
-   approved and four were turned down because someone other than her was
-   recognisable in them — that check cannot be skipped for a video simply because
-   the tooling could not open it. A garden is exactly the sort of place other
-   people are in.
-2. **It is more than 3× the weight of the entire site.** The built tape is ~4.4MB.
-   This one file is 15MB, it would sit in `main`'s history and in `gh-pages` for good, and
-   `TapePrefetch` already declines to warm fourteen photographs on a metered
-   connection — shipping 15MB to the same visitor would contradict that directly.
+1. **Reduced motion** — never loaded at all.
+2. **A metered or 2g connection** — never loaded, the same `saveData`/`effectiveType`
+   test `TapePrefetch` makes before warming the photographs. That rule exists for
+   images the visitor will probably look at; it applies with more force to 15MB of
+   decoration.
+3. **Not until you get there** — the `src` is set by the script when the credits
+   become the screen in front, and playback pauses when they stop being it. Verified:
+   zero requests for it on the title card, and it only fetches on arrival. Nobody who
+   leaves before the end of the tape pays for it.
 
-If it is wanted, the shape of the answer is: confirm who is in it, then encode a
-much smaller version (a few seconds, VP9/WebM with an H.264 fallback, a few
-hundred KB) rather than committing the master. Note that **this container cannot
-re-encode it** either, for the same codec reason.
+**It could not be watched in this container, and still has not been.** Chromium here
+has no H.264 decoder (`canPlayType('video/mp4; codecs="avc1.42E01E"')` returns
+empty) and Playwright's ffmpeg cannot demux MP4, so `play()` rejects with
+`MEDIA_ERR_SRC_NOT_SUPPORTED` and the screen falls back to its own gradient. That
+fallback is deliberate and it is what any browser without the codec gets — but it
+also means **the footage has never been reviewed for who else is in it.** Every
+photograph on this site was individually approved and four were turned down because
+someone other than her was recognisable. That check is still outstanding for this
+file. Watch it on a real device before the site is made findable.
+
+If it ever needs to be smaller, the shape is a few seconds of VP9/WebM with an H.264
+fallback at a few hundred KB rather than the 15MB master — and note this container
+cannot re-encode it either, for the same codec reason.
 
 ## Branches and deploying
 

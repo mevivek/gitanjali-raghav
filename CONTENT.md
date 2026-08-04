@@ -30,6 +30,7 @@ Every word on the site is in this file, in the order you meet it.
 | `credits`, `ending` | The cast-and-crew roll and the sign-off. |
 | `boot` | The two lines on the tracking screen that plays before the title card. |
 | `notFound` | The 404 — the only screen that is not part of the tape. |
+| `footage` | The path to the video that plays under the end credits. One field; the three conditions that stop it loading are in the comment above it. |
 | `sound` | The five blips: the transport clunk, the key click, reel 06's tick and ping, and the rewind sweep. All numbers — frequencies, gains, decays. Changing them changes what the deck sounds like. |
 | `positions`, `wear` | Two per-screen tables, both eleven long: the timecode the counter shows, and how scuffed each screen is. |
 

@@ -864,6 +864,35 @@ export const credits: Credit[] = [
   { role: 'quality control', who: 'see interval' },
 ];
 
+/**
+ * The footage behind the end credits, and the only moving picture on the tape.
+ *
+ * It plays under the roll, graded almost to black so the names stay legible — the
+ * point is that the last screen is the one place the tape stops being made of
+ * stills. It is muted and has no audio track at all, loops, and is `aria-hidden`:
+ * nothing in it carries meaning, so a screen reader is told nothing and loses
+ * nothing.
+ *
+ * Three things gate it, all in EndCredits.astro:
+ *
+ *   - **reduced motion** — never loaded. A full-screen moving background is the
+ *     single most motion-heavy thing here.
+ *   - **a metered or 2g connection** — never loaded, the same test TapePrefetch
+ *     uses before warming the photographs. 15MB is a real amount of somebody's
+ *     data plan, and this is decoration.
+ *   - **arriving at the screen** — the source is not set until the credits are the
+ *     screen in front, and playback pauses the moment they are not. Nothing
+ *     downloads 15MB for a visitor who never reaches the end of the tape, and
+ *     nothing decodes video four reels away.
+ *
+ * `poster` is deliberately absent: the first frame would be a second network
+ * request for an image that is covered by a near-opaque scrim anyway.
+ */
+export const footage = {
+  /** Under public/, so it is served as-is rather than processed by Astro. */
+  src: 'video/garden.mp4',
+} as const;
+
 export const ending = {
   kicker: 'end of tape',
   /**

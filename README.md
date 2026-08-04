@@ -185,6 +185,13 @@ number could come down. Each is still a one-word change.
   than on the tape is the right move. On a landscape phone the sign shrinks, the
   board drops its header and the paragraph goes — the primary action staying above
   the transport matters more than a line of commentary.
+- **The end credits play under moving footage.** `public/video/garden.mp4` sits
+  behind the roll, desaturated and dropped to 42% brightness under a near-opaque
+  scrim, so it is the one place the tape stops being made of stills. It is 15MB —
+  more than three times the rest of the build — so it is gated three ways: never
+  under reduced motion, never on a metered or 2g connection (the same test
+  `TapePrefetch` uses), and the `src` is not set until the credits are the screen in
+  front. Nobody who leaves before the end of the tape downloads it.
 - **Position is shown by two spools, not a progress bar.** They sit either side of
   the transport counter: the supply hub shrinks as the take-up hub grows, off a
   single `--tape-pos` custom property. They replaced an eleven-segment bar across

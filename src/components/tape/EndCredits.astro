@@ -1,5 +1,5 @@
 ---
-import { credits, ending, slugs } from '../../data/tape';
+import { credits, ending, footage, slugs } from '../../data/tape';
 import { site } from '../../data/site';
 
 interface Props {
@@ -8,6 +8,15 @@ interface Props {
 }
 
 const { index } = Astro.props;
+
+/*
+ * The video source rides on a data attribute rather than being written into the
+ * `src` here, for two reasons. It must not load until the credits are the screen
+ * in front — a 15MB fetch for somebody who never reaches the end of the tape would
+ * be indefensible — and the path has to be resolved against the site's base, which
+ * a hand-written relative src would get wrong on a project page.
+ */
+const video = `${import.meta.env.BASE_URL}/${footage.src}`.replace(/\/+/g, '/');
 ---
 
 <section
@@ -17,8 +26,29 @@ const { index } = Astro.props;
   data-active="false"
   data-credits
   data-roll-delay={ending.rollDelay}
+  data-footage={video}
   aria-label="End credits"
 >
+  {/*
+    The one moving picture on the tape, under the roll and graded nearly to black
+    so the names stay readable over it. `aria-hidden` and muted: nothing in it
+    carries meaning, and it has no audio track to unmute.
+
+    No `src` attribute — the script sets it on arrival. See the note on `footage`
+    in src/data/tape.ts for the three things that stop it loading at all.
+  */}
+  <video
+    class="footage"
+    muted
+    loop
+    playsinline
+    preload="none"
+    aria-hidden="true"
+    tabindex="-1"
+    data-credits-footage></video>
+
+  <div class="footage__scrim" aria-hidden="true"></div>
+
   <div class="stage">
     <div class="roll" data-credits-roll>
       <p class="kicker">{ending.kicker}</p>
@@ -89,6 +119,59 @@ const { index } = Astro.props;
 </section>
 
 <style>
+  /* ------------------------------------------------------------- the footage */
+
+  /*
+   * Behind everything on the screen, and only visible at all once the script has
+   * given it a source — an empty `<video>` paints nothing, so there is no black
+   * rectangle waiting over the gradient in the meantime.
+   *
+   * Graded hard: desaturated, dropped to 42% brightness, and then a near-opaque
+   * scrim on top of that. The credits are white type on a moving background, and
+   * the roll has to stay readable at every frame of the footage rather than at
+   * most of them.
+   */
+  .footage {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+    filter: saturate(0.5) contrast(1.06) brightness(0.42);
+    pointer-events: none;
+  }
+
+  .footage__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(rgb(8 4 13 / 72%), rgb(8 4 13 / 86%));
+  }
+
+  /*
+   * Both are inert without a source, but the scrim would still darken the
+   * screen's own gradient — so it only comes in once the video is actually
+   * playing, which is what the attribute the script sets means.
+   */
+  .footage__scrim {
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
+
+  [data-footage-playing='true'] .footage__scrim {
+    opacity: 1;
+  }
+
+  /* Everything else on the screen sits above the footage. */
+  .stage,
+  .actions {
+    position: relative;
+    z-index: 1;
+  }
+
   /* --------------------------------------------------------------- the roll */
 
   .stage {
@@ -454,6 +537,62 @@ const { index } = Astro.props;
 
     let waiting: number | null = null;
 
+    /* ------------------------------------------------------------- footage */
+
+    /*
+     * The video behind the roll. Three things have to be true before 15MB is
+     * fetched, and the first two are decided once, here.
+     */
+    const video = credits.querySelector<HTMLVideoElement>('[data-credits-footage]');
+    const source = credits.dataset.footage;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /*
+     * The same test TapePrefetch makes before warming the photographs: not on a
+     * metered connection, and not on 2g. That rule exists for ~3.5MB of images the
+     * visitor will probably look at; it applies with far more force to 15MB of
+     * decoration behind the last screen. Where the browser will not say, this goes
+     * ahead — absence of the API is not evidence of a slow line.
+     */
+    type NetworkInfo = { saveData?: boolean; effectiveType?: string };
+    const link = (navigator as Navigator & { connection?: NetworkInfo }).connection;
+    const thrifty = Boolean(
+      link?.saveData || (link?.effectiveType && /(^|-)2g$/.test(link.effectiveType)),
+    );
+
+    const wanted = Boolean(video && source) && !reduce.matches && !thrifty;
+
+    /**
+     * Attaches the source the first time the credits are reached, and plays.
+     *
+     * `play()` can still be rejected — a browser that will not autoplay even a
+     * muted video, or one that cannot decode this file — and that is survivable:
+     * the screen keeps its own gradient and the roll is unaffected, so the promise
+     * is caught and dropped rather than reported.
+     */
+    function rollFootage() {
+      if (!wanted || !video) return;
+      if (!video.src) {
+        video.src = source!;
+        video.load();
+      }
+      void video.play().then(
+        () => {
+          credits!.dataset.footagePlaying = 'true';
+        },
+        () => {
+          /* no autoplay, or no decoder for this file — the screen stands alone */
+        },
+      );
+    }
+
+    /* Off-screen video is exactly what this repo's timers rule is about. */
+    function holdFootage() {
+      if (!video || !video.src) return;
+      video.pause();
+    }
+
     function stop() {
       if (waiting !== null) {
         clearTimeout(waiting);
@@ -466,9 +605,18 @@ const { index } = Astro.props;
        * wherever it had got to.
        */
       delete roll.dataset.rolling;
+      holdFootage();
     }
 
     function start() {
+      /*
+       * The footage starts immediately while the roll still waits out its hold —
+       * arriving on a static frame and having it start moving a beat later is the
+       * point of that delay, and the picture behind it coming up at the same moment
+       * would make the whole screen lurch at once.
+       */
+      rollFootage();
+
       if (waiting !== null || roll.dataset.rolling === 'true') return;
       waiting = window.setTimeout(() => {
         waiting = null;
