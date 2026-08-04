@@ -183,6 +183,170 @@ html[data-osd='off'] {
   background: radial-gradient(120% 90% at 50% 100%, #1d1029 0%, #0c0613 56%, #08040d 100%);
 }
 
+/* ------------------------------------------------------ the reel skeleton */
+
+/*
+ * Every reel is built the same way — a readout strip, a photograph in a frame
+ * with its caption sunk into the bottom, a row of controls, a paragraph — and
+ * then does something completely different inside it. These are the parts they
+ * share; anything a single reel invents lives in that reel's own component.
+ *
+ * Global for the same reason as the strip above: six components render these
+ * classes, and scoped styles cannot be shared across components.
+ */
+.reel__osd {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-family: var(--font-osd);
+  font-size: var(--osd-md);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: var(--osd-op, 0);
+}
+
+.reel__osd > * {
+  white-space: nowrap;
+}
+
+.reel__osd-tc {
+  color: var(--tape-muted);
+}
+
+.reel__frame {
+  position: relative;
+  flex: 1 1 auto;
+  /* Without this the photo's intrinsic height wins and the reel overflows. */
+  min-height: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--tape-panel);
+  box-shadow:
+    0 20px 50px rgb(0 0 0 / 66%),
+    inset 0 0 0 1px var(--edge);
+  transition:
+    opacity 0.55s ease,
+    transform 0.7s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/*
+ * Reels not in front sit back and dim. Gated on `html.js` because nothing
+ * updates `data-active` without it — see the note further down.
+ */
+html.js .screen--reel[data-active='false'] .reel__frame {
+  opacity: 0.42;
+  transform: scale(0.955);
+}
+
+.reel__photo {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  object-fit: cover;
+  object-position: var(--photo-pos, 50% 50%);
+}
+
+/* Overlays, in the order they stack. */
+.reel__scan,
+.reel__sink {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.reel__scan {
+  background: var(--scanline);
+  opacity: var(--scan-op, 0);
+}
+
+/* Sinks the bottom of the photograph so the caption stays readable. */
+.reel__sink {
+  background: linear-gradient(to top, rgb(8 4 13 / 93%) 0%, rgb(8 4 13 / 36%) 36%, transparent 64%);
+}
+
+/* The burnt-in readout, top left. */
+.reel__stamp {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  z-index: 4;
+  font-family: var(--font-osd);
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 3px #000;
+}
+
+.reel__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.reel__title {
+  font-family: var(--font-display);
+  font-size: var(--step-h2);
+  font-weight: 400;
+  line-height: 0.84;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--tape-cream);
+  text-shadow:
+    2px 0 0 var(--accent),
+    -2px 0 0 rgb(62 224 232 / 60%);
+}
+
+.reel__hand {
+  font-family: var(--font-hand);
+  font-weight: 600;
+  font-size: var(--step-hand);
+  line-height: 1.15;
+  color: var(--accent);
+  transform: rotate(-1.2deg);
+}
+
+.reel__line {
+  flex: 0 0 auto;
+  max-width: 46ch;
+  font-family: var(--font-osd);
+  font-size: var(--step-body);
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  color: var(--tape-body);
+}
+
+/*
+ * The controls strip under each frame — a throttle, a row of chips, a dial.
+ * Every one of them is dead without script, so none of them is shown without
+ * it. The reel still reads: photograph, title, aside, paragraph.
+ */
+.reel__controls {
+  display: none;
+  flex: 0 0 auto;
+}
+
+html.js .reel__controls {
+  display: flex;
+}
+
+/*
+ * A control inside the strip must not be read as a drag on the tape. The
+ * pointer handler checks for this attribute before starting a scrub.
+ */
+[data-nodrag] {
+  touch-action: manipulation;
+}
+
 /* --------------------------------------------------------- in front / not */
 
 /*

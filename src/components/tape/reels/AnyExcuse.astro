@@ -1,0 +1,203 @@
+---
+import { getImage } from 'astro:assets';
+import { excuse, look, reelCount } from '../../../data/tape';
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+const SIZES = '(min-width: 900px) min(62vw, 720px), 100vw';
+
+/*
+ * One <img> that the script re-points, rather than four stacked on top of each
+ * other. Astro still optimises all four — getImage runs at build time and
+ * gives back the same WebP variants and srcset the <Image> component would —
+ * but only the occasion on screen is ever fetched, and there is one alt text
+ * live at a time instead of three needing to be hidden from screen readers.
+ */
+const shots = await Promise.all(
+  excuse.occasions.map((occasion) =>
+    getImage({ src: occasion.photo, width: 1080, widths: [400, 720, 1080], sizes: SIZES }),
+  ),
+);
+
+const initial = excuse.initial;
+const open = excuse.occasions[initial];
+
+/** Handed to the script so a swap needs no round trip. */
+const payload = excuse.occasions.map((occasion, i) => ({
+  src: shots[i].src,
+  srcset: shots[i].srcSet.attribute,
+  alt: occasion.alt,
+  pos: occasion.pos,
+  stamp: occasion.stamp,
+  hand: occasion.hand,
+  line: occasion.line,
+}));
+
+const vars = [
+  `--accent: ${excuse.accent}`,
+  `--edge: ${excuse.edge}`,
+  `--reel-bg: ${excuse.bg}`,
+  `--photo-pos: ${open.pos}`,
+].join('; ');
+---
+
+<section
+  class="screen screen--reel"
+  id={`screen-${index}`}
+  data-screen
+  data-active="false"
+  data-excuse
+  data-occasions={JSON.stringify(payload)}
+  style={vars}
+  aria-label={`Reel ${excuse.num} of ${reelCount} — ${excuse.label}`}
+>
+  <div class="reel__osd" aria-hidden={osdHidden}>
+    <span>reel {excuse.num} / {String(reelCount).padStart(2, '0')}</span>
+    <span class="reel__osd-tc">{excuse.tc}</span>
+  </div>
+
+  <div class="reel__frame">
+    <img
+      class="reel__photo photo"
+      src={shots[initial].src}
+      srcset={shots[initial].srcSet.attribute}
+      sizes={SIZES}
+      alt={open.alt}
+      width="1080"
+      height="1080"
+      loading="lazy"
+      decoding="async"
+      data-excuse-photo
+    />
+
+    <div class="reel__scan" aria-hidden="true"></div>
+    <div class="reel__sink" aria-hidden="true"></div>
+
+    <p class="reel__stamp" data-excuse-stamp>{open.stamp}</p>
+
+    <div class="reel__caption">
+      <h2 class="reel__title">{excuse.title}</h2>
+      <p class="reel__hand" data-excuse-hand>{open.hand}</p>
+    </div>
+  </div>
+
+  {/*
+    Buttons with aria-pressed rather than a tablist: there is no panel to
+    associate them with — they change one photograph in place — and pressed
+    state is what a visitor actually needs announced.
+  */}
+  <div class="chips reel__controls" role="group" aria-label="Pick an occasion" data-nodrag>
+    {
+      excuse.occasions.map((occasion, i) => (
+        <button
+          class="chip"
+          type="button"
+          aria-pressed={i === initial ? 'true' : 'false'}
+          data-excuse-pick={i}
+        >
+          {occasion.name}
+        </button>
+      ))
+    }
+  </div>
+
+  <p class="reel__line" data-excuse-line>{open.line}</p>
+</section>
+
+<style>
+  .screen--reel {
+    background: var(--reel-bg);
+  }
+
+  .photo {
+    filter: saturate(1.45) contrast(1.06) brightness(0.95);
+  }
+
+  .chips {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    flex: 1 1 auto;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid #5a2440;
+    border-radius: 3px;
+    background-color: rgb(30 10 22 / 70%);
+    color: #e7b9cd;
+    font-family: var(--font-osd);
+    font-size: 16px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .chip:hover {
+    border-color: var(--tape-pink);
+    color: #fff;
+  }
+
+  .chip[aria-pressed='true'] {
+    border-color: var(--tape-pink);
+    background-color: var(--tape-pink);
+    color: var(--tape-black);
+  }
+</style>
+
+<script>
+  const screen = document.querySelector<HTMLElement>('[data-excuse]');
+
+  if (screen) {
+    type Shot = {
+      src: string;
+      srcset: string;
+      alt: string;
+      pos: string;
+      stamp: string;
+      hand: string;
+      line: string;
+    };
+
+    const shots: Shot[] = JSON.parse(screen.dataset.occasions ?? '[]');
+    const photo = screen.querySelector<HTMLImageElement>('[data-excuse-photo]')!;
+    const stamp = screen.querySelector<HTMLElement>('[data-excuse-stamp]')!;
+    const hand = screen.querySelector<HTMLElement>('[data-excuse-hand]')!;
+    const line = screen.querySelector<HTMLElement>('[data-excuse-line]')!;
+    const chips = [...screen.querySelectorAll<HTMLButtonElement>('[data-excuse-pick]')];
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const i = Number(chip.dataset.excusePick);
+        const shot = shots[i];
+        if (!shot) return;
+
+        // srcset before src, so the browser picks from the new candidate list
+        // rather than briefly resolving the old one.
+        photo.srcset = shot.srcset;
+        photo.src = shot.src;
+        photo.alt = shot.alt;
+        screen.style.setProperty('--photo-pos', shot.pos);
+
+        stamp.textContent = shot.stamp;
+        hand.textContent = shot.hand;
+        line.textContent = shot.line;
+
+        chips.forEach((other) =>
+          other.setAttribute('aria-pressed', String(other === chip)),
+        );
+      });
+    });
+  }
+</script>

@@ -1,0 +1,289 @@
+---
+import { getImage } from 'astro:assets';
+import { look, reelCount, takes } from '../../../data/tape';
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+const SIZES = '(min-width: 900px) min(62vw, 720px), 100vw';
+
+/* One <img> the script re-points — see the note in AnyExcuse.astro. */
+const shots = await Promise.all(
+  takes.list.map((take) =>
+    getImage({ src: take.photo, width: 1080, widths: [400, 720, 1080], sizes: SIZES }),
+  ),
+);
+
+/* Opens on take one, the first ruined one. The joke needs the order. */
+const open = takes.list[0];
+
+const payload = takes.list.map((take, i) => ({
+  src: shots[i].src,
+  srcset: shots[i].srcSet.attribute,
+  alt: take.alt,
+  pos: take.pos,
+  n: take.n,
+  hand: take.hand,
+}));
+
+const vars = [
+  `--accent: ${takes.accent}`,
+  `--edge: ${takes.edge}`,
+  `--reel-bg: ${takes.bg}`,
+  `--photo-pos: ${open.pos}`,
+].join('; ');
+---
+
+<section
+  class="screen screen--reel"
+  id={`screen-${index}`}
+  data-screen
+  data-active="false"
+  data-takes
+  data-kept="false"
+  data-list={JSON.stringify(payload)}
+  data-copy={JSON.stringify(takes.lines)}
+  data-labels={JSON.stringify({ roll: takes.rollLabel, again: takes.againLabel })}
+  style={vars}
+  aria-label={`Reel ${takes.num} of ${reelCount} — ${takes.label}`}
+>
+  <div class="reel__osd" aria-hidden={osdHidden}>
+    <span>reel {takes.num} / {String(reelCount).padStart(2, '0')}</span>
+    <span class="reel__osd-tc">{takes.tc}</span>
+  </div>
+
+  <div class="reel__frame">
+    <img
+      class="reel__photo photo"
+      src={shots[0].src}
+      srcset={shots[0].srcSet.attribute}
+      sizes={SIZES}
+      alt={open.alt}
+      width="1080"
+      height="1080"
+      loading="lazy"
+      decoding="async"
+      data-takes-photo
+    />
+
+    <div class="reel__scan" aria-hidden="true"></div>
+    <div class="reel__sink" aria-hidden="true"></div>
+
+    <div class="slate">
+      <span data-takes-n>take {open.n}</span>
+      {/* Only on the keeper. Names her follower count — see CONTENT.md. */}
+      <span class="posted" data-takes-posted>{takes.postedLabel}</span>
+    </div>
+
+    <div class="reel__caption">
+      <h2 class="reel__title">{takes.title}</h2>
+      <p class="reel__hand" data-takes-hand>{open.hand}</p>
+    </div>
+  </div>
+
+  <div class="deck reel__controls" data-nodrag>
+    {/*
+      The list is a readout, not a control: you cannot skip to the good take,
+      which is the entire joke. aria-live so the reason for each bin is
+      announced as it is struck through.
+    */}
+    <ol class="slips" aria-live="polite">
+      {
+        takes.list.map((take, i) => (
+          <li class="slip" data-takes-slip={i} data-state={i === 0 ? 'now' : 'todo'}>
+            <span class="slip__n">{take.n}</span>
+            <span class="slip__why">{take.why}</span>
+          </li>
+        ))
+      }
+    </ol>
+
+    <button class="roll" type="button" data-takes-roll>{takes.rollLabel}</button>
+  </div>
+
+  <p class="reel__line" data-takes-line>{takes.lines.rolling}</p>
+</section>
+
+<style>
+  .screen--reel {
+    background: var(--reel-bg);
+  }
+
+  /*
+   * The ruined takes are cold, flat and slightly crooked; the keeper
+   * straightens up and warms through. Driven off one attribute on the frame so
+   * both the photo and the slate change together.
+   */
+  .photo {
+    filter: saturate(1.1) contrast(1.16) brightness(0.8);
+    transform: scale(1.03) rotate(-0.6deg);
+    transition:
+      transform 0.2s ease-out,
+      filter 0.2s linear;
+  }
+
+  [data-kept='true'] .photo {
+    filter: saturate(1.45) contrast(1.08) brightness(0.95);
+    transform: scale(1) rotate(0deg);
+  }
+
+  .slate {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-osd);
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 1px 3px #000;
+  }
+
+  .posted {
+    display: none;
+    padding: 1px 7px;
+    border-radius: 2px;
+    background-color: var(--tape-pink);
+    color: var(--tape-black);
+    letter-spacing: 0.12em;
+    text-shadow: none;
+  }
+
+  [data-kept='true'] .posted {
+    display: inline-block;
+  }
+
+  .deck {
+    gap: 7px;
+    align-items: stretch;
+  }
+
+  .slips {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .slip {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-osd);
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    color: #3c3049;
+    transition: color 0.2s ease;
+  }
+
+  .slip__n {
+    flex: 0 0 auto;
+  }
+
+  .slip__why {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Binned. */
+  .slip[data-state='done'] {
+    color: var(--tape-muted-dim);
+  }
+
+  .slip[data-state='done'] .slip__why {
+    text-decoration: line-through;
+  }
+
+  .slip[data-state='now'] {
+    color: var(--tape-pink);
+  }
+
+  .roll {
+    flex: 0 0 auto;
+    width: 92px;
+    border: 1px solid #6b2544;
+    border-radius: 3px;
+    background-color: var(--tape-pink);
+    color: var(--tape-black);
+    font-family: var(--font-osd);
+    font-size: 16px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  /* On the keeper the button steps back — nothing needs rolling any more. */
+  [data-kept='true'] .roll {
+    background-color: rgb(30 10 22 / 70%);
+    color: #e7b9cd;
+  }
+
+  .roll:hover {
+    background-color: var(--tape-gold);
+    color: var(--tape-black);
+  }
+</style>
+
+<script>
+  const screen = document.querySelector<HTMLElement>('[data-takes]');
+
+  if (screen) {
+    type Shot = { src: string; srcset: string; alt: string; pos: string; n: string; hand: string };
+
+    const shots: Shot[] = JSON.parse(screen.dataset.list ?? '[]');
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as { rolling: string; kept: string };
+    const labels = JSON.parse(screen.dataset.labels ?? '{}') as { roll: string; again: string };
+
+    const photo = screen.querySelector<HTMLImageElement>('[data-takes-photo]')!;
+    const nOut = screen.querySelector<HTMLElement>('[data-takes-n]')!;
+    const hand = screen.querySelector<HTMLElement>('[data-takes-hand]')!;
+    const line = screen.querySelector<HTMLElement>('[data-takes-line]')!;
+    const button = screen.querySelector<HTMLButtonElement>('[data-takes-roll]')!;
+    const slips = [...screen.querySelectorAll<HTMLElement>('[data-takes-slip]')];
+
+    let take = 0;
+    const last = shots.length - 1;
+
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      // Cycles rather than stopping, so the reel can be replayed.
+      take = take >= last ? 0 : take + 1;
+
+      const shot = shots[take];
+      photo.srcset = shot.srcset;
+      photo.src = shot.src;
+      photo.alt = shot.alt;
+      screen.style.setProperty('--photo-pos', shot.pos);
+
+      nOut.textContent = `take ${shot.n}`;
+      hand.textContent = shot.hand;
+
+      const kept = take === last;
+      screen.dataset.kept = String(kept);
+      line.textContent = kept ? copy.kept : copy.rolling;
+      button.textContent = kept ? labels.again : labels.roll;
+
+      slips.forEach((slip, i) => {
+        slip.dataset.state = i === take ? 'now' : i < take ? 'done' : 'todo';
+      });
+    });
+  }
+</script>

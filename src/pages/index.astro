@@ -1,23 +1,33 @@
 ---
 import Base from '../layouts/Base.astro';
 import TitleCard from '../components/tape/TitleCard.astro';
-import Reel from '../components/tape/Reel.astro';
+import SaltWater from '../components/tape/reels/SaltWater.astro';
+import TwoWheels from '../components/tape/reels/TwoWheels.astro';
+import AnyExcuse from '../components/tape/reels/AnyExcuse.astro';
+import TakeFour from '../components/tape/reels/TakeFour.astro';
+import ColdAir from '../components/tape/reels/ColdAir.astro';
+import SideA from '../components/tape/reels/SideA.astro';
 import IntervalCard from '../components/tape/IntervalCard.astro';
 import EndCredits from '../components/tape/EndCredits.astro';
 import TapeChrome from '../components/tape/TapeChrome.astro';
 import TapeGrain from '../components/tape/TapeGrain.astro';
-import { reels } from '../data/tape';
+import { reelCount } from '../data/tape';
 
 /*
  * Nine screens on one strip: the title card, six reels, the interval, the end
  * credits. The order is the whole argument of the site — the photographs come
  * first and the job is an interval near the end, not a section at the top.
  *
+ * The reels are six separate components rather than six passes over one,
+ * because each is a different toy: you touch the water, hold the throttle,
+ * pick the occasion, roll the take, drag the temperature down, play a line.
+ * They share a skeleton (src/styles/tape.css) and nothing else.
+ *
  * Each screen gets an `id` so the play, resume and rewind links are real
  * links. With no script they jump; with script they glide.
  */
-const intervalIndex = reels.length + 1;
-const creditsIndex = reels.length + 2;
+const intervalIndex = reelCount + 1;
+const creditsIndex = reelCount + 2;
 ---
 
 <Base>
@@ -31,7 +41,12 @@ const creditsIndex = reels.length + 2;
     >
       <TitleCard index={0} />
 
-      {reels.map((reel, i) => <Reel reel={reel} index={i + 1} />)}
+      <SaltWater index={1} />
+      <TwoWheels index={2} />
+      <AnyExcuse index={3} />
+      <TakeFour index={4} />
+      <ColdAir index={5} />
+      <SideA index={6} />
 
       <IntervalCard index={intervalIndex} />
       <EndCredits index={creditsIndex} />
@@ -193,8 +208,10 @@ const creditsIndex = reels.length + 2;
 
     track.addEventListener('pointerdown', (event) => {
       if (!wide.matches || event.button !== 0) return;
-      // Let a click on something clickable be a click.
-      if ((event.target as HTMLElement).closest('a, button')) return;
+      // Let a click on something clickable be a click, and a drag on one of a
+      // reel's own controls — the throttle, the temperature dial — belong to
+      // that control rather than scrubbing the tape out from under it.
+      if ((event.target as HTMLElement).closest('a, button, input, [data-nodrag]')) return;
 
       from = { x: event.clientX, scroll: track.scrollLeft };
       track.dataset.dragging = 'true';

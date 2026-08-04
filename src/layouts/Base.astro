@@ -24,39 +24,55 @@ const isDraft = placeholders.length > 0 || !site.approved;
 // for the social tags, which require them.
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
-const asset = (file: string) =>
-  new URL(`${import.meta.env.BASE_URL}/${file}`.replace(/\/+/g, '/'), Astro.site);
+/** Path under the site's base, e.g. `/gitanjali-raghav/og.jpg`. */
+const path = (file: string) => `${import.meta.env.BASE_URL}/${file}`.replace(/\/+/g, '/');
+
+/**
+ * Absolute, origin and all. Only for tags that genuinely require it: a social
+ * scraper fetching `og:image` has no page to resolve a relative path against.
+ */
+const asset = (file: string) => new URL(path(file), Astro.site);
 
 /*
+ * Cache-buster for the hand-made files in public/. **Increment this whenever
+ * og.jpg, favicon.svg or apple-touch-icon.png changes.**
+ *
+ * Cloudflare fronts mevivek.dev and serves images with
+ * `cache-control: max-age=14400` — four hours. Everything Astro builds is
+ * content-hashed and so immune, but these three live under fixed names, so
+ * replacing one in place leaves the old file being served for hours: the HTML
+ * is cached for only ten minutes, so it updates first and then spends the rest
+ * of the window asking for a stale image. That is exactly what happened when
+ * the cassette mark replaced the old favicon.
+ *
+ * A query string makes it a new URL, so the change lands as soon as the HTML
+ * does. There is no way to purge that cache from here — the zone is not ours.
+ *
+ * It matters most for og.jpg, and not only because of Cloudflare: Slack,
+ * WhatsApp and LinkedIn cache a preview against the image URL more or less
+ * indefinitely, so a redrawn share image under an unchanged name would go on
+ * showing the old headline to everyone who had already shared the link.
+ */
+const ASSET_VERSION = 3;
+
+/**
  * The share image. A JPEG, not a PNG: it is mostly a photograph and a
  * gradient, and the same picture as a PNG was 896KB against 86KB here — over
  * the size at which WhatsApp in particular quietly declines to render a
  * preview at all. Generated from scripts/og-template.html.
+ *
+ * Absolute, because a scraper has no page to resolve a relative path against.
  */
-const ogImage = asset('og.jpg');
+const ogImage = `${asset('og.jpg')}?v=${ASSET_VERSION}`;
 
 /*
- * Icon cache-buster. **Increment this whenever favicon.svg or
- * apple-touch-icon.png changes.**
- *
- * Cloudflare fronts mevivek.dev and serves images with
- * `cache-control: max-age=14400` — four hours. Everything Astro builds is
- * content-hashed and so immune, but these two live in public/ under fixed
- * names, which means replacing one in place leaves the old file being served
- * for hours. The page's own HTML is only cached for ten minutes, so it updates
- * first and then spends the rest of the window asking for a stale icon. That
- * is exactly what happened when the cassette mark replaced the old one.
- *
- * A query string makes it a new URL, so the change lands as soon as the HTML
- * does. There is no way to purge that cache from here — the zone is not ours.
+ * Icons are deliberately paths, not absolute URLs. An icon is fetched by the
+ * browser that already has the page, so it should resolve against whatever
+ * origin served it — hard-coding `Astro.site` made `npm run preview` reach
+ * across to production for its favicon, and would break the moment this is
+ * served from anywhere else.
  */
-const ICON_VERSION = 2;
-
-const icon = (file: string) => {
-  const url = asset(file);
-  url.searchParams.set('v', String(ICON_VERSION));
-  return url;
-};
+const icon = (file: string) => `${path(file)}?v=${ASSET_VERSION}`;
 ---
 
 <!doctype html>
@@ -86,7 +102,7 @@ const icon = (file: string) => {
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="A VHS cassette labelled 'geetanjali raghav' beside the words 'Not much of a CV'"
+      content="A VHS cassette labelled 'geetanjali raghav' beside the words 'No plot, just good footage'"
     />
     <meta name="twitter:card" content="summary_large_image" />
     {/* Twitter falls back to og:image, but is happier told outright. */}

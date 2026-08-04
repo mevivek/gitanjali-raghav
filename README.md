@@ -5,6 +5,12 @@ than a CV. Nine screens on one strip: a title card, six reels, an interval for
 the day job, and end credits. Built with [Astro](https://astro.build) and
 published to GitHub Pages.
 
+Each reel is a toy rather than a slide. You touch the water and it ripples, hold
+a throttle and the odometer runs on, pick the occasion, roll through four takes
+until one is worth posting, drag the temperature down until it snows, and play
+the captions that were only ever song lyrics. All of it optional: with no
+JavaScript the reels are still six photographs with her words under them.
+
 Built from the `Home Video` design in the Claude Design handoff bundle. The
 previous version of this site — a light-themed photo wall with a work list — is
 in the git history at `f36c0a9`.
@@ -63,7 +69,21 @@ Both land on `<html>` as data attributes and become four numbers in
 ## How it's put together
 
 - **Content as data.** Every word lives in `src/data/`, never inside a
-  component. The reels are one array; adding a seventh is adding an object.
+  component — including the alternative wordings each reel swaps between as you
+  play with it. See [CONTENT.md](./CONTENT.md).
+- **Interaction is additive, and every control is a real one.** The throttle,
+  the chips and the roll button are `<button>`s; the temperature dial is an
+  `<input type="range">` rather than the prototype's pointer-drag div, so it
+  arrows, pages and announces its value instead of being pointer-only. The
+  hold-to-rev throttle also holds on Space and Enter, because a
+  pointerdown-only control is unusable from a keyboard. Anything that would be
+  dead without JavaScript is not rendered without it — no inert buttons.
+- **Sound is synthesised, not served.** The tape hiss is three Web Audio voices
+  built on first press: filtered noise, a 50Hz hum, a slow wobble on the gain.
+  No audio file is committed and nothing needs licensing — which is the point,
+  since the soundtrack this tape claims is commercial Hindi film music that
+  cannot go on a public page. Silent until asked, and the choice is remembered
+  but never auto-resumed.
 - **The tape is a scroll container, not a transform.** The design prototype
   moved the strip with a JS-driven `translate3d` and an index in component
   state. This is native scroll snapping instead, which looks the same and gets
@@ -187,19 +207,22 @@ being shrunk to 16px) and `public/apple-touch-icon.png`, a 180×180 raster of
 the same mark for iOS home screens, share sheets, and the scrapers that reach
 for an apple-touch-icon when a page offers no other raster icon.
 
-> **Changing an icon? Bump `ICON_VERSION` in `src/layouts/Base.astro`.**
+> **Changed `og.jpg`, `favicon.svg` or `apple-touch-icon.png`? Bump
+> `ASSET_VERSION` in `src/layouts/Base.astro`.**
 > Cloudflare fronts `mevivek.dev` and serves images with
 > `cache-control: max-age=14400` — four hours. Everything Astro builds is
-> content-hashed and so immune, but these two live in `public/` under fixed
+> content-hashed and so immune, but these three live in `public/` under fixed
 > names, so replacing one in place leaves the old file being served for hours:
 > the HTML is only cached for ten minutes, so it updates first and then spends
-> the rest of the window asking for a stale icon. The version query makes it a
+> the rest of the window asking for a stale image. That is exactly what happened
+> when the cassette mark replaced the old favicon. The version query makes it a
 > new URL and takes effect immediately. The cache cannot be purged from here —
 > the zone is not ours.
 >
-> This does not apply to `og.jpg`. It is a filename that has never existed
-> before, so nothing has a stale copy of it. It replaced a reference to
-> `og.png`, which never existed either.
+> It matters most for `og.jpg`, and not only because of Cloudflare: Slack,
+> WhatsApp and LinkedIn cache a preview against the image URL more or less
+> indefinitely, so a redrawn share image under an unchanged name would go on
+> showing the old headline to everyone who had already shared the link.
 
 ## Known gaps
 
