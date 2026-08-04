@@ -189,7 +189,7 @@ const { index } = Astro.props;
      * scrolls rather than the name clipping off the top of the poster.
      */
     max-height: 100%;
-    overflow-y: auto;
+    overflow: clip;
   }
 
   .poster__plate > * {
@@ -335,6 +335,14 @@ const { index } = Astro.props;
 
     .hint--wide {
       display: inline;
+    }
+  }
+
+  /* Landscape only — see the note on .screen--interval in tape.css. */
+  @media (orientation: landscape) and (max-height: 700px) {
+    .poster__plate {
+      overflow-x: hidden;
+      overflow-y: auto;
     }
   }
 

@@ -180,7 +180,10 @@ const summaryAll = fill(qualityCheck.summaryAll, {
 <style>
   .screen--qc {
     justify-content: safe center;
-    overflow-y: auto;
+    /* See the long note on .screen--interval in tape.css: the internal scroll
+       only exists on a short window, because a nested scroller with nothing to
+       scroll can still swallow a swipe on iOS. */
+    overflow: clip;
     background: radial-gradient(120% 90% at 50% 0%, #16283a 0%, #0c1420 54%, #08040d 100%);
     /* The osd strip on this screen is ice, not a reel accent. */
     --accent: var(--tape-ice);
@@ -703,6 +706,14 @@ const summaryAll = fill(qualityCheck.summaryAll, {
     .cert {
       max-width: 500px;
       margin: 0 auto;
+    }
+  }
+
+  /* Landscape only — see the note on .screen--interval in tape.css. */
+  @media (orientation: landscape) and (max-height: 700px) {
+    .screen--qc {
+      overflow-x: hidden;
+      overflow-y: auto;
     }
   }
 

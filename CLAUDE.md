@@ -107,6 +107,33 @@ place to start.** Whether the bleed is even along the tape or grows the further
 along you are tells you which half is wrong: even means the height, growing means
 the re-snap is not firing.
 
+## Nested scrollers swallow swipes on iOS
+
+Four screens can scroll internally — the interval, Side A, the b-side and the title
+card's plate — as a safety net for a landscape phone. **That scroll now exists only
+in landscape, and gating it was a bug fix, not a tidy-up.**
+
+Reported from a real device: on the b-side, swiping sometimes did nothing and you had
+to lift your finger and try again. The cause is that a nested scroll container on iOS
+can claim a vertical gesture *even when it has nothing to scroll*, and then absorb it
+instead of letting it move the tape. Measuring content against available space at
+320×568, 360×640, 375×667, 390×844 and 430×932 showed all four screens fit in portrait
+with room to spare — so the scroller was pure liability on every phone held normally.
+
+They are `overflow: clip` above 700px tall and in portrait, `overflow-y: auto` only in
+landscape under 700px. Three things to keep in mind:
+
+- **`clip`, not `hidden` or `auto`.** `clip` does not create a scroll container, so it
+  cannot capture a gesture. `hidden` still does.
+- **Both axes together.** A `clip` on one axis with `visible` on the other computes
+  back to a scroll container and undoes the fix.
+- **The gate is `(orientation: landscape) and (max-height: 700px)`, not height alone.**
+  A 375×667 iPhone SE is under 700px while being held perfectly normally.
+
+This could not be reproduced in Chromium here — the swipe works every time at every
+size — so if it recurs, this is the mechanism to look at first, and the fix to check
+is whether some new content has made one of these screens overflow in portrait.
+
 ## The video, and the three things that stop it loading
 
 `public/video/garden.mp4` — 15MB, H.264, one video track and no audio — plays under
@@ -143,6 +170,16 @@ HIT`, `content-type: text/html`, 5815 bytes, which is `404.html` — for four ho
 with no way to purge it from here. Do not request a newly deployed asset's URL until
 Pages is serving it, and if you must, use a throwaway query string. Bumping the
 version is the only lever if it happens.
+
+**Its grade is set from a contrast requirement, not by eye**, since it cannot be
+viewed here. `--footage-lum` and the scrim's two stops in EndCredits.astro put the
+worst-case backdrop — a pure-white frame — at about 0.19 relative luminance, which
+buys the cream credits ≈4:1 and the gold ≈3:1. The bundle's own numbers came out near
+0.09, which was reported from a real device as too dark to see the footage at all;
+these roughly double it, and much above 0.2 the credits stop clearing AA. A light
+background cannot be compensated for with lighter text — there is nothing above white
+to move to. The small muted labels are additionally lifted to `--tape-body` while
+video is playing, because they are the smallest and dimmest type on the screen.
 
 If it ever needs to be smaller, the shape is a few seconds of VP9/WebM with an H.264
 fallback at a few hundred KB rather than the 15MB master — and note this container

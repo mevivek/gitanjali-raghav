@@ -198,16 +198,44 @@ html[data-osd='off'] {
 /* ------------------------------------------------------------ the screens */
 
 /*
- * The interval centres its contents and scrolls internally if a short window
- * cannot hold them — losing the bottom of it on a landscape phone would take the
- * day job with it. Side A, the interval's b-side and the title card do the same
- * thing from inside their own components: the first two are a single paper card
- * that has to stay whole, and the third is a poster whose billing plate is
- * bottom-anchored rather than centred.
+ * FOUR SCREENS CENTRE THEIR CONTENTS AND CAN SCROLL INTERNALLY — the interval,
+ * Side A, the interval's b-side and the title card's plate. The last three set it
+ * up inside their own components; this is the interval's, and the rule below is
+ * what governs all four.
+ *
+ * **The internal scroll only exists on a short window, and that is the fix for a
+ * real bug.** It is a safety net for a landscape phone, where losing the bottom of
+ * the interval would take the day job with it. On a phone held normally nothing on
+ * any of these screens overflows — measured at 375×667, 390×844 and 430×932 — so
+ * the scroller had nothing to scroll and was pure liability: on iOS, a nested
+ * scroll container can claim a vertical gesture even with zero scrollable extent,
+ * and then swallow it instead of letting it move the tape. That is what "sometimes
+ * swiping on the b-side does nothing" was. You had to lift your finger and swipe
+ * again, because the gesture had gone to a scroller that could not move.
+ *
+ * So `overflow: clip` above 700px tall — which, unlike `hidden` or `auto`, does not
+ * create a scroll container at all and therefore cannot capture anything — and
+ * `auto` below it, where the content genuinely needs somewhere to go. Both axes
+ * have to be set together: a `clip` on one axis with `visible` on the other
+ * computes back to a scroll container, which would defeat the whole point.
+ *
+ * The gate is **landscape and short**, not short alone. A 375×667 iPhone SE is under
+ * 700px tall while being held perfectly normally, and it does not need the scroller
+ * either: measured content against available space at 320×568, 360×640, 375×667 and
+ * 390×844, all three of these screens fit with room to spare in portrait. Only a
+ * phone turned sideways genuinely runs out of room, so only a phone turned sideways
+ * gets a scroll container.
  */
 .screen--interval {
   justify-content: safe center;
-  overflow-y: auto;
+  overflow: clip;
+}
+
+@media (orientation: landscape) and (max-height: 700px) {
+  .screen--interval {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
 
 .screen--interval {

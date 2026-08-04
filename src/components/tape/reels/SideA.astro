@@ -173,7 +173,10 @@ const payload = segments.map((segment) => ({
 <style>
   .screen--sidea {
     justify-content: safe center;
-    overflow-y: auto;
+    /* See the long note on .screen--interval in tape.css: the internal scroll
+       only exists on a short window, because a nested scroller with nothing to
+       scroll can still swallow a swipe on iOS. */
+    overflow: clip;
     background: radial-gradient(120% 90% at 50% 0%, #2b1c33 0%, #150c1c 52%, #08040d 100%);
   }
 
@@ -519,6 +522,14 @@ const payload = segments.map((segment) => ({
     .inlay {
       max-width: 500px;
       margin: 0 auto;
+    }
+  }
+
+  /* Landscape only — see the note on .screen--interval in tape.css. */
+  @media (orientation: landscape) and (max-height: 700px) {
+    .screen--sidea {
+      overflow-x: hidden;
+      overflow-y: auto;
     }
   }
 
