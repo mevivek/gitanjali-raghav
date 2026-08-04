@@ -69,9 +69,15 @@ Published from a branch, not GitHub Actions — Actions creates jobs on this
 repository but never assigns them a runner, so the build is done locally and
 the result is pushed to `gh-pages`.
 
-**One-time setup** — **Settings → Pages → Build and deployment**, set *Source*
-to **Deploy from a branch**, then pick **`gh-pages`** and **`/ (root)`**.
-Nothing is served until this is done; it cannot be enabled from code.
+**Already live** — GitHub enabled Pages automatically when `gh-pages` was
+first pushed. If it ever needs setting by hand: **Settings → Pages → Build and
+deployment → Source: Deploy from a branch → `gh-pages` → `/ (root)`**.
+
+The address is `mevivek.dev`, not `mevivek.github.io`: that account serves a
+user site on the custom domain, and GitHub 301s every project path to match.
+This is why `site` in `astro.config.mjs` is set to the custom domain — pointing
+it at github.io would emit canonical and Open Graph URLs that instantly
+redirect.
 
 **Every deploy after that:**
 
@@ -85,7 +91,7 @@ working tree and current branch are never touched. Give it about a minute,
 then:
 
 ```
-https://mevivek.github.io/gitanjali-raghav
+https://mevivek.dev/gitanjali-raghav
 ```
 
 > `public/.nojekyll` must stay where it is. GitHub Pages runs Jekyll by

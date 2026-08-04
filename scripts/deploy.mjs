@@ -94,7 +94,7 @@ try {
   console.log(`\n${GREEN}✓ Deployed.${RESET}`);
   console.log(`${DIM}If this is the first deploy, set Settings → Pages → Source:${RESET}`);
   console.log(`${DIM}"Deploy from a branch" → ${BRANCH} → / (root). Then wait ~1 minute.${RESET}`);
-  console.log(`\n  https://mevivek.github.io/gitanjali-raghav\n`);
+  console.log(`\n  https://mevivek.dev/gitanjali-raghav\n`);
   console.log(`${YELLOW}Note:${RESET} the repository is public, so this page is readable by anyone`);
   console.log(`${DIM}with the link, even while it carries a noindex tag.${RESET}\n`);
 } finally {
