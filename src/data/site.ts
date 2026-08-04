@@ -24,16 +24,29 @@ export const site = {
    */
   name: 'Geetanjali Raghav',
 
-  title: 'Geetanjali Raghav — Home Video',
+  /**
+   * Her name and nothing else. This is the browser tab, the search result and
+   * the bold line of every share preview, so it is the one string a stranger
+   * is most likely to see before anything else.
+   *
+   * It briefly read "Geetanjali Raghav — Home Video". That was wrong twice
+   * over: "Home Video" is the *design's* internal name, meaningless to a
+   * visitor, and set in bold beside a photograph of her in a link preview it
+   * invites a reading nobody wants. The tape can call itself whatever it likes
+   * on the page; the title should just say who she is.
+   */
+  title: 'Geetanjali Raghav',
 
   /**
-   * 140–160 characters, for search results and link previews. Deliberately
-   * not a job description: the page opens by saying it is not a CV, and a
-   * summary that led with the day job would contradict it before anyone
-   * arrived.
+   * The grey line under the title in previews and search results. Keep it
+   * under ~155 characters or search truncates it mid-sentence.
+   *
+   * Deliberately not a job description: the page opens by saying it is not a
+   * CV, and a summary that led with the day job would contradict it before
+   * anyone arrived.
    */
   description:
-    'A home video rather than a CV. Eight reels of hills, salt water, one motorcycle and a very short interval about the day job.',
+    'Eight reels of hills, salt water, one motorcycle and a very short interval about the day job.',
 
   /** Shown as two buttons on the end credits. `rel="me"` on both. */
   socials: [

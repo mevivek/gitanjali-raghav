@@ -83,8 +83,8 @@ cannot consent by proxy. If any are wanted later, ask the people in them first.
 | Field | What to write |
 |---|---|
 | `name` | Spelled as on her LinkedIn. Her Instagram spells it "Gitanjali"; she uses both. |
-| `title` | The browser tab and link previews. |
-| `description` | 140–160 characters, for search results and link previews. |
+| `title` | The browser tab, the search result and the bold line of every share preview. Her name alone. Resist appending a tagline — it briefly said "— Home Video", which is the design's internal name and reads badly in bold beside her photograph. |
+| `description` | The grey line under the title. Under ~155 characters, or search truncates it mid-sentence. |
 | `socials` | Instagram and LinkedIn. The first one gets the filled button on the end credits. |
 | `approved` | `false` until she has seen the site. |
 
