@@ -188,6 +188,20 @@ being shrunk to 16px) and `public/apple-touch-icon.png`, a 180×180 raster of
 the same mark for iOS home screens, share sheets, and the scrapers that reach
 for an apple-touch-icon when a page offers no other raster icon.
 
+> **Changing an icon? Bump `ICON_VERSION` in `src/layouts/Base.astro`.**
+> Cloudflare fronts `mevivek.dev` and serves images with
+> `cache-control: max-age=14400` — four hours. Everything Astro builds is
+> content-hashed and so immune, but these two live in `public/` under fixed
+> names, so replacing one in place leaves the old file being served for hours:
+> the HTML is only cached for ten minutes, so it updates first and then spends
+> the rest of the window asking for a stale icon. The version query makes it a
+> new URL and takes effect immediately. The cache cannot be purged from here —
+> the zone is not ours.
+>
+> This does not apply to `og.jpg`. It is a filename that has never existed
+> before, so nothing has a stale copy of it. It replaced a reference to
+> `og.png`, which never existed either.
+
 ## Known gaps
 
 - **`portrait.jpg` is 320×320** — her Instagram profile picture, and the

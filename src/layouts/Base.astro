@@ -34,6 +34,29 @@ const asset = (file: string) =>
  * preview at all. Generated from scripts/og-template.html.
  */
 const ogImage = asset('og.jpg');
+
+/*
+ * Icon cache-buster. **Increment this whenever favicon.svg or
+ * apple-touch-icon.png changes.**
+ *
+ * Cloudflare fronts mevivek.dev and serves images with
+ * `cache-control: max-age=14400` — four hours. Everything Astro builds is
+ * content-hashed and so immune, but these two live in public/ under fixed
+ * names, which means replacing one in place leaves the old file being served
+ * for hours. The page's own HTML is only cached for ten minutes, so it updates
+ * first and then spends the rest of the window asking for a stale icon. That
+ * is exactly what happened when the cassette mark replaced the old one.
+ *
+ * A query string makes it a new URL, so the change lands as soon as the HTML
+ * does. There is no way to purge that cache from here — the zone is not ours.
+ */
+const ICON_VERSION = 2;
+
+const icon = (file: string) => {
+  const url = asset(file);
+  url.searchParams.set('v', String(ICON_VERSION));
+  return url;
+};
 ---
 
 <!doctype html>
@@ -78,8 +101,8 @@ const ogImage = asset('og.jpg');
       screens and share sheets, and a few link-preview scrapers that reach for
       an apple-touch-icon when a page has no other raster icon.
     */}
-    <link rel="icon" href={asset('favicon.svg')} type="image/svg+xml" />
-    <link rel="apple-touch-icon" href={asset('apple-touch-icon.png')} />
+    <link rel="icon" href={icon('favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={icon('apple-touch-icon.png')} />
 
     {/*
       Marks that scripting is available. The transport buttons need it to do
