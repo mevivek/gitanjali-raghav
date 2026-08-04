@@ -134,7 +134,7 @@ different alt texts. That is on purpose, not a duplicate to tidy up.
 
 Images live in `src/assets/photos/` (**not** `public/`) so Astro optimises
 them: each is re-encoded to WebP at three widths and served with a `srcset`.
-That is why the built site is ~3.5MB with the photographs it uses instead of far
+That is why the built site is ~4.4MB with the photographs it uses instead of far
 more.
 
 **Committed at full resolution** — 1080×1080 for the Instagram set, exactly as
@@ -142,19 +142,21 @@ downloaded, never resized on disk. Astro generates the variants at build time an
 the browser picks one, so a high-density screen gets the full file while an
 ordinary one does not pay for it. Do not pre-shrink anything you add.
 
-**One exception, and it is a crop rather than a shrink.** `cafe-stance.jpg` is the
-third handoff's photograph at its full 3120×4160, and `playback-portrait.jpg` is a
-1080×1350 crop of it framed head-and-shoulders. Reel 06 wants the crop, because
-that reel is about her face stepping from bare to in character and the original is
-a full-length shot in which her face is a few dozen pixels. Both files are
-committed: the crop because it is what is used, the original because a crop is a
-decision and the next person should be able to make a different one.
+**One exception to the 1080 rule.** `playback-portrait.jpg` is the third handoff's
+photograph at its full 3120×4160, and reel 06 uses the whole frame — a standing
+figure in a café, room and all. It was briefly cropped to 1080×1350
+head-and-shoulders; the full frame was chosen instead. It is also the one photograph
+whose `srcset` is **not** capped at 1080 — the others are 1080×1080 originals, so
+1080 is all they have, while this one has 3120 and stopping there would throw most
+of it away. Six variants are generated, from 400px/19KB to 3120px/452KB, and the
+browser picks: a 1× desktop takes 720, a 3× phone takes 1620, and only a large
+high-density display asks for the full 3120.
 
-**Seventeen files, and three of them unused by this cut.** `palace.jpg` was a
-thumbnail on a reel that no longer exists; `cafe-stance.jpg` is the uncropped
-original above; `portrait.jpg` is her 320×320 avatar, which the poster card and
-the new reel-06 photograph between them retired. All three stay on disk — a file
-that was reviewed and approved is not something a redesign should quietly delete.
+**Sixteen files, and two of them unused by this cut.** `palace.jpg` was a thumbnail
+on a reel that no longer exists, and `portrait.jpg` is her 320×320 avatar, which the
+poster card and the new reel-06 photograph between them retired. Both stay on disk —
+a file that was reviewed and approved is not something a redesign should quietly
+delete.
 
 **Each photograph individually approved.** Four candidates were turned down
 specifically because someone other than her was recognisable in them — her

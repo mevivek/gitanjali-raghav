@@ -81,13 +81,16 @@ her behalf:
    `src/data/tape.ts`.
 
 **The headshot gap is closed.** It was the third item on this list for two
-sessions. The third handoff brought a 3120×4160 photograph — delivered three
-times under three names, all byte-identical — and reel 06 now uses a 1080×1350
-crop of it (`playback-portrait.jpg`), framed head-and-shoulders because that reel
-is about her face. The uncropped original is committed as `cafe-stance.jpg` and
-unused. **`portrait.jpg`, the 320×320 avatar that used to do three jobs, is now
-used nowhere** — the poster has no cassette window and the share image is a
-poster. It is left on disk, like `palace.jpg`.
+sessions. The third handoff brought a 3120×4160 photograph — delivered three times
+under three names, all byte-identical — committed once as `playback-portrait.jpg`,
+and reel 06 uses it **at its full frame**: a whole standing figure in a café, not a
+headshot. It was briefly a 1080×1350 head-and-shoulders crop, on the reasoning that
+the reel is about her face; the full frame was chosen instead. If you are wondering
+why the reel's key-light glow is aimed off-centre and tight, that is why — a glow
+centred on this frame lights the room rather than her, and the light coming up on
+her is the whole mechanic. **`portrait.jpg`, the 320×320 avatar that used to do
+three jobs, is now used nowhere** — the poster has no cassette window and the share
+image is a poster. It is left on disk, like `palace.jpg`.
 
 `CONTENT.md` has the longer list of smaller unknowns — her Highspring start
 year, what she studied at MJPRU. On that last one: **two handoffs have now
@@ -122,8 +125,8 @@ have to be settled first, and neither is a code question:
    recognisable in them — that check cannot be skipped for a video simply because
    the tooling could not open it. A garden is exactly the sort of place other
    people are in.
-2. **It is 4× the weight of the entire site.** The built tape is ~3.5MB. This one
-   file is 15MB, it would sit in `main`'s history and in `gh-pages` for good, and
+2. **It is more than 3× the weight of the entire site.** The built tape is ~4.4MB.
+   This one file is 15MB, it would sit in `main`'s history and in `gh-pages` for good, and
    `TapePrefetch` already declines to warm fourteen photographs on a metered
    connection — shipping 15MB to the same visitor would contradict that directly.
 
@@ -280,8 +283,8 @@ updating past the end.
   (`qualityCheck.signature`) if she would rather it were initials or a scrawl.
 - Four photographs were turned down because someone other than her was
   recognisable in them. Nobody can consent by proxy — ask the people in them
-  first. `palace.jpg`, `cafe-stance.jpg` and `portrait.jpg` are all in the repo
-  and unused by the current cut; leave them.
+  first. `palace.jpg` and `portrait.jpg` are both in the repo and unused by the
+  current cut; leave them.
 
 ## Two more that cost time last session
 
@@ -289,8 +292,10 @@ updating past the end.
 is standalone and small enough that Astro inlines them into the HTML (76KB for
 `index.html`, 8KB for the 404 — it was 48KB before the second handoff added two
 screens and the blips). `find dist -name '*.js'` returning nothing is not a broken
-build. The rest: 40 WebP variants and ~3.5MB, up from 38 and 3.2MB because reel
-06 finally has a photograph worth generating widths for.
+build. The rest: 43 WebP variants and ~4.4MB, up from 38 and 3.2MB because reel 06
+finally has a photograph worth generating widths for — and it is the one image not
+capped at 1080, so it alone accounts for six of those variants and about 1MB. See
+the note in Playback.astro for why.
 
 **Browser UI colour is not something the page controls.** `theme-color` and
 `color-scheme: dark` are both set and correct. iOS Safari honours them; **Chrome

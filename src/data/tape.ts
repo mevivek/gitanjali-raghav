@@ -34,22 +34,21 @@ import sareeStreet from '../assets/photos/saree-street.jpg';
 import stoneTemple from '../assets/photos/stone-temple.jpg';
 
 /*
- * Three approved photographs this cut of the tape does not use, all of them
- * deliberately still on disk. A file that was reviewed and approved is not
- * something a redesign should quietly delete.
+ * Two approved photographs this cut of the tape does not use, both deliberately
+ * still on disk. A file that was reviewed and approved is not something a redesign
+ * should quietly delete.
  *
  *   palace.jpg      a contact-sheet thumbnail on the old reel 01, and the reels
  *                   that replaced it have no thumbnail strip.
- *   cafe-stance.jpg the third handoff's photograph at its full 3120×4160 — a
- *                   full-length shot. playback-portrait.jpg is a 1080×1350 crop
- *                   of it, and the crop is what reel 06 wants, because that reel
- *                   is about her face. The original is kept for anywhere a whole
- *                   figure is ever wanted.
  *   portrait.jpg    her 320×320 Instagram avatar. It was the cassette window on
  *                   the old title card and the whole of reel 06; the poster
  *                   card has no window and reel 06 now has a real photograph, so
  *                   nothing asks for it any more. Which is the good outcome —
  *                   it was the lowest-resolution image on the site.
+ *
+ * The third handoff's photograph arrived three times under three names, all
+ * byte-identical. Only one copy is committed, as playback-portrait.jpg, and reel 06
+ * uses it whole — so there is no second file here holding the same picture.
  */
 
 /* ------------------------------------------------------------- the look */
@@ -526,24 +525,29 @@ export const playback = {
 
   title: 'Playback',
   /*
-   * A real photograph at last, and the one asset that has been outstanding since
-   * this reel was built. It arrived with the third handoff at 3120×4160; this is
-   * a 1080×1350 crop of it, framed head-and-shoulders with air above her hair,
-   * because the reel is about her face changing and the original is a full-length
-   * shot in which her face is a few dozen pixels. The uncropped file is kept as
-   * cafe-stance.jpg — see the note at the top of this file.
+   * A real photograph at last, and the one asset that was outstanding from the day
+   * this reel was built. It arrived with the third handoff at 3120×4160, and it is
+   * used at its full frame — a whole standing figure in a café, not a headshot.
    *
-   * The bundle called this "close up", which the full-length original is not. It
-   * is now.
+   * It was briefly a 1080×1350 head-and-shoulders crop of the same file, on the
+   * reasoning that the reel is about her face stepping from bare to in character.
+   * The full frame was chosen instead: it is the photograph she was given, the room
+   * around her is most of what makes it read as a mirror somewhere real, and the
+   * bulbs and the key light do the work of pointing at her without the crop having
+   * to. Astro still generates the same three widths, so nothing is served large.
+   *
+   * Note the bundle's alt text calls this a "close up". It is not, and the alt
+   * text below says what is actually in the frame.
    */
   photo: playbackPortrait as ImageMetadata,
-  alt: 'Geetanjali Raghav close up in a black top and pale striped jacket, one hand on her hip',
+  alt: 'Geetanjali Raghav standing in a café in a black top and pale striped jacket, one hand on her hip',
   /*
-   * The crop is 4:5 and so is the frame at most sizes, so this barely bites —
-   * it only matters on a landscape phone, where the frame goes wide and the crop
-   * has to give up its bottom rather than her face.
+   * The bundle's framing, and it is chosen for both orientations: the source is 3:4
+   * and the frame is narrower than that on a phone — so `cover` crops the sides and
+   * only the 46% matters, pulling her back towards the middle — and wider than it on
+   * a desktop, where it crops top and bottom and the 20% is what keeps her head in.
    */
-  pos: '50% 24%',
+  pos: '46% 20%',
 
   /** Accessible name for the invisible button over the photograph. */
   action: 'Tap on the beat',

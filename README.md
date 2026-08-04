@@ -367,10 +367,9 @@ for an apple-touch-icon when a page offers no other raster icon.
   the whole of the share image, and the full-screen frame on reel 06, where it was
   upscaled two to three times and was visibly the softest thing on the site. The
   third handoff brought a 3120×4160 photograph, and all three jobs went away with
-  it: reel 06 uses a 1080×1350 crop of the new file, and the title card and the
-  share image are now a crop of `red-and-gold.jpg`. **`portrait.jpg` is used
-  nowhere** and is left on disk with `palace.jpg` and the uncropped
-  `cafe-stance.jpg`.
+  it: reel 06 uses that file at its full frame, and the title card and the share
+  image are now a crop of `red-and-gold.jpg`. **`portrait.jpg` is used nowhere** and
+  is left on disk with `palace.jpg`.
 - **Reel 06 is a rhythm toy, and rhythm has no non-timing equivalent.** The beat
   is shown as well as heard — four dots, driven by an attribute rather than an
   animation so the reduced-motion kill-switch cannot stop them — and the tap
