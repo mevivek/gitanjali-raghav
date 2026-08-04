@@ -405,11 +405,18 @@ const summaryAll = fill(qualityCheck.summaryAll, {
     font-size: 16px;
     line-height: 1.08;
     color: #a0553f;
-    visibility: hidden;
+    /*
+     * Faded in rather than switched on, so the note arrives with the stamp instead
+     * of appearing a frame before it. `min-height` above is what keeps the row's
+     * height steady either way — opacity alone would not, and `display` would take
+     * the reserved space back and shunt the rest of the card as each line lands.
+     */
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
 
   .row[data-run='true'] .row__note {
-    visibility: visible;
+    opacity: 1;
   }
 
   /* An empty ruled box, waiting for an impression. */
@@ -668,7 +675,7 @@ const summaryAll = fill(qualityCheck.summaryAll, {
   }
 
   :global(html:not(.js)) .row__note {
-    visibility: visible;
+    opacity: 1;
   }
 
   :global(html:not(.js)) .row__stamp {
@@ -701,16 +708,16 @@ const summaryAll = fill(qualityCheck.summaryAll, {
 
   @media (max-height: 700px) {
     .cert {
-      gap: 7px;
-      padding: 11px 13px 12px;
+      gap: 5px;
+      padding: 10px 12px 11px;
     }
 
     .cert__title {
-      font-size: 26px;
+      font-size: 23px;
     }
 
     .rating__mark {
-      font-size: 22px;
+      font-size: 20px;
     }
 
     /* The particulars are the first thing to go — the conditions are the toy. */
@@ -719,20 +726,24 @@ const summaryAll = fill(qualityCheck.summaryAll, {
     }
 
     .row {
-      padding: 3px 0;
+      padding: 1px 0;
     }
 
     .row__item {
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .row__note {
-      min-height: 17px;
-      font-size: 15px;
+      min-height: 15px;
+      font-size: 14px;
     }
 
     .verdict__top {
-      font-size: 20px;
+      font-size: 17px;
+    }
+
+    .verdict__note {
+      font-size: 10px;
     }
   }
 </style>

@@ -178,6 +178,13 @@ number could come down. Each is still a one-word change.
   afford to put its photographs behind glass — which is also when the reels start
   needing furniture around the frame (a slate, a thermometer, a mirror's bulbs)
   that wants somewhere to sit other than on top of her.
+- **The interval is a cinema foyer.** A lit marquee with twelve staggered bulbs
+  over a brass-framed programme board, with the job titles set in the display face
+  as slot-in board letters. It is the one screen that admits to being about a job
+  and the only one she is not on camera for, so putting it in the building rather
+  than on the tape is the right move. On a landscape phone the sign shrinks, the
+  board drops its header and the paragraph goes — the primary action staying above
+  the transport matters more than a line of commentary.
 - **Position is shown by two spools, not a progress bar.** They sit either side of
   the transport counter: the supply hub shrinks as the take-up hub grows, off a
   single `--tape-pos` custom property. They replaced an eleven-segment bar across

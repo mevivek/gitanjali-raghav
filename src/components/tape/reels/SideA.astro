@@ -305,8 +305,12 @@ const payload = segments.map((segment) => ({
     border: 1px solid rgb(35 20 44 / 50%);
     border-radius: 2px;
     overflow: hidden;
-    /* The unrecorded tail of the side shows through as bare tape. */
-    background-color: #d8c8a4;
+    /*
+     * The unrecorded tail of the side shows through as bare tape — hatched since
+     * the fourth handoff, which reads as unexposed stock rather than as a flat
+     * panel somebody forgot to fill in.
+     */
+    background: repeating-linear-gradient(135deg, #cdbb95 0 5px, #d8c8a4 5px 10px);
   }
 
   .seg {

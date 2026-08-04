@@ -629,8 +629,13 @@ export const sideA = {
 
   title: 'Side A',
 
-  /** The card's spine, printed across the top edge. */
-  inlaySpine: 'geetanjali raghav · no plot, just good footage',
+  /**
+   * The card's spine, printed across the top edge. Her name is initialled here
+   * and nowhere else on the tape: a spine is a few millimetres of card read
+   * edge-on, and the fourth handoff shortened it so the title beside it survives
+   * instead of being ellipsed away on a phone.
+   */
+  inlaySpine: 'g. raghav · no plot, just good footage',
   inlaySide: 'side a',
   inlayNote: 'on repeat, at volume',
   /** Boxed, top right. NR is the noise reduction an E-180 would print. */
@@ -685,10 +690,9 @@ export const sideA = {
 export const interval = {
   kicker: 'interval',
   tc: '00:41:02',
-  /** Printed opposite the kicker. The quality-check card is screen 2. */
-  screenTag: 'screen 1',
+  /** Printed opposite the kicker, where the reels print a timecode. */
+  screenTag: 'house lights up',
   heading: 'Interval',
-  hand: 'the bit where I actually go to work',
 
   /**
    * A three-minute countdown, purely for the joke — nothing on the tape waits
@@ -700,14 +704,18 @@ export const interval = {
   clockLabel: 'interval ends in',
   clockOver: 'interval over',
 
-  /** Column headings over the rows, like a cinema listing. */
-  columnRole: 'showing',
-  columnYears: 'times',
+  /**
+   * The programme board's own header. The fourth handoff turned the listing into
+   * a lit board in a foyer, so the two column headings became one title and the
+   * screen number moved across to sit under it.
+   */
+  boardTitle: "today's programme",
+  boardScreen: 'screen 1',
 
-  /** The status chip at the right of each row. */
+  /** The status line under each row's dates. */
   nowBadge: 'now showing',
-  endedBadge: 'ended',
-  archiveBadge: 'archive',
+  endedBadge: 'last show',
+  archiveBadge: 'archive print',
 
   body: 'Quality checks, the report that has to be right before Friday. I am good at it and it pays for the train tickets — it is just not the interesting part.',
 
@@ -854,8 +862,18 @@ export const credits: Credit[] = [
 
 export const ending = {
   kicker: 'end of tape',
-  /** Not printed anywhere; it is the last stop for the transport counter. */
-  tc: '00:47:55',
+  /**
+   * Not printed anywhere; it is the last stop for the transport counter.
+   *
+   * 45:00 rather than the 47:55 it read until the fourth handoff, because the
+   * title card's billing block says "running time 45 min" and the counter is the
+   * one thing that can contradict it. The bundle fixed the same mismatch by going
+   * back to spreading the whole runtime arithmetically across eleven screens; this
+   * keeps the counter reading each screen's own printed timecode — which is the
+   * property worth having, since it means the counter and a reel's readout cannot
+   * drift apart — and just corrects the one number that was wrong.
+   */
+  tc: '00:45:00',
   headingTop: 'Cast &',
   headingBottom: 'crew',
   signoff: 'shot on a phone, mostly in winter, mostly on the way somewhere',

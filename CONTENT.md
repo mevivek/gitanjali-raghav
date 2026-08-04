@@ -25,7 +25,7 @@ Every word on the site is in this file, in the order you meet it.
 | `look` | How worn the tape is: `grade`, `grain`, `osd`. See the table in [README.md](./README.md#the-three-switches) — `osd: false` hides a fair amount of writing, which is worth knowing before you edit it. `grain` is only a base now; `wear` at the foot of the file multiplies it per screen. |
 | `title` | The opening card, which is a **film poster**: her name, the three-line heading, the two-line billing block, the photograph and its crop. There is deliberately nothing above the photograph — see the note in the file. |
 | `salt`, `wheels`, `excuse`, `takes`, `cold`, `playback`, `sideA` | The seven reels, in order. One block each — they are seven different things, so they do not share a shape. |
-| `interval` | The framing around the day job, including the three-minute countdown. The jobs themselves come from `work.ts`. |
+| `interval` | The framing around the day job: the marquee, the programme board's header (`boardTitle`, `boardScreen`) and the three status lines, plus the three-minute countdown. The jobs themselves come from `work.ts`. |
 | `qualityCheck` | The interval's b-side: the **censor certificate**, its six conditions, and everything printed on it. |
 | `credits`, `ending` | The cast-and-crew roll and the sign-off. |
 | `boot` | The two lines on the tracking screen that plays before the title card. |
@@ -168,7 +168,7 @@ cannot consent by proxy. If any are wanted later, ask the people in them first.
 | `name` | Spelled as on her LinkedIn. Her Instagram spells it "Gitanjali"; she uses both. |
 | `title` | The browser tab, the search result and the bold line of every share preview. Her name alone. Resist appending a tagline — it briefly said "— Home Video", which is the design's internal name and reads badly in bold beside her photograph. |
 | `description` | The grey line under the title. Under ~155 characters, or search truncates it mid-sentence. |
-| `socials` | Instagram and LinkedIn. The first one gets the filled button on the end credits. |
+| `socials` | Instagram and LinkedIn, set as the last two lines of the credit roll. Each needs `role` (what the row is for — "distributed by"), `who` (the handle, which is what shows) and `note` (the half-line under it, dropped on a short screen). `label` is still the platform and is the link's accessible name, because "@gitanjaliraghav" on its own does not say where it goes. Instagram is first and keeps the pink. |
 | `approved` | `false` until she has seen the site. |
 
 ## 3. Work — `src/data/work.ts`

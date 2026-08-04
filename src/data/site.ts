@@ -12,8 +12,18 @@
  */
 
 export interface SocialLink {
+  /** The platform, and the accessible name of the link. */
   label: string;
   href: string;
+  /**
+   * The end credits set these two out as a film's slug lines rather than as
+   * buttons — a right-aligned role in small caps, then the credit itself. So
+   * `role` is what the row is *for* and `who` is the handle it points at.
+   */
+  role: string;
+  who: string;
+  /** The half-line under the handle. Dropped on a short screen. */
+  note: string;
 }
 
 export const site = {
@@ -48,10 +58,30 @@ export const site = {
   description:
     'Seven reels of hills, salt water, one motorcycle, a song, and a very short interval about the day job.',
 
-  /** Shown as two buttons on the end credits. `rel="me"` on both. */
+  /**
+   * The last two lines of the credit roll, set as slug lines. `rel="me"` on both.
+   *
+   * They were two filled buttons side by side until the fourth handoff. As rows
+   * they read as part of the roll above them rather than as furniture stuck
+   * underneath it, and they have room to say which of the two is which — which is
+   * the joke in `note`, and the only place on the tape that acknowledges the
+   * difference between her Instagram and her LinkedIn.
+   */
   socials: [
-    { label: 'Instagram', href: 'https://www.instagram.com/gitanjaliraghav/' },
-    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/geetanjaliraghav/' },
+    {
+      label: 'Instagram',
+      href: 'https://www.instagram.com/gitanjaliraghav/',
+      role: 'distributed by',
+      who: '@gitanjaliraghav',
+      note: 'instagram · the unedited cut',
+    },
+    {
+      label: 'LinkedIn',
+      href: 'https://www.linkedin.com/in/geetanjaliraghav/',
+      role: 'for enquiries',
+      who: 'geetanjaliraghav',
+      note: 'linkedin · the sensible one',
+    },
   ] as SocialLink[],
 
   /**

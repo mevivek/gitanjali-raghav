@@ -43,16 +43,32 @@ const { index } = Astro.props;
   </div>
 
   <div class="actions">
-    <div class="links">
+    {/*
+      The last two lines of the roll, set as a film's slug lines rather than as
+      two buttons side by side — which is what they were until the fourth handoff.
+      As rows they belong to the credits above them instead of sitting underneath
+      as furniture, and they have room to say which of the two is which.
+
+      Still real links to real places, so `rel="me"` and an explicit accessible
+      name: the visible handle is not the platform, and "@gitanjaliraghav" alone
+      does not say where it goes.
+    */}
+    <div class="slugs">
       {
-        site.socials.map((social, i) => (
+        site.socials.map((social) => (
           <a
-            class:list={['link', i === 0 ? 'link--primary' : 'link--secondary']}
+            class="slug"
             href={social.href}
             target="_blank"
             rel="me noopener noreferrer"
+            aria-label={`${social.label} — ${social.who}`}
           >
-            {social.label}
+            <span class="slug__role">{social.role}</span>
+            <span class="slug__what">
+              <span class="slug__who">{social.who}</span>
+              <span class="slug__note">{social.note}</span>
+            </span>
+            <span class="slug__arrow" aria-hidden="true">&#8599;</span>
           </a>
         ))
       }
@@ -78,7 +94,12 @@ const { index } = Astro.props;
   .stage {
     position: relative;
     flex: 1 1 auto;
-    min-height: 0;
+    /*
+     * A floor, so the roll always has somewhere to run. Without it the slug lines
+     * and the sticker below can squeeze the stage to nothing on a short window and
+     * the credits vanish rather than scroll.
+     */
+    min-height: 300px;
     overflow: hidden;
   }
 
@@ -257,59 +278,97 @@ const { index } = Astro.props;
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding-top: 12px;
+    gap: var(--slug-gap);
+    padding-top: var(--slug-gap);
+    --slug-gap: 10px;
   }
 
-  .links {
+  /* Ruled top and bottom, as a block of slug lines is set. */
+  .slugs {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    border-top: 1px solid rgb(111 91 128 / 50%);
+    border-bottom: 1px solid rgb(111 91 128 / 50%);
   }
 
-  .link {
-    flex: 1 1 0;
-    min-height: 48px;
-    padding: 14px 8px;
-    display: grid;
-    place-items: center;
-    text-align: center;
-    border-radius: 2px;
-    font-family: var(--font-display);
-    font-size: 15px;
-    letter-spacing: 0.1em;
+  .slug {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 46px;
+    padding: 11px 2px;
+    transition: background-color 0.2s ease;
+  }
+
+  .slug + .slug {
+    border-top: 1px dotted rgb(111 91 128 / 40%);
+  }
+
+  .slug:first-child:hover {
+    background-color: rgb(255 46 136 / 9%);
+  }
+
+  .slug:last-child:hover {
+    background-color: rgb(62 224 232 / 8%);
+  }
+
+  /* Right-aligned against the gutter, the way a credit's role is set. */
+  .slug__role {
+    flex: 0 0 auto;
+    width: 106px;
+    text-align: right;
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      color 0.2s ease;
+    white-space: nowrap;
+    color: var(--tape-muted-dim);
   }
 
-  .link--primary {
-    border: 2px solid var(--tape-pink);
-    background-color: var(--tape-pink);
-    color: var(--tape-black);
+  .slug__what {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
   }
 
-  .link--primary:hover {
-    border-color: var(--tape-gold);
-    background-color: var(--tape-gold);
-    color: var(--tape-black);
-  }
-
-  .link--secondary {
-    border: 2px solid var(--tape-muted-dim);
-    background-color: transparent;
+  .slug__who {
+    font-family: var(--font-display);
+    font-size: 17px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--tape-body);
   }
 
-  .link--secondary:hover {
-    border-color: var(--tape-cyan);
-    color: var(--tape-cyan);
+  /* Instagram is the one that gets the colour, as it did as a filled button. */
+  .slug:first-child .slug__who {
+    color: var(--tape-pink);
+  }
+
+  .slug__note {
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tape-muted);
+  }
+
+  .slug__arrow {
+    flex: 0 0 auto;
+    font-family: var(--font-osd);
+    font-size: 15px;
+    color: var(--tape-muted-dim);
+  }
+
+  .slug:hover .slug__arrow {
+    color: var(--tape-cream);
   }
 
   .rewind {
-    min-height: 52px;
-    padding: 9px 8px;
+    min-height: 46px;
+    padding: var(--sticker-pad, 9px 8px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -351,6 +410,38 @@ const { index } = Astro.props;
     font-size: 11px;
     letter-spacing: 0.2em;
     opacity: 0.7;
+  }
+
+  /*
+   * A short window: the roll needs a floor or it collapses to nothing behind the
+   * slug lines, and the slug lines give up their sub-line and some air.
+   */
+  @media (max-height: 700px) {
+    /*
+     * Enough for the roll to move in, and no more: the slug lines and the sticker
+     * below need the rest, and if this is left generous the sticker ends up under
+     * the transport keys.
+     */
+    .stage {
+      min-height: 130px;
+    }
+
+    .actions {
+      --slug-gap: 6px;
+      --sticker-pad: 6px 8px;
+    }
+
+    .slug {
+      padding: 5px 2px;
+    }
+
+    .slug__role {
+      width: 100px;
+    }
+
+    .slug__note {
+      display: none;
+    }
   }
 </style>
 

@@ -36,7 +36,25 @@ its shape — the screen count did not move. What was taken:
 - **A real photograph for reel 06**, at last. See below.
 - **A 404 page**, in the cold open's untuned blue.
 
-Seven things in that bundle were deliberately **not** taken. Check `git log`
+**A fourth handoff followed the same day**, and it is small by comparison. The
+interval became a cinema foyer — a lit marquee with twelve pulsing bulbs over a
+brass-framed "today's programme" board, job titles moved off the serif onto the
+display face, and the screen darkened around them so the two read as lit. The end
+credits' two social buttons became slug lines (*distributed by* / *for
+enquiries*). Side A's spine initialled her name, its blank tail gained a hatch,
+and the certificate's margin notes now fade in rather than switching on. The
+counter's last stop moved 47:55 → **45:00**, because the poster's billing block
+says "running time 45 min" and the counter was the one thing contradicting it.
+
+Three of that bundle's changes were fixes we had already made independently —
+sizing Side A's strip against the whole side, holding the certificate's note
+height so stamping does not shunt the card, and giving the verdict stamp its own
+keyframe so the centring survives. Worth knowing, because it means the bundle and
+this repo are converging rather than fighting.
+
+**It also brought a 15MB `garden.mp4`** — see "The video is not in the repo" below.
+
+Seven things in the third bundle were deliberately **not** taken. Check `git log`
 before assuming a difference from a bundle is an oversight:
 
 1. `osd: true` — asked for by all three handoffs, declined all three times.
@@ -84,6 +102,35 @@ symptom — so **if a sliver is still showing on a real iPhone, that fix is the
 place to start.** Whether the bleed is even along the tape or grows the further
 along you are tells you which half is wrong: even means the height, growing means
 the re-snap is not firing.
+
+## The video is not in the repo
+
+The fourth handoff shipped `video/garden.mp4` — 15MB, H.264, one video track and
+no audio, about 726 frames. It is used as a muted looping backdrop in exactly one
+of three places, chosen by a `footage` prop that defaults to **behind the end
+credits**, loaded only once you reach the interval, and skipped entirely under
+reduced motion. That is a considerate design.
+
+**It was not adopted, and the reason is not that it is a bad idea.** Two things
+have to be settled first, and neither is a code question:
+
+1. **Nobody has been able to look at it.** This container's Chromium has no H.264
+   decoder (`canPlayType('video/mp4; codecs="avc1.42E01E"')` returns empty) and
+   the ffmpeg that ships with Playwright cannot demux MP4, so the footage could
+   not be viewed here at all. Every photograph on this site was individually
+   approved and four were turned down because someone other than her was
+   recognisable in them — that check cannot be skipped for a video simply because
+   the tooling could not open it. A garden is exactly the sort of place other
+   people are in.
+2. **It is 4× the weight of the entire site.** The built tape is ~3.5MB. This one
+   file is 15MB, it would sit in `main`'s history and in `gh-pages` for good, and
+   `TapePrefetch` already declines to warm fourteen photographs on a metered
+   connection — shipping 15MB to the same visitor would contradict that directly.
+
+If it is wanted, the shape of the answer is: confirm who is in it, then encode a
+much smaller version (a few seconds, VP9/WebM with an H.264 fallback, a few
+hundred KB) rather than committing the master. Note that **this container cannot
+re-encode it** either, for the same codec reason.
 
 ## Branches and deploying
 

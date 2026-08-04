@@ -76,14 +76,19 @@
   /* The stamp pad: pass in the certificate's own ink, fail in red. */
   --tape-stamp-fail: #c2452c;
 
-  /* the interval is the one screen that leaves the purple behind */
-  --int-near: #7a0f3d;
-  --int-mid: #3a0a22;
-  --int-far: #14060f;
-  --int-hand: #ffd9e7;
+  /*
+   * The interval is the one screen that leaves the purple behind. Darkened by the
+   * fourth handoff, which turned it into a cinema foyer: a lit marquee and a
+   * backlit programme board only read as lit if the room around them is dim.
+   */
+  --int-near: #5c0b2e;
+  --int-mid: #2c0719;
+  --int-far: #12050e;
   --int-org: #e3a8c2;
   --int-years: #b78a9f;
-  --int-body: #f0c9d8;
+  --int-body: #f4d5e0;
+  /* The marquee's frame and the programme board's brass surround. */
+  --int-brass: #c9a24c;
 
   /* focus ring — cyan clears AA on every background the tape uses */
   --focus: #8fe8f2;
@@ -101,7 +106,9 @@
    * monospace, so now the machine and the person are set differently.
    *
    * `--font-serif` above is Rozha One and stays where it is: it is a display
-   * face for the interval's job titles, and it would be unreadable at 16px.
+   * face, used for the names on the credit roll, and it would be unreadable at
+   * 16px. It set the interval's job titles too until the fourth handoff turned
+   * that screen into a letter board and moved them onto the display face.
    */
   --font-body: 'Tiro Devanagari Hindi', Georgia, 'Times New Roman', serif;
 
@@ -110,7 +117,7 @@
   --step-int: clamp(52px, 17vw, 88px);
   --step-hand: 25px;
   --step-body: 16px;
-  --step-role: 24px;
+  --step-role: 19px;
 
   /*
    * The poster headline on the title card, and the one size on the tape that is
@@ -163,7 +170,7 @@
     --step-int: clamp(62px, 8.4vw, 118px);
     --step-hand: 28px;
     --step-body: 18px;
-    --step-role: 28px;
+    --step-role: 22px;
     /* 13.5% of the panel, which is itself min(44vw, 560px). */
     --step-poster: min(5.94vw, 75.6px, calc(var(--screen-h, 100dvh) * 0.17), 92px);
 
@@ -187,7 +194,7 @@
     --step-int: clamp(40px, 8vw, 58px);
     --step-hand: 21px;
     --step-body: 14px;
-    --step-role: 20px;
+    --step-role: 16px;
 
     --pad-x: 18px;
     --pad-screen: 22px 18px 74px;
