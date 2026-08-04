@@ -53,17 +53,19 @@ const dots = Array.from({ length: playback.dots }, (_, i) => i);
 
   <div class="reel__frame">
     {/*
-      The same 320×320 file as the cassette window on the title card, and the
-      only place on the tape it is asked to fill a whole frame. No `widths`:
-      there is nothing to pick between, and asking for 1080 would only upscale
-      it on disk as well as on screen. See CONTENT.md — this is the reason the
-      headshot moved to the top of the assets list.
+      A real photograph, finally. This was her 320×320 Instagram avatar upscaled
+      two to three times to fill a whole frame, and it was the softest thing on
+      the site by a distance; the third handoff brought a 3120×4160 original, and
+      this is a 1080×1350 crop of it. So it now takes `widths` like every other
+      reel — there is genuinely something to pick between.
     */}
     <Image
       class="reel__photo photo"
       src={playback.photo}
       alt={playback.alt}
-      width={320}
+      width={1080}
+      widths={[400, 720, 1080]}
+      sizes="(min-width: 900px) min(44vw, 560px), 100vw"
       loading="lazy"
       decoding="async"
     />

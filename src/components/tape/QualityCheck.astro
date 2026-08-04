@@ -16,11 +16,9 @@ const passes = qualityCheck.checks.filter((check) => check.verdict === 'pass').l
 const fill = (template: string, values: Record<string, number>) =>
   template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
 
-/* What the summary says before anything is run, and with everything run. */
-const summaryIdle = fill(qualityCheck.summaryIdle, { n: total });
-const summaryAll = fill(qualityCheck.summaryRun, {
-  done: total,
-  total,
+/* What the summary says before anything is examined, and with everything done. */
+const summaryIdle = fill(qualityCheck.summaryPartial, { done: 0, total });
+const summaryAll = fill(qualityCheck.summaryAll, {
   pass: passes,
   fail: total - passes,
 });
@@ -34,12 +32,12 @@ const summaryAll = fill(qualityCheck.summaryRun, {
   data-qc
   data-copy={JSON.stringify({
     total,
-    summaryIdle: qualityCheck.summaryIdle,
-    summaryRun: qualityCheck.summaryRun,
-    signedYes: qualityCheck.signedYes,
-    signedNo: qualityCheck.signedNo,
+    summaryPartial: qualityCheck.summaryPartial,
+    summaryAll: qualityCheck.summaryAll,
+    signedPending: qualityCheck.signedPending,
+    signedDone: qualityCheck.signedDone,
   })}
-  aria-label="Interval, b-side — the quality check"
+  aria-label="Interval, b-side — the certificate"
 >
   <div class="reel__osd" aria-hidden={osdHidden}>
     <span>{qualityCheck.kicker}</span>
@@ -47,85 +45,135 @@ const summaryAll = fill(qualityCheck.summaryRun, {
   </div>
 
   {/*
-    A carbon-paper form, punched and slightly crooked. `data-nodrag` because
-    pressing `check` on a wide screen must not be read as a drag on the tape.
+    The card the censor board staples to the front of a print, made out to
+    herself. It was a carbon-paper QA form until the third handoff; a certificate
+    is the same joke on better stationery, and it is the thing every Hindi film
+    actually opens on, which is a better fit for a tape than an internal form.
+
+    `data-nodrag` because pressing the stamp on a wide screen must not be read as
+    a drag on the tape.
   */}
-  <div class="form" data-nodrag data-done="false">
-    <span class="form__hole form__hole--left" aria-hidden="true"></span>
-    <span class="form__hole form__hole--right" aria-hidden="true"></span>
+  <div class="cert" data-nodrag data-done="false">
+    <p class="cert__board">
+      <span>{qualityCheck.board}</span>
+      <span class="cert__rule" aria-hidden="true"></span>
+    </p>
 
-    <div class="form__head">
-      <h2 class="form__title">{qualityCheck.heading}<br />{qualityCheck.headingSecond}</h2>
+    <div class="cert__head">
+      <span class="cert__names">
+        <h2 class="cert__title">{qualityCheck.heading}</h2>
+        <span class="cert__code">
+          {qualityCheck.code} &middot;
+          {/*
+            Two spellings of the same fact, because the no-script page has every
+            condition already examined and the scripted one starts with none. CSS
+            picks one, so neither ever flashes into the other.
+          */}
+          <span class="only-js" data-qc-signed>{qualityCheck.signedPending}</span>
+          <span class="only-static">{qualityCheck.signedDone}</span>
+        </span>
+      </span>
 
-      <p class="form__ref">
-        <span>{qualityCheck.formCode}</span>
-        <span>{qualityCheck.formSubject}</span>
-        {/*
-          Two spellings of the same fact, because the no-script page has every
-          check already run and the scripted one starts with none. CSS picks
-          one, so neither ever flashes into the other.
-        */}
-        <span class="only-js" data-qc-signed>{qualityCheck.signedNo}</span>
-        <span class="only-static">{qualityCheck.signedYes}</span>
-      </p>
+      {/*
+        The rating, boxed. U/A is the real Indian certificate for "parental
+        guidance under 12", which is about right for a tape whose worst offence
+        is the language on this screen.
+      */}
+      <span class="rating">
+        <span class="rating__mark">{qualityCheck.rating}</span>
+        <span class="rating__note">{qualityCheck.ratingNote}</span>
+      </span>
     </div>
 
-    <p class="form__intro">{qualityCheck.intro}</p>
-
-    <ul class="rows">
+    <dl class="parts">
       {
-        qualityCheck.checks.map((check) => (
-          <li class="row" data-qc-row={check.id} data-run="false">
-            <span class="row__id">{check.id}</span>
-
-            <span class="row__body">
-              <span class="row__item">{check.item}</span>
-              <span class="row__note">{check.note}</span>
-            </span>
-
-            <button
-              class="row__check only-js"
-              type="button"
-              aria-label={`Check: ${check.item}`}
-              data-qc-run={check.id}
-            >
-              {qualityCheck.runLabel}
-            </button>
-
-            <span class="row__stamp" data-verdict={check.verdict}>
-              {check.verdict}
-            </span>
-          </li>
+        qualityCheck.particulars.map((part) => (
+          <div class="part">
+            <dt class="part__k">{part.k}</dt>
+            <dd class="part__v">{part.v}</dd>
+          </div>
         ))
       }
-    </ul>
+    </dl>
 
-    <div class="form__foot">
+    <div class="conditions">
+      <p class="conditions__label">{qualityCheck.conditionsLabel}</p>
+
+      <ul class="rows">
+        {
+          qualityCheck.checks.map((check, i) => (
+            <li class="row" data-qc-row={check.id} data-run="false">
+              <span class="row__n">{i + 1}</span>
+
+              <span class="row__body">
+                <span class="row__item">{check.item}</span>
+                <span class="row__note">{check.note}</span>
+              </span>
+
+              {/*
+                A real button per line, so a single condition can be examined on
+                its own from the keyboard — the "press the stamp" key below only
+                ever takes the next one in order. Both are the same action.
+              */}
+              <button
+                class="row__press only-js"
+                type="button"
+                aria-label={`Examine: ${check.item}`}
+                data-qc-run={check.id}
+              >
+                <span class="row__empty" aria-hidden="true"></span>
+              </button>
+
+              <span class="row__stamp" data-verdict={check.verdict}>
+                {check.verdict}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="cert__foot">
       {/*
-        aria-live so pressing a check announces the tally moving, which is the
-        only feedback a screen-reader user gets for the stamp landing.
+        The stamp comes down on the next unexamined line, one press at a time. A
+        rubber stamp is a single action, and going through them in order is what
+        makes the three fails land one after another instead of as a batch.
       */}
-      <p class="form__summary" aria-live="polite">
+      <button class="cert__press only-js" type="button" data-qc-all>
+        {qualityCheck.pressLabel}
+      </button>
+
+      <button class="cert__reset only-js" type="button" data-qc-clear>
+        {qualityCheck.resetLabel}
+      </button>
+
+      {/*
+        aria-live so pressing the stamp announces the tally moving, which is the
+        only feedback a screen-reader user gets for the impression landing.
+      */}
+      <p class="cert__summary" aria-live="polite">
         <span class="only-js" data-qc-summary>{summaryIdle}</span>
         <span class="only-static">{summaryAll}</span>
       </p>
-
-      <button class="form__all only-js" type="button" data-qc-all>
-        {qualityCheck.runAllLabel}
-      </button>
-
-      <button class="form__clear only-js" type="button" data-qc-clear>
-        {qualityCheck.clearLabel}
-      </button>
     </div>
 
-    <div class="form__signed">
-      <span class="form__signed-label">{qualityCheck.signedLabel}</span>
-      <span class="form__rule">
-        <span class="form__hand">{qualityCheck.verdict}</span>
+    <div class="signed">
+      <span class="signed__label">{qualityCheck.signedLabel}</span>
+      <span class="signed__rule">
+        <span class="signed__hand">{qualityCheck.signature}</span>
       </span>
-      <span class="form__date">{qualityCheck.date}</span>
+      <span class="signed__date">{qualityCheck.date}</span>
     </div>
+
+    {/*
+      Slammed across the card once every condition has been examined. It is
+      `aria-hidden` because the summary beside the stamp already says the same
+      thing in a form a screen reader can use, and this is the graphic version.
+    */}
+    <p class="verdict" aria-hidden="true">
+      <span class="verdict__top">{qualityCheck.verdictTop}</span>
+      <span class="verdict__note">{qualityCheck.verdictNote}</span>
+    </p>
   </div>
 </section>
 
@@ -138,79 +186,165 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     --accent: var(--tape-ice);
   }
 
-  /* ----------------------------------------------------------- the paper */
+  /* --------------------------------------------------------- the certificate */
 
-  .form {
+  /*
+   * Green-grey security paper with a double rule round it, which is what these
+   * cards are actually printed on — deliberately not the warm stock reel 07's
+   * inlay card uses. The two are different objects and should not look like the
+   * same piece of paper.
+   */
+  .cert {
     position: relative;
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 17px 13px 11px;
-    border-radius: 4px;
-    background: linear-gradient(var(--tape-label-bright), var(--tape-label-deep));
-    box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
-    transform: rotate(0.4deg);
-  }
-
-  .form__hole {
-    position: absolute;
-    top: 6px;
-    width: 9px;
-    height: 9px;
-    border-radius: 999px;
-    background-color: #0c1420;
-    box-shadow: inset 0 1px 2px rgb(0 0 0 / 80%);
-  }
-
-  .form__hole--left {
-    left: 26px;
-  }
-
-  .form__hole--right {
-    right: 26px;
-  }
-
-  .form__head {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
     gap: 10px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid rgb(35 20 44 / 30%);
+    padding: 15px 16px;
+    border: 3px double var(--tape-cert-ink);
+    background: linear-gradient(var(--tape-cert), var(--tape-cert-shade));
+    box-shadow: 0 18px 44px rgb(0 0 0 / 60%);
+    transform: rotate(0.35deg);
+    /* The verdict stamp is positioned against this and must not escape it. */
+    overflow: hidden;
   }
 
-  .form__title {
-    font-family: var(--font-display);
-    font-size: 27px;
-    font-weight: 400;
-    line-height: 0.9;
-    text-transform: uppercase;
-    color: var(--tape-label-ink);
-  }
-
-  .form__ref {
+  .cert__board {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     gap: 1px;
+    text-align: center;
     font-family: var(--font-osd);
     font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--tape-cert-faint);
+  }
+
+  .cert__rule {
+    width: 34px;
+    height: 1px;
+    margin: 3px 0;
+    background-color: rgb(28 42 30 / 45%);
+  }
+
+  .cert__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .cert__names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .cert__title {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--tape-cert-ink);
+  }
+
+  .cert__code {
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tape-cert-mute);
+  }
+
+  /* ------------------------------------------------------------- the rating */
+
+  .rating {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 3px 9px 4px;
+    border: 2px solid var(--tape-cert-ink);
+    border-radius: 2px;
+  }
+
+  .rating__mark {
+    font-family: var(--font-display);
+    font-size: 27px;
+    line-height: 0.9;
+    color: var(--tape-cert-ink);
+  }
+
+  .rating__note {
+    font-family: var(--font-osd);
+    font-size: 9px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    text-align: right;
-    color: var(--tape-label-mute);
+    color: var(--tape-cert-mute);
   }
 
-  .form__intro {
+  /* -------------------------------------------------------- the particulars */
+
+  /*
+   * A two-column list of facts about the print. `display: contents` on the
+   * wrapper lets the <dt>/<dd> pairs be the grid's own items and keep their
+   * semantics — the same trick the end credits use.
+   */
+  .parts {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 66px 1fr;
+    gap: 2px 9px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-top: 1px solid rgb(28 42 30 / 35%);
+    border-bottom: 1px solid rgb(28 42 30 / 35%);
+  }
+
+  .part {
+    display: contents;
+  }
+
+  .part__k {
+    font-family: var(--font-osd);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tape-cert-mute);
+  }
+
+  .part__v {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     font-family: var(--font-osd);
     font-size: 13px;
-    line-height: 1.35;
     letter-spacing: 0.04em;
-    color: #6d5a48;
+    color: var(--tape-cert-ink);
   }
 
-  /* ------------------------------------------------------------- the rows */
+  /* --------------------------------------------------------- the conditions */
+
+  .conditions {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .conditions__label {
+    font-family: var(--font-osd);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--tape-cert-faint);
+  }
 
   .rows {
     margin: 0;
@@ -225,16 +359,15 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     align-items: center;
     gap: 9px;
     padding: 5px 0;
-    border-bottom: 1px dashed rgb(35 20 44 / 22%);
+    border-bottom: 1px solid rgb(28 42 30 / 16%);
   }
 
-  .row__id {
+  .row__n {
     flex: 0 0 auto;
-    width: 42px;
+    width: 15px;
     font-family: var(--font-osd);
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    color: var(--tape-label-mute);
+    font-size: 13px;
+    color: var(--tape-cert-mute);
   }
 
   .row__body {
@@ -242,26 +375,25 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 1px;
   }
 
-  /* Grey until it has been run, then in ink. */
+  /* Faint until it has been examined, then in ink. */
   .row__item {
     font-family: var(--font-osd);
     font-size: 14px;
-    line-height: 1.2;
+    line-height: 1.22;
     letter-spacing: 0.02em;
-    color: #57405f;
+    color: #4c5a49;
     transition: color 0.2s ease;
   }
 
   .row[data-run='true'] .row__item {
-    color: var(--tape-label-ink);
+    color: var(--tape-cert-ink);
   }
 
   /*
    * Her note in the margin. The row keeps its height whether or not the note
-   * is showing, so stamping a line does not shunt the rest of the form about.
+   * is showing, so stamping a line does not shunt the rest of the card about.
    */
   .row__note {
     min-height: 18px;
@@ -271,7 +403,7 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     font-family: var(--font-hand);
     font-weight: 600;
     font-size: 16px;
-    line-height: 1.1;
+    line-height: 1.08;
     color: #a0553f;
     visibility: hidden;
   }
@@ -280,36 +412,31 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     visibility: visible;
   }
 
-  .row__check {
+  /* An empty ruled box, waiting for an impression. */
+  .row__press {
     flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 58px;
-    min-height: 30px;
-    padding: 0 9px;
-    border: 1px dashed #a08a6a;
-    border-radius: 2px;
+    padding: 0;
+    border: 0;
     background: transparent;
-    color: var(--tape-label-mute);
-    font-family: var(--font-osd);
-    font-size: 13px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
     cursor: pointer;
-    transition:
-      border-color 0.2s ease,
-      color 0.2s ease;
   }
 
-  .row__check:hover {
+  .row__empty {
+    display: block;
+    width: 52px;
+    height: 22px;
+    border: 1px dotted rgb(28 42 30 / 40%);
+    border-radius: 2px;
+    transition: border-color 0.2s ease;
+  }
+
+  .row__press:hover .row__empty {
     border-style: solid;
-    border-color: var(--tape-label-ink);
-    color: var(--tape-label-ink);
+    border-color: var(--tape-cert-ink);
   }
 
-  /* Run: the button gives its place up to the stamp. */
-  .row[data-run='true'] .row__check {
+  /* Examined: the box gives its place up to the stamp. */
+  .row[data-run='true'] .row__press {
     display: none;
   }
 
@@ -318,14 +445,13 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     display: none;
     align-items: center;
     justify-content: center;
-    min-width: 58px;
-    min-height: 28px;
-    padding: 1px 7px;
+    width: 52px;
+    min-height: 22px;
     border: 2px solid;
     border-radius: 2px;
     font-family: var(--font-osd);
-    font-size: 15px;
-    letter-spacing: 0.2em;
+    font-size: 14px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     opacity: 0.88;
   }
@@ -340,138 +466,190 @@ const summaryAll = fill(qualityCheck.summaryRun, {
    * repeated. The animations are declared in global.css.
    */
   .row__stamp[data-verdict='pass'] {
-    border-color: #1d6a72;
-    color: #1d6a72;
-    animation: tape-stamp-pass 0.3s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+    border-color: var(--tape-cert-ink);
+    color: var(--tape-cert-ink);
+    animation: tape-stamp-pass 0.34s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
   }
 
   .row__stamp[data-verdict='fail'] {
-    border-color: #c2452c;
-    color: #c2452c;
-    animation: tape-stamp-fail 0.3s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+    border-color: var(--tape-stamp-fail);
+    color: var(--tape-stamp-fail);
+    animation: tape-stamp-fail 0.34s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
   }
 
-  /* ------------------------------------------------------------ the foot */
+  /* ------------------------------------------------------------- the foot */
 
-  .form__foot {
+  .cert__foot {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 10px;
-    padding-top: 2px;
   }
 
-  .form__summary {
-    font-family: var(--font-osd);
-    font-size: 13px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--tape-label-mute);
-  }
-
-  .form__all,
-  .form__clear {
+  .cert__press,
+  .cert__reset {
+    flex: 1 1 auto;
     align-items: center;
-    min-height: 34px;
+    justify-content: center;
+    min-height: 40px;
     padding: 0 13px;
     border-radius: 2px;
     font-family: var(--font-osd);
-    font-size: var(--osd-md);
-    letter-spacing: 0.16em;
+    font-size: 15px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     cursor: pointer;
     transition:
       background-color 0.2s ease,
       border-color 0.2s ease,
-      color 0.2s ease;
+      color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
-  .form__all {
+  .cert__press {
     border: 0;
-    background-color: var(--tape-label-ink);
-    color: var(--tape-label-bright);
+    background-color: var(--tape-cert-ink);
+    color: var(--tape-cert);
+    box-shadow: 0 3px 0 #0d1510;
   }
 
-  .form__all:hover {
-    background-color: #c2452c;
+  .cert__press:hover {
+    background-color: var(--tape-stamp-fail);
+    box-shadow: 0 3px 0 #7d2a1b;
   }
 
-  .form__clear {
-    border: 1px solid #a08a6a;
+  /* Travels like a stamp being pressed, because that is what it is. */
+  .cert__press:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #0d1510;
+  }
+
+  .cert__reset {
+    border: 1px solid rgb(28 42 30 / 50%);
     background: transparent;
-    color: var(--tape-label-mute);
+    color: var(--tape-cert-faint);
   }
 
-  .form__clear:hover {
-    border-color: var(--tape-label-ink);
-    color: var(--tape-label-ink);
+  .cert__reset:hover {
+    border-color: var(--tape-cert-ink);
+    color: var(--tape-cert-ink);
   }
 
   /* Only one of the two is ever the useful one. */
-  .form[data-done='false'] .form__clear,
-  .form[data-done='true'] .form__all {
+  .cert[data-done='false'] .cert__reset,
+  .cert[data-done='true'] .cert__press {
     display: none;
+  }
+
+  .cert__summary {
+    flex: 0 0 auto;
+    text-align: right;
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--tape-cert-mute);
   }
 
   /* --------------------------------------------------------- the signature */
 
-  .form__signed {
+  .signed {
     display: flex;
     align-items: flex-end;
     gap: 10px;
-    padding-top: 2px;
   }
 
-  .form__signed-label,
-  .form__date {
+  .signed__label,
+  .signed__date {
     flex: 0 0 auto;
     font-family: var(--font-osd);
-    font-size: 11px;
-    color: var(--tape-label-mute);
+    font-size: 10px;
+    color: var(--tape-cert-mute);
   }
 
-  .form__signed-label {
+  .signed__label {
     letter-spacing: 0.16em;
     text-transform: uppercase;
   }
 
-  .form__date {
+  .signed__date {
     letter-spacing: 0.1em;
   }
 
-  .form__rule {
+  .signed__rule {
     flex: 1 1 auto;
     min-width: 0;
-    min-height: 26px;
+    min-height: 24px;
     display: flex;
     align-items: flex-end;
-    border-bottom: 1px solid rgb(35 20 44 / 40%);
-    /* Signed only once every line has been run. */
+    border-bottom: 1px solid rgb(28 42 30 / 45%);
+    /* Signed only once every condition has been examined. */
     opacity: 0;
     transition: opacity 0.35s ease;
   }
 
-  .form[data-done='true'] .form__rule {
+  .cert[data-done='true'] .signed__rule {
     opacity: 1;
   }
 
-  .form__hand {
+  .signed__hand {
     font-family: var(--font-hand);
     font-weight: 700;
-    font-size: 21px;
+    font-size: 20px;
     line-height: 1;
-    color: #c2452c;
+    color: var(--tape-stamp-fail);
     transform: rotate(-2deg);
+  }
+
+  /* ----------------------------------------------------------- the verdict */
+
+  .verdict {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    z-index: 3;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 7px 16px;
+    border: 3px double var(--tape-stamp-fail);
+    border-radius: 3px;
+    background-color: rgb(236 234 218 / 28%);
+    color: var(--tape-stamp-fail);
+    transform: translate(-50%, -50%) rotate(-9deg);
+    pointer-events: none;
+  }
+
+  .cert[data-done='true'] .verdict {
+    display: flex;
+    animation: tape-stamp-over 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  .verdict__top {
+    font-family: var(--font-display);
+    font-size: 25px;
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .verdict__note {
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   /* ------------------------------------------------------- with no script */
 
   /*
-   * Nothing here works without script, so the unscripted page gets the form
-   * already filled in: every item in ink, every note and stamp showing, the
-   * signature down, and none of the dead controls. It is the same trick the
-   * inlay card on reel 07 uses, and it means the b-side reads as a document
-   * rather than as six broken buttons.
+   * Nothing here works without script, so the unscripted page gets the
+   * certificate already made out: every condition in ink, every note and stamp
+   * showing, the verdict across it, the signature down, and none of the dead
+   * controls. It is the same trick the inlay card on reel 07 uses, and it means
+   * the b-side reads as a document rather than as six broken buttons.
    */
   .only-js {
     display: none;
@@ -486,7 +664,7 @@ const summaryAll = fill(qualityCheck.summaryRun, {
   }
 
   :global(html:not(.js)) .row__item {
-    color: var(--tape-label-ink);
+    color: var(--tape-cert-ink);
   }
 
   :global(html:not(.js)) .row__note {
@@ -497,18 +675,47 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     display: inline-flex;
   }
 
-  :global(html:not(.js)) .form__rule {
+  :global(html:not(.js)) .signed__rule {
     opacity: 1;
   }
 
+  /*
+   * The one thing the unscripted page does *not* get is the verdict stamp across
+   * the middle of the card.
+   *
+   * It is translucent and it lands over two of the six conditions, which is fine
+   * when you have stamped them one at a time and already read them — it is the
+   * payoff for working through the form. Rendered cold it would be sitting on top
+   * of two lines nobody has seen, and this page's whole job without script is to
+   * read as a finished document. The signature and the tally carry the joke there
+   * instead.
+   */
+
+  @media (min-width: 900px) {
+    /* A certificate is a physical card; it should not grow with the panel. */
+    .cert {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+  }
+
   @media (max-height: 700px) {
-    /* The instruction is the first thing to go; the form still explains itself. */
-    .form__intro {
-      display: none;
+    .cert {
+      gap: 7px;
+      padding: 11px 13px 12px;
     }
 
-    .form__title {
+    .cert__title {
+      font-size: 26px;
+    }
+
+    .rating__mark {
       font-size: 22px;
+    }
+
+    /* The particulars are the first thing to go — the conditions are the toy. */
+    .parts {
+      display: none;
     }
 
     .row {
@@ -523,6 +730,10 @@ const summaryAll = fill(qualityCheck.summaryRun, {
       min-height: 17px;
       font-size: 15px;
     }
+
+    .verdict__top {
+      font-size: 20px;
+    }
   }
 </style>
 
@@ -533,13 +744,13 @@ const summaryAll = fill(qualityCheck.summaryRun, {
   if (screen) {
     const copy = JSON.parse(screen.dataset.copy ?? '{}') as {
       total: number;
-      summaryIdle: string;
-      summaryRun: string;
-      signedYes: string;
-      signedNo: string;
+      summaryPartial: string;
+      summaryAll: string;
+      signedPending: string;
+      signedDone: string;
     };
 
-    const form = screen.querySelector<HTMLElement>('.form')!;
+    const cert = screen.querySelector<HTMLElement>('.cert')!;
     const summary = screen.querySelector<HTMLElement>('[data-qc-summary]')!;
     const signed = screen.querySelector<HTMLElement>('[data-qc-signed]')!;
     const rows = [...screen.querySelectorAll<HTMLElement>('[data-qc-row]')];
@@ -550,48 +761,48 @@ const summaryAll = fill(qualityCheck.summaryRun, {
     const fill = (template: string, values: Record<string, number>) =>
       template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
 
+    const verdictOf = (row: HTMLElement) =>
+      row.querySelector<HTMLElement>('.row__stamp')?.dataset.verdict;
+
     function paint() {
       const run = rows.filter((row) => row.dataset.run === 'true');
-      const pass = run.filter(
-        (row) => row.querySelector<HTMLElement>('.row__stamp')?.dataset.verdict === 'pass',
-      ).length;
+      const pass = run.filter((row) => verdictOf(row) === 'pass').length;
 
       const done = run.length;
-      form.dataset.done = String(done === copy.total);
+      const all = done === copy.total;
+      cert.dataset.done = String(all);
 
-      summary.textContent =
-        done === 0
-          ? fill(copy.summaryIdle, { n: copy.total })
-          : fill(copy.summaryRun, {
-              done,
-              total: copy.total,
-              pass,
-              fail: done - pass,
-            });
+      summary.textContent = all
+        ? fill(copy.summaryAll, { pass, fail: done - pass })
+        : fill(copy.summaryPartial, { done, total: copy.total });
 
-      signed.textContent = done === copy.total ? copy.signedYes : copy.signedNo;
+      signed.textContent = all ? copy.signedDone : copy.signedPending;
     }
 
-    function run(row: HTMLElement) {
+    /** One impression. A fail gets the heavier noise, which is the joke landing. */
+    function stamp(row: HTMLElement) {
       row.dataset.run = 'true';
-      // A fail gets the heavier noise, which is most of the joke landing.
-      blip(row.querySelector<HTMLElement>('.row__stamp')?.dataset.verdict === 'pass' ? 'click' : 'clunk');
+      blip(verdictOf(row) === 'pass' ? 'click' : 'clunk');
     }
 
     rows.forEach((row) => {
       row.querySelector<HTMLButtonElement>('[data-qc-run]')?.addEventListener('click', (event) => {
         event.stopPropagation();
-        run(row);
+        stamp(row);
         paint();
       });
     });
 
+    /*
+     * The stamp key takes the next unexamined condition in order rather than all
+     * six at once. Going through them one at a time is what lands the three fails
+     * separately — and a rubber stamp only ever makes one impression per press.
+     */
     screen.querySelector<HTMLButtonElement>('[data-qc-all]')?.addEventListener('click', (event) => {
       event.stopPropagation();
-      blip('clunk');
-      rows.forEach((row) => {
-        row.dataset.run = 'true';
-      });
+      const next = rows.find((row) => row.dataset.run !== 'true');
+      if (!next) return;
+      stamp(next);
       paint();
     });
 

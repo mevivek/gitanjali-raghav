@@ -22,14 +22,16 @@ Every word on the site is in this file, in the order you meet it.
 
 | Section | What it holds |
 |---|---|
-| `look` | How worn the tape is: `grade`, `grain`, `osd`. See the table in [README.md](./README.md#the-three-switches) — `osd: false` hides a fair amount of writing, which is worth knowing before you edit it. |
-| `title` | The opening card: the three-line heading, the intro sentence, and both lines written on the cassette's paper label. There is deliberately nothing above the cassette — see the note in the file. |
+| `look` | How worn the tape is: `grade`, `grain`, `osd`. See the table in [README.md](./README.md#the-three-switches) — `osd: false` hides a fair amount of writing, which is worth knowing before you edit it. `grain` is only a base now; `wear` at the foot of the file multiplies it per screen. |
+| `title` | The opening card, which is a **film poster**: her name, the three-line heading, the two-line billing block, the photograph and its crop. There is deliberately nothing above the photograph — see the note in the file. |
 | `salt`, `wheels`, `excuse`, `takes`, `cold`, `playback`, `sideA` | The seven reels, in order. One block each — they are seven different things, so they do not share a shape. |
 | `interval` | The framing around the day job, including the three-minute countdown. The jobs themselves come from `work.ts`. |
-| `qualityCheck` | The interval's b-side: the QA form, its six checks, and everything printed on it. |
+| `qualityCheck` | The interval's b-side: the **censor certificate**, its six conditions, and everything printed on it. |
 | `credits`, `ending` | The cast-and-crew roll and the sign-off. |
 | `boot` | The two lines on the tracking screen that plays before the title card. |
+| `notFound` | The 404 — the only screen that is not part of the tape. |
 | `sound` | The five blips: the transport clunk, the key click, reel 06's tick and ping, and the rewind sweep. All numbers — frequencies, gains, decays. Changing them changes what the deck sounds like. |
+| `positions`, `wear` | Two per-screen tables, both eleven long: the timecode the counter shows, and how scuffed each screen is. |
 
 ### The reels are toys
 
@@ -54,10 +56,18 @@ done. So a reel holds more than one version of its words:
 
 And the interval has a second screen behind it:
 
-- **b-side · Quality check** — six checks on herself, three pass and three fail,
-  each with a note that appears with its stamp. `summaryIdle` and `summaryRun`
-  are templates: `{n}`, `{done}`, `{total}`, `{pass}` and `{fail}` are filled in
-  with counts, everything else is wording.
+- **b-side · the certificate** — the card a censor board staples to the front of
+  a print, made out to herself. Six "conditions of certification", three pass and
+  three fail, each with a note in the margin that appears with its stamp. Pressing
+  the stamp takes the next unexamined line in order, one impression per press;
+  when all six are done the signature comes down and **passed with remarks** lands
+  across the card. `summaryPartial` and `summaryAll` are templates: `{done}`,
+  `{total}`, `{pass}` and `{fail}` are filled in with counts.
+
+  This was a carbon-paper QA form until the third handoff. The joke did not change
+  — three fails, signed off anyway — it just moved onto stationery that every Hindi
+  film actually opens on. `particulars` is the block of facts about the "film";
+  `rating` and `ratingNote` are the U/A box.
 
 ### Copy that changes: the `Step` tables
 
@@ -88,28 +98,66 @@ keeping for a reason beyond the design: a lyric is somebody's copyright and a
 title is not, and this is a public page under her name. The paragraph underneath
 still says the captions were these songs. It just no longer quotes them.
 
+**That paragraph is load-bearing, and the third handoff dropped it.** It is kept
+here anyway: it is the sentence that says the six titles were her captions, which
+is the whole reason the card can name them at all. Do not remove it to tidy the
+screen up.
+
 The same six titles appear in `playback.tracks`, where reel 06 cycles through
 them. If you change one list, change the other.
 
-`alt` and `hand` do different jobs. The handwritten line is her voice; the alt
-text describes what is in the frame for someone who cannot see it. Never make
-them the same string. `portrait.jpg` is used twice and cropped differently each
-time, so it has two different alt texts — that is on purpose, not a duplicate to
-tidy up.
+### Side A's blank tail is the point
+
+Each track carries a `sec` running time, and those six times add up to 25:42.
+`sideSeconds` is 45 minutes. **The position strip is drawn against 45 minutes, not
+against the sum of the tracks** — so the segments stop about four fifths of the way
+along and the rest of the strip is bare tape, which is what `hands.idle` ("rest of
+the side is blank — on purpose") is describing.
+
+The bundle had this the other way round: it labelled the strip `00:00`–`45:00` and
+then sized each segment as a fraction of the six tracks' own total, so they filled
+the strip end to end and the card claimed a 45-minute side with exactly 45 minutes
+recorded on it. A home-made tape with a blank tail is both more honest and a better
+joke, so the sizing was changed rather than the label.
+
+### `alt` and `hand` are not the same sentence
+
+The handwritten line is her voice; the alt text describes what is in the frame for
+someone who cannot see it. Never make them the same string.
+
+`red-and-gold.jpg` is used twice and cropped differently each time — the whole
+frame on reel 03, and hard into her face on the title card — so it has two
+different alt texts. That is on purpose, not a duplicate to tidy up.
+(`portrait.jpg` used to be the pair that needed this.)
 
 ### Photographs
 
 Images live in `src/assets/photos/` (**not** `public/`) so Astro optimises
 them: each is re-encoded to WebP at three widths and served with a `srcset`.
-That is why the built site is ~3MB with fifteen photographs instead of far more.
+That is why the built site is ~3.5MB with the photographs it uses instead of far
+more.
 
-**Committed at full resolution** — 1080×1080, exactly as downloaded, never
-resized on disk. Astro generates the variants at build time and the browser
-picks one, so a high-density screen gets the full file while an ordinary one
-does not pay for it. Do not pre-shrink anything you add.
+**Committed at full resolution** — 1080×1080 for the Instagram set, exactly as
+downloaded, never resized on disk. Astro generates the variants at build time and
+the browser picks one, so a high-density screen gets the full file while an
+ordinary one does not pay for it. Do not pre-shrink anything you add.
 
-**Fifteen photos, each individually approved.** Four candidates were turned
-down specifically because someone other than her was recognisable in them — her
+**One exception, and it is a crop rather than a shrink.** `cafe-stance.jpg` is the
+third handoff's photograph at its full 3120×4160, and `playback-portrait.jpg` is a
+1080×1350 crop of it framed head-and-shoulders. Reel 06 wants the crop, because
+that reel is about her face stepping from bare to in character and the original is
+a full-length shot in which her face is a few dozen pixels. Both files are
+committed: the crop because it is what is used, the original because a crop is a
+decision and the next person should be able to make a different one.
+
+**Seventeen files, and three of them unused by this cut.** `palace.jpg` was a
+thumbnail on a reel that no longer exists; `cafe-stance.jpg` is the uncropped
+original above; `portrait.jpg` is her 320×320 avatar, which the poster card and
+the new reel-06 photograph between them retired. All three stay on disk — a file
+that was reviewed and approved is not something a redesign should quietly delete.
+
+**Each photograph individually approved.** Four candidates were turned down
+specifically because someone other than her was recognisable in them — her
 mother, her sister, her brother, a friend at Holi. They have not been asked and
 cannot consent by proxy. If any are wanted later, ask the people in them first.
 
@@ -167,26 +215,29 @@ if the two ever disagree again.
 ### Facts
 
 - [ ] The year she joined Highspring (Vaco Binary Semantics) — the end date is known, the start is not
-- [ ] What she studied at MJPRU. **The second design handoff wrote `B.Sc` against
-      the university and that was not adopted** — nothing confirms it, and a guess
-      about a real person's degree does not go on her page because a design tool
-      filled the gap in. One word in `work.ts` (`study[0].what`) once she says.
-      The handoff also shortened the institution to "Rohilkhand University"; the
-      full name is what it is called, so the interval's layout gives way to it
-      instead.
+- [ ] What she studied at MJPRU. **Two design handoffs have now written `B.Sc`
+      against the university and it has been declined twice** — nothing confirms
+      it, and a guess about a real person's degree does not go on her page because
+      a design tool filled the gap in. One word in `work.ts` (`study[0].what`) once
+      she says. Both handoffs also shortened the institution to "Rohilkhand
+      University"; the full name is what it is called, so the interval's layout
+      gives way to it instead.
 - [ ] The two earlier education entries LinkedIn returned with dates but no institution: 2013–2015 and 2012–2013
 
 ### Assets
 
-- [ ] **A proper headshot. This got more urgent.** `portrait.jpg` is her
-      Instagram profile picture at 320×320. In the cassette window at ~284px it
-      holds. But reel 06 — added by the second handoff — now fills a whole screen
-      with the same file, around 420 CSS px on a phone and 600 on a desktop, so
-      it is being upscaled 2–3× and is visibly the softest thing on the site. A
-      photo at 1000px+ is the biggest single upgrade available and needs only a
-      file swap, a re-render of `og.jpg` and an `ASSET_VERSION` bump — and it
-      would fix three places at once.
-- [ ] Any photos she would rather have than the ones pulled from Instagram
+- [x] ~~**A proper headshot.**~~ **Done.** This was the most urgent item here for
+      two sessions: `portrait.jpg`, her 320×320 Instagram avatar, was doing three
+      jobs and being upscaled 2–3× on reel 06. The third handoff brought a
+      3120×4160 photograph. Reel 06 now uses a 1080×1350 head-and-shoulders crop of
+      it, and the title card and the share image are a crop of `red-and-gold.jpg`,
+      so `portrait.jpg` is used nowhere.
+- [ ] Any photos she would rather have than the ones pulled from Instagram —
+      still worth asking. Everything on the site except the new café photograph
+      came off her Instagram grid.
+- [ ] Whether she is happy with the café photograph being the one that fills a
+      screen on reel 06. It is the only image here that did not come from a public
+      post of her own, so it is the one she is least likely to have expected.
 
 **The share image** is `public/og.jpg`, built from `scripts/og-template.html`.
 If you change the headline or the intro line in `tape.ts`, that image still
@@ -195,8 +246,13 @@ how. It is the one asset that does not update itself when the copy does.
 
 ### Permissions
 
-- [ ] Confirm she is happy with all fifteen photographs being on a public page
+- [ ] Confirm she is happy with every photograph on the site being on a public
+      page — including the café photograph on reel 06, which is the one that did
+      not come off her own Instagram
 - [ ] Confirm the follower count in reel 04 (above)
+- [ ] Confirm her name in handwriting on the b-side's signature line
+      (`qualityCheck.signature`). It is a joke signature on a joke certificate, but
+      it is still her name in a hand on a public page
 - [ ] Then set `approved: true`
 
 ---

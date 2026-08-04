@@ -9,40 +9,72 @@ only the things that will bite you.
 
 The tape is live at <https://mevivek.dev/gitanjali-raghav>. **Eleven screens**: a
 title card, seven reels that are each interactive in their own way, an interval
-for the day job, that interval's b-side, and end credits.
+for the day job, that interval's b-side, and end credits. Plus a 404, which is
+the only page that is not part of the strip.
 
-**A second design handoff was applied on 2026-08-04** and is what took it from
-nine screens to eleven. It added reel 06 (Playback — tap on the beat) and the
-interval's b-side (a QA form she runs on herself), renumbered Side A to reel 07,
-rewrote the title card's heading and the interval's rows, replaced the piano with
-interaction blips, and narrowed the wide panel to 560px with sprockets and a
-bezel around it. Three things in that bundle were deliberately **not** taken:
-its `grain: 46` / `osd: true` defaults, its desktop contact sheet (an alternate
-layout the designer built but did not select), and its `B.Sc` against the
-university — see below. Check `git log` before assuming a difference from the
-bundle is an oversight.
+**A third design handoff was applied on 2026-08-04**, the same day as the
+second. It is the largest so far and it changed the look of the tape rather than
+its shape — the screen count did not move. What was taken:
 
-**Three things are waiting on her, and none of them are code.** Do not decide
-any of them on her behalf:
+- **The title card is a film poster.** The drawn cassette is gone — shell,
+  spools, REC dot, paper label, "that's me". In its place a full-bleed crop of
+  `red-and-gold.jpg`, her name in gold script, the headline left-aligned, a
+  billing block, and one gold "play the tape" key.
+- **Reels 01–03 are full bleed**, 04–06 keep their framed panel. That mix is in
+  the bundle and is deliberate — see the long note in `src/styles/tape.css`.
+- **Body copy is a serif** (Tiro Devanagari Hindi, latin subset, for its Latin).
+  The readouts keep VT323, so the machine and the person are now set differently.
+- **Reel 07 is a real inlay card** with a proportional tape-position strip.
+- **The b-side is a censor certificate** — U/A rating, particulars, "conditions
+  of certification", press-the-stamp, and a verdict slammed across it.
+- **The transport grew two spools** that wind between each other as you move.
+  They replaced the eleven-segment progress bar *and* the phone's edge rail,
+  both of which are gone.
+- **Grain is per-screen**: `look.grain` dropped 80 → 14 and a `wear` curve
+  multiplies it, so the head and tail of the tape are scuffed and the middle is
+  clean.
+- **A real photograph for reel 06**, at last. See below.
+- **A 404 page**, in the cold open's untuned blue.
+
+Seven things in that bundle were deliberately **not** taken. Check `git log`
+before assuming a difference from a bundle is an oversight:
+
+1. `osd: true` — asked for by all three handoffs, declined all three times.
+2. **The title card's top strip** (`home video` / `e-180 · side a`). It was
+   dropped on purpose in `5cb2778` and the bundle put it back. Still dropped.
+3. **Reel 05 opening at 14°** instead of −4°.
+4. **Single-sheet snow.** Reel 05 runs three depth layers here, on purpose.
+5. **`B.Sc · Rohilkhand University`** — third time asked, still nothing
+   confirms it.
+6. **The desktop contact sheet** and **the desktop "cheeks"** (side deck panels
+   with a spool and lamps). Both are alternates the designer built but did not
+   select — the bundle's own default is `desk: 'strip'`, which is what we have.
+7. Its `role="button"` divs, its pointer-drag temperature dial, and its global
+   Space-is-next keybinding. We keep real buttons, a range input, and arrow keys
+   scoped to the track — Space is reel 02's throttle.
+
+**Two things are waiting on her, and neither is code.** Do not decide either on
+her behalf:
 
 1. **`approved: false` in `src/data/site.ts`** keeps every page `noindex`. It
    flips when she has seen the site and wants to be findable. Hers to say.
 2. **Reel 04's "posted · 10.7k" badge names her follower count.** Nobody has
    asked whether she is happy with that on a public page. One string in
    `src/data/tape.ts`.
-3. **A headshot, and this is now the most visible gap on the site.**
-   `portrait.jpg` is her Instagram avatar at 320×320 — the lowest-resolution
-   image here. It was shown at ~284px in the cassette window and in the share
-   image, where it holds. **Reel 06 now fills a whole screen with the same
-   file** — ~420 CSS px on a phone, ~600 on a desktop — so it is upscaled 2–3×
-   and is plainly the softest thing on the tape. Anything 1000px+ is the single
-   biggest upgrade available and needs only a file swap (then re-render `og.jpg`
-   and bump `ASSET_VERSION`). If she supplies one, that fixes three places.
+
+**The headshot gap is closed.** It was the third item on this list for two
+sessions. The third handoff brought a 3120×4160 photograph — delivered three
+times under three names, all byte-identical — and reel 06 now uses a 1080×1350
+crop of it (`playback-portrait.jpg`), framed head-and-shoulders because that reel
+is about her face. The uncropped original is committed as `cafe-stance.jpg` and
+unused. **`portrait.jpg`, the 320×320 avatar that used to do three jobs, is now
+used nowhere** — the poster has no cassette window and the share image is a
+poster. It is left on disk, like `palace.jpg`.
 
 `CONTENT.md` has the longer list of smaller unknowns — her Highspring start
-year, what she studied at MJPRU. On that last one: **the second handoff wrote
-`B.Sc` and it was not adopted.** Nothing confirms it. Do not let a later bundle
-quietly put a guessed qualification on a real person's page.
+year, what she studied at MJPRU. On that last one: **two handoffs have now
+written `B.Sc` and it has been declined twice.** Nothing confirms it. Do not let
+a later bundle quietly put a guessed qualification on a real person's page.
 
 **One open question from the last session.** The reels used to show a sliver of
 their neighbours on iOS Safari. It was fixed by measuring `visualViewport.height`
@@ -110,11 +142,11 @@ around them. `dvh` is the no-script fallback; `svh` and `lvh` are both wrong her
 ## Three things that are easy to get wrong
 
 **No client-side `<script>` may import `src/data/tape.ts`.** That module imports
-fifteen photographs. Pulling it into the client bundle's module graph makes the
-build emit all fifteen originals as assets — 2.6MB that nothing references —
-even though Vite tree-shakes the bindings back out of the JS. Pass what a script
-needs on a `data-` attribute instead; every reel already does this — including
-the table of tape positions, which rides on the transport counter.
+every photograph the tape uses. Pulling it into the client bundle's module graph
+makes the build emit all of those originals as assets — megabytes that nothing
+references — even though Vite tree-shakes the bindings back out of the JS. Pass
+what a script needs on a `data-` attribute instead; every reel already does this,
+as do the tape-position and wear tables, which ride on the transport counter.
 
 That rule is also why **sound is asked for with an event, not a function call**:
 a reel does
@@ -140,8 +172,19 @@ resolve a relative path against, so that one must stay absolute.
 
 `public/og.jpg` is a picture of the title card, generated from
 `scripts/og-template.html` and committed. It does not rebuild itself. Change the
-headline or the intro and the share image still shows the old wording until it
-is re-rendered — and `site.description` and `og:image:alt` quote it too.
+headline or the billing block and the share image still shows the old wording
+until it is re-rendered — and `og:image:alt` describes the picture in words, so
+that has to move with it. (It said "a VHS cassette labelled 'geetanjali raghav'"
+for one commit longer than it was true.)
+
+**The whole title card is driven off one number.** `--step-poster` in
+`tokens.css` is `min(13.5% of the panel width, 17% of its height, 92px)`, and her
+name, the handwritten line, the gap between blocks and the billing type are all
+fractions of it. So the poster scales as one object — but it also means a change
+to any one of those sizes should be a change to its fraction, not a new hard
+number. The height term is what keeps the plate on screen in landscape; the plate
+also scrolls internally as a last resort, and the "swipe up" hint is dropped
+under 700px tall because it lands under the transport.
 
 To re-render it there is no need to add Playwright to this project — the
 container already has Chromium at
@@ -165,24 +208,42 @@ Related, and it cost a debugging round: **the first `measure()` call ends in
 front.** So the landing screen has to be settled *before* `measure()` runs, or a
 deep link lands correctly and then slides back to the title card a frame later.
 
+## Two tables that must stay eleven long
+
+`positions` and `wear` in `src/data/tape.ts` are both indexed by screen, and both
+have to stay `screenCount` entries long. They ride to the client on the transport
+counter's `data-` attributes, because **no client script may import
+`src/data/tape.ts`** (see below).
+
+`positions` is the timecode the counter shows. `wear` is the grain multiplier, and
+a short table is survivable rather than fatal — `index.astro` leaves `--wear`
+alone for a screen the table does not cover, so the grain holds its last value
+instead of clearing. A wrong-length `positions` is worse: the counter simply stops
+updating past the end.
+
 ## Outstanding, and not ours to decide
 
 - **`approved: false` in `src/data/site.ts` keeps every page `noindex`.** Do not
   flip it. It is a deliberate human decision and it is hers.
 - **Reel 04's "posted · 10.7k" badge names her follower count** and she has not
   been asked about it. Do not add anything else of that kind without asking.
+- **The b-side now prints her name as a signature** in handwriting, on a mock
+  government certificate. It is a joke signature on a joke document and it reads
+  as one, but it is still her name in a hand on a public page — it is one string
+  (`qualityCheck.signature`) if she would rather it were initials or a scrawl.
 - Four photographs were turned down because someone other than her was
   recognisable in them. Nobody can consent by proxy — ask the people in them
-  first. `palace.jpg` is in the repo but unused by the current cut; leave it.
+  first. `palace.jpg`, `cafe-stance.jpg` and `portrait.jpg` are all in the repo
+  and unused by the current cut; leave them.
 
 ## Two more that cost time last session
 
 **The build emits no `.js` files, and that is correct.** Every component script
-is standalone and small enough that Astro inlines them into `index.html` (70KB,
-16KB gzipped — it was 48KB before the second handoff added two screens and the
-blips). `find dist -name '*.js'` returning nothing is not a broken build. The
-built weight is otherwise unchanged: 38 WebP variants, ~3.2MB, because the
-photographs and their widths did not move.
+is standalone and small enough that Astro inlines them into the HTML (76KB for
+`index.html`, 8KB for the 404 — it was 48KB before the second handoff added two
+screens and the blips). `find dist -name '*.js'` returning nothing is not a broken
+build. The rest: 40 WebP variants and ~3.5MB, up from 38 and 3.2MB because reel
+06 finally has a photograph worth generating widths for.
 
 **Browser UI colour is not something the page controls.** `theme-color` and
 `color-scheme: dark` are both set and correct. iOS Safari honours them; **Chrome

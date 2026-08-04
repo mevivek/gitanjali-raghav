@@ -7,9 +7,15 @@ import { scanContent } from '../../scripts/scan.mjs';
 interface Props {
   title?: string;
   description?: string;
+  /**
+   * Forces `noindex` regardless of the publish gate. The 404 sets it: a "tape not
+   * found" page has nothing worth indexing even once the tape itself is public,
+   * and search engines that do index one tend to report it as a soft 404.
+   */
+  noindex?: boolean;
 }
 
-const { title = site.title, description = site.description } = Astro.props;
+const { title = site.title, description = site.description, noindex = false } = Astro.props;
 
 /*
  * The page asks search engines to skip it until two things are true: no
@@ -18,7 +24,7 @@ const { title = site.title, description = site.description } = Astro.props;
  * being wanted in search results, and that second call is hers, not ours.
  */
 const { placeholders } = scanContent();
-const isDraft = placeholders.length > 0 || !site.approved;
+const isDraft = noindex || placeholders.length > 0 || !site.approved;
 
 // Astro.site + base are set in astro.config.mjs; this yields absolute URLs
 // for the social tags, which require them.
@@ -53,7 +59,7 @@ const asset = (file: string) => new URL(path(file), Astro.site);
  * indefinitely, so a redrawn share image under an unchanged name would go on
  * showing the old headline to everyone who had already shared the link.
  */
-const ASSET_VERSION = 5;
+const ASSET_VERSION = 6;
 
 /**
  * The share image. A JPEG, not a PNG: it is mostly a photograph and a
@@ -110,9 +116,14 @@ const icon = (file: string) => `${path(file)}?v=${ASSET_VERSION}`;
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    {/*
+      Describes public/og.jpg in words, so it has to be changed whenever that
+      image is redrawn — it used to say "a VHS cassette labelled 'geetanjali
+      raghav'", which stopped being true when the title card became a poster.
+    */}
     <meta
       property="og:image:alt"
-      content="A VHS cassette labelled 'geetanjali raghav' beside the words 'No plot, just good footage'"
+      content="A film poster: Geetanjali Raghav close up in red and gold, beside the words 'No plot, just good footage'"
     />
     <meta name="twitter:card" content="summary_large_image" />
     {/* Twitter falls back to og:image, but is happier told outright. */}

@@ -15,335 +15,211 @@ const { index } = Astro.props;
   id={slugs[index]}
   data-screen
   data-active={index === 0 ? 'true' : 'false'}
+  style={`--photo-pos: ${title.pos}`}
   aria-label="Title card"
 >
   {/*
-    The card opens on the cassette. There was a strip above it reading
-    "home video · delhi · e-180" — the design's own name for the file, which
-    means nothing to somebody arriving here, for the same reason `site.ts`
-    keeps it out of the page title. The tape says what it is by looking like one.
+    The card is a poster for the tape, printed on a photograph of her.
+
+    It used to be a drawn cassette on a purple gradient — shell, screws, two
+    turning spools, a REC dot, and a paper label with the tape's old name struck
+    out. That is in the git history. The third handoff replaced it with this, and
+    the trade is worth knowing: the cassette explained what the site was by
+    illustrating the object, and the poster does it by behaving like one. A
+    photograph of her at the top of the page also does more than a drawing of a
+    cassette with a 320px thumbnail in the window, which is what that was.
+
+    Note there is deliberately still nothing above the photograph. The bundle put
+    a "home video · e-180 · side a" strip back along the top; it was removed on
+    purpose in 5cb2778 and stays removed. The billing block below carries the
+    running time and the certificate, which is what that strip was really for.
   */}
-  <div class="cassette">
-    <span class="cassette__screw cassette__screw--left" aria-hidden="true"></span>
-    <span class="cassette__screw cassette__screw--right" aria-hidden="true"></span>
-
-    <div class="cassette__window">
-      {/*
-        320×320 source — her Instagram profile picture, and the smallest
-        image on the site. Shown at ~284px so it still holds, but it cannot
-        go bigger. No `widths` here: there is nothing to pick between.
-      */}
-      <Image
-        class="cassette__photo"
-        src={title.photo}
-        alt={title.alt}
-        width={320}
-        loading="eager"
-        decoding="async"
-      />
-      <div class="cassette__scan" aria-hidden="true"></div>
-      <div class="cassette__bleed" aria-hidden="true"></div>
-
-      {/* The two spools, turning at different speeds behind the picture. */}
-      <span class="spool spool--left" aria-hidden="true"></span>
-      <span class="spool spool--right" aria-hidden="true"></span>
-
-      <div class="rec" aria-hidden="true">
-        <span class="rec__dot"></span>REC
-      </div>
-
-      <p class="cassette__scribble" aria-hidden="true">{title.scribble}</p>
-    </div>
-
-    {/* The paper label, stuck on slightly crooked and written on twice. */}
-    <div class="cassette__label" aria-hidden="true">
-      <span class="cassette__line">
-        <span class="cassette__name">{title.labelName}</span>
-        <span class="cassette__code">{title.labelCode}</span>
-      </span>
-      <span class="cassette__line cassette__line--was">
-        <span class="cassette__was">{title.labelWas}</span>
-        <span class="cassette__years">{title.labelYears}</span>
-      </span>
-    </div>
-  </div>
+  <Image
+    class="poster__photo"
+    src={title.photo}
+    alt={title.alt}
+    width={1080}
+    widths={[400, 720, 1080]}
+    sizes="(min-width: 900px) min(44vw, 560px), 100vw"
+    loading="eager"
+    fetchpriority="high"
+    decoding="async"
+  />
 
   {/*
-    Three lines, and the middle one is not the same kind of thing as the other
-    two — it is her handwriting, gold and crooked, wedged between two lines of
-    stencil. So it is a span with its own rules rather than a `<br />` apart.
+    Three sheets over the photograph, in order: a vertical scrim that keeps the
+    type legible at the bottom and darkens the very top, the tape's
+    mis-registered colour bleed, and the scanlines. All decoration, all
+    pointer-transparent — the play key underneath has to stay pressable.
   */}
-  <h1 class="title">
-    <span class="title__stencil">{title.headingTop}</span>
-    <span class="title__hand">{title.headingHand}</span>
-    <span class="title__stencil title__stencil--flip">{title.headingBottom}</span>
-  </h1>
+  <div class="poster__scrim" aria-hidden="true"></div>
+  <div class="poster__bleed" aria-hidden="true"></div>
+  <div class="poster__scan" aria-hidden="true"></div>
 
-  <p class="intro">{title.intro}</p>
+  <div class="poster__plate">
+    {/*
+      Everything below is a fraction of `--step-poster`, so the poster scales as
+      one thing rather than as six independently clamped sizes.
+    */}
+    <p class="poster__name">{title.name}</p>
 
-  {/*
-    A cassette deck's keypad. Only the middle key does anything: the outer two
-    are the deck's own furniture and are `aria-hidden`, because announcing two
-    unusable buttons either side of the real one is worse than saying nothing.
+    {/*
+      Three lines, and the middle one is not the same kind of thing as the other
+      two — it is her handwriting, gold and crooked, wedged between two lines of
+      stencil. So it is a span with its own rules rather than a `<br />` apart.
+      Left-aligned here, where the cassette card centred them.
+    */}
+    <h1 class="poster__title">
+      <span class="poster__stencil">{title.headingTop}</span>
+      <span class="poster__hand">{title.headingHand}</span>
+      <span class="poster__stencil poster__stencil--flip">{title.headingBottom}</span>
+    </h1>
 
-    The middle one is an anchor, not a button: with no script this still moves
-    the tape to reel 01, because the strip is a real scroll container. The
-    script upgrades it to a smooth glide.
-  */}
-  <div class="deck" data-nodrag>
-    <span class="deck__key" aria-hidden="true">&#9664;&#9664;</span>
+    {/* The billing block, under a gold hairline, as a poster prints it. */}
+    <div class="bill">
+      <p class="bill__reels">{title.billReels}</p>
+      <p class="bill__footer">{title.billFooter}</p>
+    </div>
 
-    <a class="play" href={`#${slugs[1]}`} data-tape-go="1">
+    {/*
+      One key, full width, and an anchor rather than a button: with no script
+      this still moves the tape to reel 01, because the strip is a real scroll
+      container. The script upgrades it to a smooth glide.
+
+      The cassette card had this flanked by two dead rewind/forward keys, as a
+      deck's keypad. A poster is not a deck, so they went with the cassette —
+      which is a small mercy, because they were `aria-hidden` furniture that
+      existed only to make the middle key look like part of a machine.
+    */}
+    <a class="play" href={`#${slugs[1]}`} data-tape-go="1" data-nodrag>
       <span class="play__glyph" aria-hidden="true">&#9654;</span>{title.playLabel}
     </a>
 
-    <span class="deck__key" aria-hidden="true">&#9654;&#9654;</span>
+    {/* The gesture differs by layout, so both are written and CSS picks one. */}
+    <p class="hint">
+      <span class="hint--narrow">swipe up &#8593;</span>
+      <span class="hint--wide">drag the tape &#8592; &#8594;</span>
+    </p>
   </div>
-
-  {/* The gesture differs by layout, so both are written and CSS picks one. */}
-  <p class="hint">
-    <span class="hint--narrow">swipe up &#8593;</span>
-    <span class="hint--wide">drag the tape &#8592; &#8594;</span>
-  </p>
 </section>
 
 <style>
-  /* ------------------------------------------------------------- cassette */
-
-  .cassette {
+  /*
+    The title card is the one screen that is a single photograph with type on it
+    and no frame, so it overrides the flex column `.screen` sets up: the photo and
+    the scrims are absolutely positioned and the plate is the only thing in flow.
+  */
+  .screen--title {
     position: relative;
-    width: var(--cassette-w);
-    aspect-ratio: 5 / 3.5;
-    padding: 9px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border-radius: 9px;
-    background: linear-gradient(160deg, #2b1c3a, #170e22 58%, #0d0813);
-    box-shadow:
-      0 26px 60px rgb(0 0 0 / 75%),
-      inset 0 1px 0 rgb(255 255 255 / 12%),
-      inset 0 0 0 1px var(--tape-edge);
-  }
-
-  /* The cassette rocks very slightly, as if resting on an uneven surface. */
-  @media (prefers-reduced-motion: no-preference) {
-    .cassette {
-      animation: tape-wob 11s ease-in-out infinite;
-    }
-  }
-
-  .cassette__screw {
-    position: absolute;
-    top: 4px;
-    width: 4px;
-    height: 4px;
-    border-radius: 999px;
-    background-color: #0a0610;
-    box-shadow: inset 0 1px 1px rgb(255 255 255 / 30%);
-  }
-
-  .cassette__screw--left {
-    left: 4px;
-  }
-
-  .cassette__screw--right {
-    right: 4px;
-  }
-
-  .cassette__window {
-    position: relative;
-    flex: 1 1 auto;
-    /* Holds the picture's share of the shell once the label takes two lines. */
-    min-height: 64%;
-    border-radius: 3px;
     overflow: hidden;
-    background-color: var(--tape-panel);
-    box-shadow: inset 0 0 0 1px rgb(62 224 232 / 30%);
+    /* The plate is bottom-anchored, as a poster's billing always is. */
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
   }
 
-  .cassette__photo {
+  .poster__photo {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 6%;
-    filter: saturate(1.5) contrast(1.1) brightness(0.9);
+    object-position: var(--photo-pos, 50% 20%);
+    filter: saturate(1.45) contrast(1.14) brightness(0.84);
   }
 
-  .cassette__scan {
+  .poster__scrim,
+  .poster__bleed,
+  .poster__scan {
     position: absolute;
     inset: 0;
-    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 40%) 0 1px, transparent 1px 3px);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /*
+   * Dark at the very top so the notch has something behind it, clear through her
+   * face, then heavy from just above the plate down. The stops are what let a
+   * white-on-photograph headline clear AA without a flat black bar under it.
+   */
+  .poster__scrim {
+    background: linear-gradient(
+      to bottom,
+      rgb(8 4 13 / 72%) 0%,
+      rgb(8 4 13 / 10%) 14%,
+      rgb(8 4 13 / 6%) 26%,
+      rgb(8 4 13 / 74%) 58%,
+      rgb(8 4 13 / 98%) 82%
+    );
+  }
+
+  .poster__bleed {
+    background: linear-gradient(
+      96deg,
+      rgb(255 46 136 / 14%),
+      transparent 40%,
+      transparent 62%,
+      rgb(62 224 232 / 12%)
+    );
+  }
+
+  .poster__scan {
+    background: var(--scanline);
     /* Scanlines belong to the full VHS grade only — see tape.css. */
     opacity: var(--scan-op, 0);
   }
 
-  .cassette__bleed {
-    position: absolute;
-    inset: 0;
-    mix-blend-mode: screen;
-    background: linear-gradient(
-      90deg,
-      rgb(255 46 136 / 26%),
-      transparent 34%,
-      transparent 66%,
-      rgb(62 224 232 / 26%)
-    );
-  }
+  /* ---------------------------------------------------------------- plate */
 
-  /*
-   * The spools. Dashed rings rather than drawn hubs: a dashed border turning
-   * slowly is exactly what a spool's teeth look like through a cassette window,
-   * and it costs no image. The percentage margin resolves against the ring's own
-   * containing block width, which is how half of 27% centres it vertically.
-   */
-  .spool {
-    position: absolute;
-    top: 50%;
-    width: 27%;
-    aspect-ratio: 1;
-    margin-top: -13.5%;
-    border-radius: 999px;
-    box-shadow: inset 0 0 0 4px rgb(8 4 13 / 50%);
-  }
-
-  .spool--left {
-    left: 8%;
-    border: 5px dashed rgb(246 239 230 / 50%);
-  }
-
-  .spool--right {
-    right: 8%;
-    border: 5px dashed rgb(246 239 230 / 34%);
-  }
-
-  /* Different speeds, because a playing tape's two spools are never in step. */
-  @media (prefers-reduced-motion: no-preference) {
-    .spool--left {
-      animation: tape-spool 9s linear infinite;
-    }
-
-    .spool--right {
-      animation: tape-spool 14s linear infinite;
-    }
-  }
-
-  .rec {
-    position: absolute;
-    left: 9px;
-    top: 8px;
+  .poster__plate {
+    position: relative;
+    z-index: 3;
     display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-osd);
-    font-size: var(--osd-md);
-    letter-spacing: 0.12em;
-    color: #fff;
-    text-shadow: 0 1px 3px #000;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--poster-gap);
+    padding: var(--pad-title);
+    /* Every size on the card is a fraction of this one number. */
+    --poster-gap: max(9px, calc(var(--step-poster) * 0.21));
+    /*
+     * The safety net. `--step-poster` takes 17% of the height, which keeps the
+     * plate inside the screen at every size that has been looked at — but the
+     * bottom padding also has to clear the transport, and a 380px-tall landscape
+     * phone is tight enough that the two fight. If it ever loses, the plate
+     * scrolls rather than the name clipping off the top of the poster.
+     */
+    max-height: 100%;
+    overflow-y: auto;
   }
 
-  .rec__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background-color: var(--tape-pink);
+  .poster__plate > * {
+    /* Nothing on the plate is centred; the billing rule needs the full width. */
+    align-self: stretch;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .rec__dot {
-      animation: tape-rec 1.4s steps(1) infinite;
-    }
-  }
-
-  .cassette__scribble {
-    position: absolute;
-    right: 9px;
-    bottom: 6px;
+  .poster__name {
     font-family: var(--font-hand);
     font-weight: 700;
-    font-size: 20px;
+    font-size: calc(var(--step-poster) * 0.44);
+    line-height: 1;
     color: var(--tape-gold);
-    transform: rotate(-4deg);
-    text-shadow: 0 2px 6px #000;
+    transform: rotate(-1.6deg);
+    transform-origin: left center;
+    text-shadow: 0 2px 10px rgb(0 0 0 / 70%);
   }
 
-  /* ---------------------------------------------------------- the label */
-
-  .cassette__label {
-    flex: 0 0 auto;
-    padding: 5px 10px 6px;
+  .poster__title {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    border-radius: 3px;
-    background: linear-gradient(var(--tape-label-bright), var(--tape-label-shade));
-    transform: rotate(-0.5deg);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 50%);
-  }
-
-  .cassette__line {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
-    overflow: hidden;
-  }
-
-  .cassette__name {
-    font-family: var(--font-hand);
-    font-weight: 700;
-    font-size: 19px;
-    line-height: 1.1;
-    white-space: nowrap;
-    color: var(--tape-label-ink);
-  }
-
-  .cassette__code {
-    font-family: var(--font-osd);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    white-space: nowrap;
-    color: var(--tape-label-mute);
-  }
-
-  /* What the tape was called before she gave up naming the versions. */
-  .cassette__line--was {
-    font-family: var(--font-osd);
-    font-size: 10px;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: #a08a6a;
-  }
-
-  .cassette__was {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    text-decoration: line-through;
-  }
-
-  .cassette__years {
-    white-space: nowrap;
-    color: var(--tape-label-mute);
-  }
-
-  /* ---------------------------------------------------------------- words */
-
-  .title {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: var(--step-h1);
+    align-items: flex-start;
+    font-size: var(--step-poster);
     font-weight: 400;
-    line-height: 0.82;
-    text-align: center;
+    line-height: 0.8;
   }
 
-  .title__stencil {
+  .poster__stencil {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     text-transform: uppercase;
     color: var(--tape-cream);
     /* Mis-registered colour, like a tape tracking a shade off. */
@@ -354,81 +230,69 @@ const { index } = Astro.props;
 
   /* The bottom line's fringe is the other way round, so the pair frames the
      handwriting between them rather than repeating. */
-  .title__stencil--flip {
+  .poster__stencil--flip {
     text-shadow:
       3px 0 0 var(--tape-cyan),
       -3px 0 0 var(--tape-pink);
   }
 
-  .title__hand {
+  .poster__hand {
     font-family: var(--font-hand);
     font-weight: 700;
-    font-size: 0.78em;
-    line-height: 0.9;
+    font-size: 0.62em;
+    line-height: 0.92;
     color: var(--tape-gold);
-    transform: rotate(-2.5deg);
+    transform: rotate(-2.2deg);
+    transform-origin: left center;
     /* Pulls the crooked line in tight against the two stencilled ones. */
-    margin: -0.04em 0 -0.06em;
+    margin: -0.02em 0 -0.04em 0.06em;
   }
 
-  .intro {
-    max-width: 34ch;
-    text-align: center;
+  /* ----------------------------------------------------------- the billing */
+
+  .bill {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 9px;
+    border-top: 1px solid rgb(255 197 61 / 40%);
+  }
+
+  .bill__reels,
+  .bill__footer {
     font-family: var(--font-osd);
-    font-size: var(--step-body);
-    line-height: 1.4;
-    letter-spacing: 0.04em;
-    color: var(--tape-body-dim);
+    font-size: clamp(11px, calc(var(--step-poster) * 0.22), 14px);
+    line-height: 1.32;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
   }
 
-  /* --------------------------------------------------------- the keypad */
-
-  .deck {
-    width: 100%;
-    max-width: 380px;
-    display: grid;
-    /* The play key is the wide one, as it is on a deck. */
-    grid-template-columns: 1fr 1.7fr 1fr;
-    gap: 7px;
-    padding: 8px;
-    border-radius: 5px;
-    background: linear-gradient(#1d1327, #120c1a);
-    box-shadow:
-      inset 0 0 0 1px #3b2a4d,
-      0 14px 30px rgb(0 0 0 / 60%);
+  .bill__reels {
+    color: #f0d3b8;
   }
 
-  .deck__key {
-    display: grid;
-    place-items: center;
-    height: 50px;
-    border-radius: 3px;
-    background-color: var(--tape-shell-deep);
-    box-shadow:
-      inset 0 0 0 1px #2e2140,
-      0 3px 0 #0c0812;
-    font-family: var(--font-osd);
-    font-size: var(--osd-lg);
-    letter-spacing: 0.1em;
-    color: #4d3d5e;
+  .bill__footer {
+    color: #a5919b;
   }
+
+  /* -------------------------------------------------------------- the key */
 
   .play {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 9px;
-    height: 50px;
+    gap: 10px;
+    min-height: 52px;
     border: 0;
     border-radius: 3px;
-    background-color: var(--tape-pink);
-    color: var(--tape-black);
+    background-color: var(--tape-gold);
+    color: #1e0a06;
     font-family: var(--font-display);
-    font-size: 18px;
-    letter-spacing: 0.1em;
+    font-size: 19px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 4px 0 #a4165a;
+    box-shadow: 0 5px 0 #a67918;
     transition:
       background-color 0.2s ease,
       box-shadow 0.2s ease,
@@ -436,15 +300,15 @@ const { index } = Astro.props;
   }
 
   .play:hover {
-    background-color: var(--tape-gold);
-    color: var(--tape-black);
-    box-shadow: 0 4px 0 #a67918;
+    background-color: var(--tape-cream);
+    color: #1e0a06;
+    box-shadow: 0 5px 0 #8c7f6d;
   }
 
   /* Travels like a key, rather than sliding like a card. */
   .play:active {
     transform: translateY(3px);
-    box-shadow: 0 1px 0 #a4165a;
+    box-shadow: 0 2px 0 #a67918;
   }
 
   .play__glyph {
@@ -452,10 +316,12 @@ const { index } = Astro.props;
   }
 
   .hint {
+    text-align: center;
     font-family: var(--font-osd);
     font-size: var(--osd-md);
-    letter-spacing: 0.16em;
-    color: var(--tape-muted-dim);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--tape-muted);
   }
 
   .hint--wide {
@@ -472,20 +338,29 @@ const { index } = Astro.props;
     }
   }
 
-  /*
-   * A phone held sideways: the shell is too shallow for two lines of label, and
-   * the picture matters more than knowing what the tape used to be called.
-   */
+  /* A phone held sideways: the plate has to give up its air before its type. */
   @media (max-height: 700px) {
-    .cassette__window {
-      min-height: 0;
+    .poster__plate {
+      --poster-gap: max(6px, calc(var(--step-poster) * 0.14));
     }
 
-    .cassette__name {
-      font-size: 16px;
+    .bill {
+      padding-top: 6px;
     }
 
-    .cassette__line--was {
+    .play {
+      min-height: 46px;
+      font-size: 17px;
+    }
+
+    /*
+     * And the hint goes. In landscape the plate is within a few pixels of the
+     * screen height, so this line ends up sitting under the transport keys — and
+     * of everything on the poster it is the most expendable, because the key
+     * directly above it already says what to do. The interval drops its own
+     * b-side hint at this width for the same reason.
+     */
+    .hint {
       display: none;
     }
   }
