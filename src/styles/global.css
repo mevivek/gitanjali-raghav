@@ -50,6 +50,24 @@ body {
   height: 100%;
 }
 
+/*
+ * The site is dark-only, and the browser has to be told so in CSS — not just
+ * by the `color-scheme` meta tag in Base.astro. The meta is a first-paint
+ * fallback for before this stylesheet arrives; this is the declaration that
+ * actually lands on the used value, and it is what makes the browser render
+ * its own furniture to match: scrollbars, form controls, and the canvas
+ * behind the page.
+ *
+ * The background belongs on `html` as well as `body`. The canvas takes its
+ * colour from the root element and only falls back to `body` when the root
+ * has none, so setting it here means there is no moment — during load, or if
+ * this file is still in flight — where a white canvas shows through.
+ */
+:root {
+  color-scheme: dark;
+  background-color: var(--tape-black);
+}
+
 body {
   margin: 0;
   background-color: var(--tape-black);

@@ -167,12 +167,30 @@ outstanding without blocking a preview deploy.
 Drop `base` from `astro.config.mjs`, set `site` to the domain, and add a
 `public/CNAME` file containing the hostname.
 
+### The share image
+
+`public/og.jpg` is what appears when the URL is pasted anywhere. It is a still
+life of the title card — the same cassette, fonts and words — so a preview looks
+like the page it opens.
+
+Its source is `scripts/og-template.html`, which pulls the fonts and the
+photograph straight out of the repository; that file's comment header explains
+how to re-render it after a copy change. It is generated once and committed
+rather than built on every deploy, because it changes about as often as the
+headline does.
+
+JPEG rather than PNG on purpose: the picture is mostly a photograph and a
+gradient, and the PNG of it was 896KB against 86KB here — above the size at
+which WhatsApp quietly declines to render a preview at all.
+
+The icons alongside it are `public/favicon.svg` (a cassette, drawn to survive
+being shrunk to 16px) and `public/apple-touch-icon.png`, a 180×180 raster of
+the same mark for iOS home screens, share sheets, and the scrapers that reach
+for an apple-touch-icon when a page offers no other raster icon.
+
 ## Known gaps
 
-- **`og:image` points at a file that does not exist.** `Base.astro` emits
-  `/gitanjali-raghav/og.png` for link previews and there is no `og.png` in
-  `public/`. Pre-existing, and a link to the site currently previews without an
-  image. A single 1200×630 still from one of the reels would fix it.
 - **`portrait.jpg` is 320×320** — her Instagram profile picture, and the
   lowest-resolution image here. It sits in the cassette window at roughly
-  284px so it holds, but only just.
+  284px so it holds, but only just. It is also the photograph in the share
+  image, which is the one place its size is doing real work.

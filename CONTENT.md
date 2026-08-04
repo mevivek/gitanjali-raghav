@@ -139,11 +139,14 @@ question to her settles it; it is a one-string change either way.
 - [ ] **A proper headshot.** `portrait.jpg` is her Instagram profile picture at
       320×320, shown in the cassette window at ~284px. It holds, but it cannot
       go larger. A photo at 1000px+ is the biggest single upgrade available and
-      needs only a file swap.
-- [ ] **An `og.png`.** `Base.astro` points link previews at
-      `/gitanjali-raghav/og.png` and no such file exists, so sharing the URL
-      previews without an image. A 1200×630 still from any reel would do it.
+      needs only a file swap — and it would improve the share image too, since
+      that is the same photograph.
 - [ ] Any photos she would rather have than the ones pulled from Instagram
+
+**The share image** is `public/og.jpg`, built from `scripts/og-template.html`.
+If you change the headline or the intro line in `tape.ts`, that image still
+says the old thing until it is re-rendered — the template's comment header says
+how. It is the one asset that does not update itself when the copy does.
 
 ### Permissions
 
