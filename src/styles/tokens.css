@@ -6,9 +6,10 @@
  *
  * The palette is five colours over three near-blacks:
  *   --tape-cream   the text
- *   --tape-pink    reels 04/05, the REC dot, the active progress segment
- *   --tape-cyan    reels 01/02, the "on air" badge, rewind
- *   --tape-gold    reels 03/06, the interval, every link
+ *   --tape-pink    reels 03/04/06, the REC dot, the active progress segment
+ *   --tape-cyan    reel 01, the "now showing" chip, the focus ring
+ *   --tape-ice     reel 05, the interval's b-side
+ *   --tape-gold    reels 02/07, the interval, every link
  *   --tape-mauve   everything muted
  * Change those and the tape reskins. Per-reel gradients live in
  * src/data/tape.ts, next to the copy they belong to.
@@ -42,8 +43,16 @@
   --tape-edge: #4a3560;
   --tape-shell: #2e2340;
   --tape-shell-deep: #17101f;
+  /*
+   * Two paper stocks, and they are not interchangeable: the cassette label and
+   * the interval's b-side form are printed on the brighter one, the inlay card
+   * on the plainer. Every paper surface on the tape is a gradient between two
+   * of these four.
+   */
   --tape-label: #f4e7cf;
+  --tape-label-bright: #f7ecd8;
   --tape-label-shade: #e3cfa6;
+  --tape-label-deep: #e9d8b4;
   --tape-label-ink: #23142c;
   --tape-label-mute: #8a6b3d;
 
@@ -99,8 +108,14 @@
 
 /*
  * Wide: the tape lies on its side and you drag along it, with the
- * neighbouring reels peeking in at either edge. 62vw capped at 720px is what
- * leaves them visible without shrinking the current reel.
+ * neighbouring reels peeking in at either edge.
+ *
+ * The panel used to be 62vw capped at 720px. The second design handoff narrows
+ * it to 44vw capped at 560px, which is what turns the wide layout from a big
+ * reel with slivers either side into a strip of film running through a gate —
+ * and it is why the sprocket bars and the bezel in TapeChrome.astro have room
+ * to read at all. Every reel photograph's `sizes` attribute quotes this figure,
+ * so the two have to be changed together.
  */
 @media (min-width: 900px) {
   :root {
@@ -111,7 +126,7 @@
     --step-body: 19px;
     --step-role: 28px;
 
-    --panel-w: min(62vw, 720px);
+    --panel-w: min(44vw, 560px);
     --pad-x: 36px;
     --pad-screen: 44px 36px 88px;
     --pad-title: 44px 44px 88px;

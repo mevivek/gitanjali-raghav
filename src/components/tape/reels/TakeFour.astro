@@ -1,6 +1,6 @@
 ---
 import { getImage } from 'astro:assets';
-import { look, reelCount, takes } from '../../../data/tape';
+import { look, reelCount, slugs, takes } from '../../../data/tape';
 
 interface Props {
   index: number;
@@ -10,7 +10,7 @@ const { index } = Astro.props;
 
 const osdHidden = look.osd ? undefined : true;
 
-const SIZES = '(min-width: 900px) min(62vw, 720px), 100vw';
+const SIZES = '(min-width: 900px) min(44vw, 560px), 100vw';
 
 /* One <img> the script re-points — see the note in AnyExcuse.astro. */
 const shots = await Promise.all(
@@ -41,7 +41,7 @@ const vars = [
 
 <section
   class="screen screen--reel"
-  id={`screen-${index}`}
+  id={slugs[index]}
   data-screen
   data-active="false"
   data-takes
@@ -265,6 +265,8 @@ const vars = [
 
     button.addEventListener('click', (event) => {
       event.stopPropagation();
+      // The film advancing in the gate, which is what rolling a take sounds like.
+      document.dispatchEvent(new CustomEvent('tape:blip', { detail: 'clunk' }));
       // Cycles rather than stopping, so the reel can be replayed.
       take = take >= last ? 0 : take + 1;
 

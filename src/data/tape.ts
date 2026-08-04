@@ -1,15 +1,15 @@
 /**
  * The tape.
  *
- * The whole site is one home-video cassette: a title card, six reels, an
- * interval for the day job, and end credits. Everything the tape says lives
- * in this file — no component holds a sentence of its own.
+ * The whole site is one home-video cassette: a title card, seven reels, an
+ * interval for the day job, its b-side, and end credits. Everything the tape
+ * says lives in this file — no component holds a sentence of its own.
  *
- * Each reel is now its own thing rather than six passes over one template.
- * They are toys: you touch the water, hold the throttle, pick the occasion,
- * roll the take, drag the temperature down, play a line. That means most of
- * the copy varies with what the visitor has done, so the alternatives live
- * here too — as threshold tables, read top-down, first match wins.
+ * Each reel is its own thing rather than seven passes over one template. They
+ * are toys: you touch the water, hold the throttle, pick the occasion, roll the
+ * take, drag the temperature down, tap on the beat, play a line. That means
+ * most of the copy varies with what the visitor has done, so the alternatives
+ * live here too — as threshold tables, read top-down, first match wins.
  *
  * Still worth reading back to her: reel 04's "posted · 10.7k" names her
  * follower count, and she has not been asked (see CONTENT.md). `approved` in
@@ -19,11 +19,11 @@
 import type { ImageMetadata } from 'astro';
 
 import basketball from '../assets/photos/basketball.jpg';
-import closeUp from '../assets/photos/close-up.jpg';
 import hills from '../assets/photos/hills.jpg';
 import holi from '../assets/photos/holi.jpg';
 import inTheAir from '../assets/photos/in-the-air.jpg';
 import inTheSea from '../assets/photos/in-the-sea.jpg';
+import laapata from '../assets/photos/laapata.jpg';
 import metro from '../assets/photos/metro.jpg';
 import policeBox from '../assets/photos/police-box.jpg';
 import portrait from '../assets/photos/portrait.jpg';
@@ -44,9 +44,12 @@ import stoneTemple from '../assets/photos/stone-temple.jpg';
 /* ------------------------------------------------------------- the look */
 
 /**
- * How worn the tape looks. These were adjustable knobs in the design tool;
- * the values below are the ones it shipped with, so the site looks like what
- * she was shown. Each is a one-word change.
+ * How worn the tape looks. These were adjustable knobs in the design tool.
+ *
+ * Note these are *not* simply whatever the latest handoff shipped with. The
+ * second handoff came with `grain: 46` and `osd: true`; both were reviewed and
+ * turned down, so the tape keeps the heavier grain and the clean photographs it
+ * already had. Each is still a one-word change if that is ever revisited.
  */
 export const look = {
   /**
@@ -58,8 +61,9 @@ export const look = {
    *
    * Note this no longer overrides each reel's photo treatment the way it used
    * to. The reels drive their own filters from what the visitor is doing — the
-   * throttle saturates, the temperature dial drains the colour out — so a
-   * uniform grade would fight them. It still controls the overlays.
+   * throttle saturates, the temperature dial drains the colour out, the beat
+   * warms the key light — so a uniform grade would fight them. It still
+   * controls the overlays.
    */
   grade: 'poster' as 'clean' | 'poster' | 'tape',
 
@@ -67,13 +71,14 @@ export const look = {
   grain: 80 as number,
 
   /**
-   * The on-screen display: "reel 01 / 06", the running timecode, and the
-   * progress bar on wide screens. Off by default — it was off in the design
-   * too, which keeps the photographs uncluttered.
+   * The on-screen display: "reel 01 / 07", the running timecode, and the
+   * progress bar on wide screens. Off by default — it was off when the tape
+   * was first built, and turning it on is the single biggest change to how the
+   * site reads, so it stays a deliberate decision rather than a default.
    *
    * The readouts that are part of an interaction — the odometer, the
-   * thermometer, the take number, the splash counter — ignore this and are
-   * always visible. They are how you can tell the toy is responding.
+   * thermometer, the take number, the splash counter, the combo — ignore this
+   * and are always visible. They are how you can tell the toy is responding.
    */
   osd: false as boolean,
 } as const;
@@ -96,27 +101,39 @@ export function stepFor(steps: Step[], value: number): string {
 /* ----------------------------------------------------------- title card */
 
 export const title = {
-  kicker: 'home video · delhi',
+  /** The strip above the cassette: gold on the left, mauve on the right. */
+  kicker: 'home video',
+  kickerRight: 'delhi · e-180',
 
-  /** Three lines; the last is picked out in gold. */
-  headingTop: 'No plot',
-  headingMiddle: 'just good',
-  headingAccent: 'footage',
+  /**
+   * Three lines, and the field names say which is which because they are not
+   * interchangeable: the outer two are stencilled display type with a
+   * mis-registered colour fringe, and the middle one is her handwriting, gold
+   * and slightly crooked, wedged between them.
+   */
+  headingTop: 'No plot,',
+  headingHand: 'just good',
+  headingBottom: 'footage',
 
-  intro: 'Six reels. Salt water, hill roads, one motorcycle — and a short interval about the job.',
+  intro:
+    'Seven reels. Salt water, hill roads, one motorcycle, a song — and a short interval about the job.',
 
   /** Written on the cassette's paper label, in her hand. */
   labelName: 'geetanjali raghav',
   labelCode: 'E-180',
+  /** The label's second line: what it said before, struck out, and the span. */
+  labelWas: 'portfolio_final_v3',
+  labelYears: '2019 — 2026',
   scribble: "that's me",
 
-  playLabel: 'press play',
+  playLabel: 'play',
 
   /**
    * Her Instagram profile picture at 320×320 — the lowest-resolution image on
-   * the site. It sits in the cassette window at roughly 284px, so it holds,
-   * but only just. A photograph at 1000px or more is the biggest single
-   * upgrade available here and needs nothing but a file swap.
+   * the site, and now the only one used twice. It sits in the cassette window
+   * at roughly 284px, where it holds, and fills the whole frame on reel 06,
+   * where it does not really. A photograph at 1000px or more is the biggest
+   * single upgrade available here and needs nothing but a file swap.
    */
   photo: portrait as ImageMetadata,
   alt: 'Geetanjali Raghav, straight to camera',
@@ -336,7 +353,7 @@ export const takes = {
     },
     {
       n: '04',
-      photo: closeUp,
+      photo: laapata,
       alt: 'Smiling close up, head tilted, hair falling loose across the frame',
       pos: '50% 26%',
       why: 'kept it',
@@ -416,48 +433,146 @@ export const cold = {
   ],
 } as const;
 
-/* ------------------------------------------------ 06 · side a (play) */
+/* ---------------------------------------------- 06 · playback (beat) */
 
-export interface Track {
-  n: string;
-  /** Empty means a blank ruled line — see the note below. */
-  line: string;
-  note: string;
+/**
+ * Her look, by how long the visitor has held the beat. Same idea as a `Step`
+ * table — highest match wins — but it carries two strings rather than one.
+ */
+export interface Look {
+  min: number;
+  /** Printed beside the track name, in the frame. */
+  look: string;
+  hand: string;
+}
+
+export function lookFor(looks: Look[], value: number): Look {
+  for (const entry of looks) if (value >= entry.min) return entry;
+  return looks[looks.length - 1];
 }
 
 /**
- * The cassette inlay card, listing the captions that were only ever song
- * lyrics. Tapping a line plays it, which is to say a little VU meter twitches
- * next to it.
+ * Four dots keep time under the frame. Tap the photograph on the beat and the
+ * combo climbs: bulbs light across the top like a dressing-room mirror, the
+ * key light comes up, and her look steps from bare face to in character. Miss
+ * and it all drops back to nothing.
  *
- * The three blank rows are deliberate, not missing content: an inlay card has
- * more ruled lines than you ever fill in, and the empty ones are what make it
- * read as a real one. They render as rules, are not focusable, and are not
- * announced.
+ * It is the one reel with a clock in it, so it only runs while it is the screen
+ * in front — see the note in Playback.astro.
+ */
+export const playback = {
+  num: '06',
+  label: 'Playback',
+  tc: '00:33:40',
+  accent: 'var(--tape-pink)',
+  edge: 'rgb(255 46 136 / 34%)',
+  bg: 'radial-gradient(120% 90% at 50% 0%, #3a1026 0%, #1c0a17 52%, #08040d 100%)',
+
+  title: 'Playback',
+  /** The same 320×320 file as the title card — see the note on `title.photo`. */
+  photo: portrait as ImageMetadata,
+  /*
+   * The design called this one "close up", which it is on the title card, where
+   * the cassette window crops in tight. Full bleed in a portrait frame the same
+   * square file shows all of her, so the alt text says what is actually there.
+   */
+  alt: 'Geetanjali Raghav in a black dress and pale blue jacket, straight to camera',
+  pos: '50% 8%',
+
+  /** Accessible name for the invisible button over the photograph. */
+  action: 'Tap on the beat',
+
+  /** Milliseconds to the beat, and how far either side of one still counts. */
+  beat: 520,
+  tolerance: 168,
+
+  /** Bulbs across the top of the frame. The combo that lights the last one. */
+  bulbs: 9,
+  /** Beats to the bar — the dots on the control strip. */
+  dots: 4,
+
+  counterLabel: 'in time',
+
+  prompts: {
+    idle: 'tap on the beat',
+    /** After a miss, while the combo is back at nothing. */
+    missed: 'off beat — again',
+    going: 'keep it',
+    /** Every bulb lit. */
+    full: 'do not stop',
+  },
+
+  looks: [
+    { min: 9, look: 'in character', hand: 'and now I am the heroine' },
+    { min: 6, look: 'the lip colour', hand: 'the good lipstick, obviously' },
+    { min: 3, look: 'kajal on', hand: 'kajal first, always' },
+    { min: 0, look: 'hair up, bare face', hand: 'phone against the mirror, take one' },
+  ] as Look[],
+
+  /**
+   * Advances one on every hit, so the frame names a different song each time.
+   * Titles only, and the same six as the inlay card on reel 07.
+   */
+  tracks: [
+    'Nal Nachna',
+    'Ishqa Ve',
+    'Sawaal',
+    'Mahiye',
+    'Meri Bheegi Bheegi Si',
+    'Dil Chura Le',
+  ],
+
+  lines: [
+    {
+      min: 9,
+      text: 'Every word, every gesture, the little turn at the end of the line. Forty minutes of this to get fourteen seconds you would watch.',
+    },
+    {
+      min: 0,
+      text: 'Singing, dancing, a full face of makeup for a video that lasts fourteen seconds. I know every word of all of these and I will perform the lot of them at you, in the kitchen, on a Tuesday.',
+    },
+  ] as Step[],
+} as const;
+
+/* ------------------------------------------------ 07 · side a (play) */
+
+export interface Track {
+  n: string;
+  line: string;
+}
+
+/**
+ * The cassette inlay card: six songs, on a loop, at volume. Tapping a line
+ * plays it, which is to say a little VU meter twitches next to it.
+ *
+ * Titles, not lyrics. The card used to print fragments of the words — they
+ * were her captions, so they belonged to the site more than a title does — but
+ * a lyric is somebody's copyright and a title is not, and this is a public
+ * page under her name. The paragraph underneath still says the captions were
+ * these songs; it just no longer quotes them.
  */
 export const sideA = {
-  num: '06',
+  num: '07',
   label: 'Side A',
-  tc: '00:34:20',
+  tc: '00:38:20',
   accent: 'var(--tape-gold)',
 
   title: 'Side A',
-  inlayTitle: 'captions that were just songs',
+  inlayTitle: 'on repeat, at volume',
   inlayLength: '45 MIN',
 
   tracks: [
-    { n: '01', line: 'Jab samne tum aa jate ho', note: 'caption, Feb 2021' },
-    { n: '02', line: 'Tune wo kaam kar', note: 'caption, Aug 2022' },
-    { n: '03', line: 'Main arse se khud se zara laapata hoon', note: 'caption, reel 04' },
-    { n: '04', line: '', note: '' },
-    { n: '05', line: '', note: '' },
-    { n: '06', line: '', note: '' },
+    { n: '01', line: 'Nal Nachna' },
+    { n: '02', line: 'Ishqa Ve' },
+    { n: '03', line: 'Sawaal' },
+    { n: '04', line: 'Mahiye' },
+    { n: '05', line: 'Meri Bheegi Bheegi Si' },
+    { n: '06', line: 'Dil Chura Le' },
   ] as Track[],
 
   lines: {
-    idle: 'Hindi film songs, mostly, on a loop until everyone in the car has learned the words. Tap a line — half my captions were just these.',
-    playing:
-      'That one. I could not improve on the line so I did not try — I just put it under the photo and posted it.',
+    idle: 'Six songs, on a loop, at volume, until everybody in the car has learned them. Tap one — most of these have been a caption at some point.',
+    playing: 'That one. Everybody in the car learns the words whether they meant to or not.',
   },
 } as const;
 
@@ -468,12 +583,113 @@ export const sideA = {
  * themselves come from work.ts — this is only the framing around them.
  */
 export const interval = {
-  kicker: 'reel 07 · 00:41:02',
+  kicker: 'interval',
+  tc: '00:41:02',
+  /** Printed opposite the kicker. The quality-check card is screen 2. */
+  screenTag: 'screen 1',
   heading: 'Interval',
   hand: 'the bit where I actually go to work',
-  body: 'Quality checks, catching the thing everybody else missed, the report that has to be right before Friday. I am good at it and it pays for the train tickets. It is not the interesting part — that is why it is only an interval.',
+
+  /**
+   * A three-minute countdown, purely for the joke — nothing on the tape waits
+   * on it and nothing happens when it reaches zero except the wording
+   * changing. It only ticks while this screen is the one in front, so it does
+   * not quietly run out while somebody is four reels away.
+   */
+  seconds: 180,
+  clockLabel: 'interval ends in',
+  clockOver: 'interval over',
+
+  /** Column headings over the rows, like a cinema listing. */
+  columnRole: 'showing',
+  columnYears: 'times',
+
+  /** The status chip at the right of each row. */
+  nowBadge: 'now showing',
+  endedBadge: 'ended',
+  archiveBadge: 'archive',
+
+  body: 'Quality checks, the report that has to be right before Friday. I am good at it and it pays for the train tickets — it is just not the interesting part.',
+
   resumeLabel: 'resume tape',
-  nowBadge: 'on air',
+  /**
+   * The b-side is optional, and this is what says so. It points at the
+   * quality-check card while `resumeLabel` skips past it to the credits — if
+   * both went to the same screen the word "or" would be a lie.
+   */
+  bsideHint: 'or read the b-side →',
+} as const;
+
+/* --------------------------------------------- interval · b-side (form) */
+
+export interface Check {
+  /** Form reference, printed in the left column. */
+  id: string;
+  item: string;
+  verdict: 'pass' | 'fail';
+  /** Her note in the margin, revealed with the stamp. */
+  note: string;
+}
+
+/**
+ * The interval's b-side: the quality-assurance form, turned on herself. Press
+ * `check` on a line and the verdict lands as a rubber stamp with a note beside
+ * it. Three pass, three fail, and it gets signed off regardless — which is the
+ * joke, and also the point of putting it directly after the day job.
+ *
+ * The summary strings are templates rather than sentences because the numbers
+ * in them are counted at runtime. `{n}`, `{done}`, `{total}`, `{pass}` and
+ * `{fail}` are substituted; everything else is the wording.
+ */
+export const qualityCheck = {
+  kicker: 'interval · b-side',
+  tc: '00:44:30',
+
+  /** Two lines of stencilled type at the head of the form. */
+  heading: 'Quality',
+  headingSecond: 'check',
+
+  formCode: 'form gr/qa/26',
+  formSubject: 'subject: self',
+  signedYes: 'signed: yes',
+  signedNo: 'signed: no',
+
+  intro:
+    'Catching what everybody else missed is the job. Turning it on myself is the hobby — tap a line.',
+
+  runLabel: 'check',
+  runAllLabel: 'run all',
+  clearLabel: 'clear',
+
+  summaryIdle: '{n} checks outstanding',
+  summaryRun: '{done} of {total} run · {pass} pass · {fail} fail',
+
+  signedLabel: 'signed',
+  verdict: 'three fails, signed off anyway',
+  /**
+   * Dated the day the form was filled in, which is how a signed form works —
+   * it is not meant to track today. One string if that is ever wrong.
+   */
+  date: '04.08.26',
+
+  checks: [
+    { id: 'QA-01', item: 'At the airport three hours early', verdict: 'pass', note: 'first at the gate' },
+    {
+      id: 'QA-02',
+      item: 'A fourteen-second reel takes fourteen seconds',
+      verdict: 'fail',
+      note: 'forty minutes. as intended',
+    },
+    {
+      id: 'QA-03',
+      item: 'Leaves the water on the first ask',
+      verdict: 'fail',
+      note: 'reproducible every time',
+    },
+    { id: 'QA-04', item: 'Report is right before Friday', verdict: 'pass', note: 'every week, quietly' },
+    { id: 'QA-05', item: 'The motorcycle belongs to her', verdict: 'fail', note: 'photo stays up' },
+    { id: 'QA-06', item: 'Knows every word of the song', verdict: 'pass', note: 'all six, in order' },
+  ] as Check[],
 } as const;
 
 /* ---------------------------------------------------------- end credits */
@@ -486,18 +702,25 @@ export interface Credit {
 export const credits: Credit[] = [
   { role: 'in front of the camera', who: 'Geetanjali Raghav' },
   { role: 'behind the camera', who: 'also her' },
+  { role: 'wardrobe', who: 'any excuse' },
   { role: 'location', who: 'Delhi → the hills → the sea' },
   { role: 'best season', who: 'winter' },
   { role: 'soundtrack', who: 'Hindi film songs' },
-  { role: 'day job', who: 'see interval' },
+  { role: 'quality control', who: 'see interval' },
 ];
 
 export const ending = {
   kicker: 'end of tape',
+  /** Not printed anywhere; it is the last stop for the transport counter. */
+  tc: '00:47:55',
   headingTop: 'Cast &',
   headingBottom: 'crew',
   signoff: 'shot on a phone, mostly in winter, mostly on the way somewhere',
-  rewindLabel: 'rewind',
+  /** The last thing on the roll, after the sign-off. */
+  theEnd: 'the end',
+
+  rewindLabel: 'please rewind',
+  rewindNote: 'be kind to the next viewer',
 
   /**
    * How long the credits sit still after you arrive before they start to roll,
@@ -512,84 +735,145 @@ export const ending = {
   rollDelay: 2500,
 } as const;
 
+/* ------------------------------------------------------------- cold open */
+
+/**
+ * The second and a half of tracking noise before the title card — a tape
+ * finding its picture. Skipped outright under reduced motion and when the URL
+ * names a reel, and clickable away at any point.
+ */
+export const boot = {
+  heading: 'tracking',
+  detail: 'e-180 · side a · play',
+  /** Milliseconds before it clears itself. */
+  hold: 1500,
+  dismissLabel: 'Skip the opening',
+} as const;
+
 /* ---------------------------------------------------------------- sound */
 
 /**
- * A slow piano, synthesised in the browser rather than served as a file.
+ * Five short blips, synthesised in the browser rather than served as files.
  *
- * This replaced a tape-hiss-and-transport-hum bed, which was accurate to a
- * cassette and unpleasant to sit under — a 50Hz drone is a drone.
+ * This replaced a slow synthesised piano, which in turn replaced a tape-hiss
+ * bed. The piano was pleasant and entirely disconnected from anything the
+ * visitor did; these are feedback — a transport clunk when the tape moves, a
+ * key click on a control, a metronome tick and a ping on reel 06, and the
+ * spooling sweep when you rewind. A cassette deck makes noise because you
+ * pressed something.
  *
- * Nothing is committed and nothing is licensed, which is the point twice over.
- * The soundtrack this tape claims in its own credits is Hindi film music, which
- * is commercial and cannot go on a public page. And what plays instead is not a
- * transcription of anything: it is four chords arpeggiated with a bit of drift,
- * so there is no melody to have borrowed. Chord progressions are not
- * copyrightable; tunes are, so there deliberately isn't one.
+ * Nothing is committed and nothing is licensed, which matters here: the
+ * soundtrack this tape claims in its own credits is Hindi film music, which is
+ * commercial and cannot go on a public page. There is no melody in any of this
+ * — there is nothing to have borrowed.
  *
- * Silent until asked. See TapeChrome.astro for the control and the reasons.
+ * Silent until asked, and every blip needs a gesture to fire, so a remembered
+ * "on" can be restored outright without anything making noise on arrival. See
+ * TapeChrome.astro for the control, and for how the reels reach it.
  */
 export const sound = {
-  toggleLabel: 'Piano',
-  onLabel: 'music on',
-  offLabel: 'music off',
+  toggleLabel: 'Sound',
+  onLabel: 'sound on',
+  offLabel: 'sound off',
 
-  /** Overall level. Deliberately low — this sits under a page, not on it. */
-  gain: 0.1,
+  /** A single oscillator each. `toHz` glides; without it the pitch is fixed. */
+  blips: {
+    /** A key press: a chip, a track, a check, a missed beat. */
+    click: { wave: 'square' as OscillatorType, hz: 1500, gain: 0.05, decay: 0.05 },
+    /** Reel 06's metronome. Quieter than the rest — it repeats. */
+    tick: { wave: 'triangle' as OscillatorType, hz: 2100, gain: 0.022, decay: 0.05 },
+    /** A beat landed. Rises, so a hit and a miss are told apart by ear alone. */
+    hit: {
+      wave: 'triangle' as OscillatorType,
+      hz: 900,
+      toHz: 1500,
+      glide: 0.07,
+      gain: 0.05,
+      decay: 0.11,
+    },
+  },
 
-  /** Seconds between notes. Slow enough to feel like thinking, not playing. */
-  step: 0.55,
+  /** The transport: a dull filtered noise burst over a falling thud. */
+  clunk: {
+    noiseDur: 0.15,
+    /** Higher fades the burst away faster. */
+    noiseCurve: 3,
+    noiseCutoff: 560,
+    noiseGain: 0.4,
+    thudFrom: 128,
+    thudTo: 44,
+    thudGain: 0.26,
+    thudDecay: 0.15,
+  },
 
-  /**
-   * MIDI note numbers, four to a chord, arpeggiated in order and looped:
-   * Am7 · Fmaj7 · Cmaj7 · G6. Wistful, unresolved, and nobody's song.
-   */
-  progression: [
-    [57, 60, 64, 67],
-    [53, 57, 60, 64],
-    [48, 52, 55, 59],
-    [55, 59, 62, 64],
-  ],
-
-  /** How often a note gets doubled an octave up. Keeps the loop from settling. */
-  sparkle: 0.22,
-
-  /* --- tone: a struck string, faked with a decaying triangle ------------- */
-
-  /** Seconds for a note to fall away. Long, so notes overlap and ring. */
-  decay: 3.2,
-  /** Cents of random detune per note, so no two are identical. */
-  detune: 5,
-  /** The brightness a note starts and ends at — real strings dull as they fade. */
-  openHz: 4200,
-  closeHz: 900,
-
-  /* --- room: a feedback delay, which is cheaper than an impulse response - */
-
-  reverbTime: 0.28,
-  reverbFeedback: 0.34,
-  reverbTone: 2200,
-  reverbMix: 0.38,
+  /** Rewind: bandpassed noise swept up and back down, like spooling tape. */
+  rewind: {
+    dur: 0.9,
+    q: 7,
+    from: 700,
+    peak: 2600,
+    to: 520,
+    /** Seconds in that the sweep tops out. */
+    peakAt: 0.42,
+    gain: 0.14,
+  },
 } as const;
 
 /* -------------------------------------------------------------- helpers */
 
 /**
- * Screens in order: title, six reels, interval, credits. The transport
- * counter and the progress rail both need this count, and it must match the
- * number of sections index.astro actually renders.
+ * Screens in order: the title card, seven reels, the interval, its b-side, the
+ * credits. Eleven in all.
+ *
+ * These double as the URL fragment for each screen — `#playback` rather than
+ * `#screen-6` — so a single reel can be linked to and arrived at directly. The
+ * transport counter and the progress rail both need the count, and it must
+ * match the number of sections index.astro actually renders.
  */
-export const reelCount = 6;
-export const screenCount = reelCount + 3;
+export const slugs = [
+  'title',
+  'salt-water',
+  'two-wheels',
+  'any-excuse',
+  'take-four',
+  'cold-air',
+  'playback',
+  'side-a',
+  'interval',
+  'quality-check',
+  'end',
+] as const;
+
+export const reelCount = 7;
+export const screenCount = reelCount + 4;
 
 /**
- * Fake tape position for a screen, as "0:MM:SS". Starts at eighteen seconds
- * and advances 6:32 a reel, which is what puts the interval at roughly the
- * forty-one minute mark printed on it.
+ * Where the transport counter says the tape is, screen by screen.
+ *
+ * This used to be arithmetic — eighteen seconds, plus 6:32 a reel. That was
+ * fine for nine screens and breaks at eleven: the last one came out as
+ * "0:65:38", a counter reading sixty-five minutes past the hour. So it now
+ * reads the timecode each screen already prints on itself, which has the
+ * better property anyway — the counter and a reel's own readout cannot drift
+ * apart, because there is only one of each number.
+ *
+ * The title card has no printed timecode of its own; eighteen seconds in is
+ * where a tape's own leader ends.
  */
+export const positions: readonly string[] = [
+  '00:00:18',
+  salt.tc,
+  wheels.tc,
+  excuse.tc,
+  takes.tc,
+  cold.tc,
+  playback.tc,
+  sideA.tc,
+  interval.tc,
+  qualityCheck.tc,
+  ending.tc,
+];
+
 export function timecode(index: number): string {
-  const total = 18 + index * 392;
-  const mm = String(Math.floor(total / 60)).padStart(2, '0');
-  const ss = String(total % 60).padStart(2, '0');
-  return `0:${mm}:${ss}`;
+  return positions[Math.max(0, Math.min(positions.length - 1, index))];
 }

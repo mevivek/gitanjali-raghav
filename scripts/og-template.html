@@ -73,27 +73,49 @@
         position: relative;
         flex: 0 0 auto;
         width: 430px;
-        aspect-ratio: 5 / 3.1;
+        aspect-ratio: 5 / 3.5;
         padding: 13px;
         display: flex;
         flex-direction: column;
         gap: 11px;
-        border: 1px solid #4a3560;
         border-radius: 12px;
-        background: linear-gradient(160deg, #241831, #140c1d 60%, #0d0813);
+        background: linear-gradient(160deg, #2b1c3a, #170e22 58%, #0d0813);
         box-shadow:
           0 30px 70px rgb(0 0 0 / 75%),
-          inset 0 1px 0 rgb(255 255 255 / 9%);
+          inset 0 1px 0 rgb(255 255 255 / 12%),
+          inset 0 0 0 1px #4a3560;
         transform: rotate(-1.3deg);
       }
 
       .window {
         position: relative;
-        flex: 1;
+        flex: 1 1 auto;
+        min-height: 64%;
         border-radius: 4px;
         overflow: hidden;
         background: #0a0610;
-        box-shadow: inset 0 0 0 1px rgb(62 224 232 / 28%);
+        box-shadow: inset 0 0 0 1px rgb(62 224 232 / 30%);
+      }
+
+      /* The spools, parked — a still image cannot show them turning. */
+      .spool {
+        position: absolute;
+        top: 50%;
+        width: 27%;
+        aspect-ratio: 1;
+        margin-top: -13.5%;
+        border-radius: 999px;
+        box-shadow: inset 0 0 0 5px rgb(8 4 13 / 50%);
+      }
+
+      .spool--left {
+        left: 8%;
+        border: 7px dashed rgb(246 239 230 / 50%);
+      }
+
+      .spool--right {
+        right: 8%;
+        border: 7px dashed rgb(246 239 230 / 34%);
       }
 
       .window img {
@@ -152,30 +174,56 @@
         text-shadow: 0 2px 6px #000;
       }
 
+      /* Two lines, since the second handoff added what the tape used to be
+         called and struck it out. */
       .label {
-        height: 43px;
-        padding: 0 14px;
+        flex: 0 0 auto;
+        padding: 7px 14px 9px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
+        gap: 2px;
         border-radius: 4px;
-        background: linear-gradient(#f4e7cf, #e3cfa6);
+        background: linear-gradient(#f7ecd8, #e3cfa6);
         transform: rotate(-0.5deg);
         box-shadow: 0 2px 8px rgb(0 0 0 / 50%);
       }
 
-      .label b {
+      .label__line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .label__name {
         font-family: 'Caveat Variable', cursive;
         font-weight: 700;
-        font-size: 29px;
-        line-height: 1;
+        font-size: 28px;
+        line-height: 1.1;
+        white-space: nowrap;
         color: #23142c;
       }
 
-      .label span {
+      .label__code {
         font-family: 'VT323', monospace;
-        font-size: 17px;
-        letter-spacing: 0.1em;
+        font-size: 16px;
+        letter-spacing: 0.14em;
+        color: #8a6b3d;
+      }
+
+      .label__was {
+        font-family: 'VT323', monospace;
+        font-size: 15px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #a08a6a;
+      }
+
+      .label__was s {
+        text-decoration: line-through;
+      }
+
+      .label__was span {
         color: #8a6b3d;
       }
 
@@ -196,12 +244,23 @@
         color: #ffc53d;
       }
 
-      /* Three lines now, not two, so this comes down to fit 630px. */
+      /*
+       * Three lines, and the middle one is her handwriting rather than another
+       * line of stencil — which is the change the second handoff made to the
+       * heading, and the reason this image had to be redrawn.
+       */
       h1 {
-        font-family: 'Anton', Impact, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
         font-size: 84px;
         font-weight: 400;
         line-height: 0.82;
+      }
+
+      h1 b {
+        font-family: 'Anton', Impact, sans-serif;
+        font-weight: 400;
         letter-spacing: -0.02em;
         text-transform: uppercase;
         color: #f6efe6;
@@ -210,9 +269,22 @@
           -4px 0 0 #3ee0e8;
       }
 
+      /* The bottom line's fringe is reversed, so the pair frames the middle. */
+      h1 b.flip {
+        text-shadow:
+          4px 0 0 #3ee0e8,
+          -4px 0 0 #ff2e88;
+      }
+
       h1 em {
         font-style: normal;
+        font-family: 'Caveat Variable', cursive;
+        font-weight: 700;
+        font-size: 0.78em;
+        line-height: 0.9;
         color: #ffc53d;
+        transform: rotate(-2.5deg);
+        margin: -0.04em 0 -0.06em;
       }
 
       .intro {
@@ -252,19 +324,27 @@
         <div class="window">
           <img src="../src/assets/photos/portrait.jpg" alt="" />
           <div class="bleed"></div>
+          <span class="spool spool--left"></span>
+          <span class="spool spool--right"></span>
           <div class="rec"><i></i>REC</div>
           <div class="scribble">that's me</div>
         </div>
         <div class="label">
-          <b>geetanjali raghav</b>
-          <span>E-180</span>
+          <span class="label__line">
+            <b class="label__name">geetanjali raghav</b>
+            <span class="label__code">E-180</span>
+          </span>
+          <span class="label__line label__was">
+            <s>portfolio_final_v3</s>
+            <span>2019 &mdash; 2026</span>
+          </span>
         </div>
       </div>
 
       <div class="words">
-        <p class="kicker">home video &middot; delhi</p>
-        <h1>No plot<br />just good<br /><em>footage</em></h1>
-        <p class="intro">Six reels. Salt water, hill roads, one motorcycle.</p>
+        <p class="kicker">home video &middot; delhi &middot; e-180</p>
+        <h1><b>No plot,</b><em>just good</em><b class="flip">footage</b></h1>
+        <p class="intro">Seven reels. Salt water, hill roads, one motorcycle, a song.</p>
         <p class="name">Geetanjali Raghav</p>
       </div>
 

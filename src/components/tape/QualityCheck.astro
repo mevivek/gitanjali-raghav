@@ -1,0 +1,609 @@
+---
+import { look, qualityCheck, slugs } from '../../data/tape';
+
+interface Props {
+  /** Position on the strip. */
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+const total = qualityCheck.checks.length;
+const passes = qualityCheck.checks.filter((check) => check.verdict === 'pass').length;
+
+const fill = (template: string, values: Record<string, number>) =>
+  template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
+
+/* What the summary says before anything is run, and with everything run. */
+const summaryIdle = fill(qualityCheck.summaryIdle, { n: total });
+const summaryAll = fill(qualityCheck.summaryRun, {
+  done: total,
+  total,
+  pass: passes,
+  fail: total - passes,
+});
+---
+
+<section
+  class="screen screen--qc screen--flat"
+  id={slugs[index]}
+  data-screen
+  data-active="false"
+  data-qc
+  data-copy={JSON.stringify({
+    total,
+    summaryIdle: qualityCheck.summaryIdle,
+    summaryRun: qualityCheck.summaryRun,
+    signedYes: qualityCheck.signedYes,
+    signedNo: qualityCheck.signedNo,
+  })}
+  aria-label="Interval, b-side — the quality check"
+>
+  <div class="reel__osd" aria-hidden={osdHidden}>
+    <span>{qualityCheck.kicker}</span>
+    <span class="reel__osd-tc">{qualityCheck.tc}</span>
+  </div>
+
+  {/*
+    A carbon-paper form, punched and slightly crooked. `data-nodrag` because
+    pressing `check` on a wide screen must not be read as a drag on the tape.
+  */}
+  <div class="form" data-nodrag data-done="false">
+    <span class="form__hole form__hole--left" aria-hidden="true"></span>
+    <span class="form__hole form__hole--right" aria-hidden="true"></span>
+
+    <div class="form__head">
+      <h2 class="form__title">{qualityCheck.heading}<br />{qualityCheck.headingSecond}</h2>
+
+      <p class="form__ref">
+        <span>{qualityCheck.formCode}</span>
+        <span>{qualityCheck.formSubject}</span>
+        {/*
+          Two spellings of the same fact, because the no-script page has every
+          check already run and the scripted one starts with none. CSS picks
+          one, so neither ever flashes into the other.
+        */}
+        <span class="only-js" data-qc-signed>{qualityCheck.signedNo}</span>
+        <span class="only-static">{qualityCheck.signedYes}</span>
+      </p>
+    </div>
+
+    <p class="form__intro">{qualityCheck.intro}</p>
+
+    <ul class="rows">
+      {
+        qualityCheck.checks.map((check) => (
+          <li class="row" data-qc-row={check.id} data-run="false">
+            <span class="row__id">{check.id}</span>
+
+            <span class="row__body">
+              <span class="row__item">{check.item}</span>
+              <span class="row__note">{check.note}</span>
+            </span>
+
+            <button
+              class="row__check only-js"
+              type="button"
+              aria-label={`Check: ${check.item}`}
+              data-qc-run={check.id}
+            >
+              {qualityCheck.runLabel}
+            </button>
+
+            <span class="row__stamp" data-verdict={check.verdict}>
+              {check.verdict}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="form__foot">
+      {/*
+        aria-live so pressing a check announces the tally moving, which is the
+        only feedback a screen-reader user gets for the stamp landing.
+      */}
+      <p class="form__summary" aria-live="polite">
+        <span class="only-js" data-qc-summary>{summaryIdle}</span>
+        <span class="only-static">{summaryAll}</span>
+      </p>
+
+      <button class="form__all only-js" type="button" data-qc-all>
+        {qualityCheck.runAllLabel}
+      </button>
+
+      <button class="form__clear only-js" type="button" data-qc-clear>
+        {qualityCheck.clearLabel}
+      </button>
+    </div>
+
+    <div class="form__signed">
+      <span class="form__signed-label">{qualityCheck.signedLabel}</span>
+      <span class="form__rule">
+        <span class="form__hand">{qualityCheck.verdict}</span>
+      </span>
+      <span class="form__date">{qualityCheck.date}</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .screen--qc {
+    justify-content: safe center;
+    overflow-y: auto;
+    background: radial-gradient(120% 90% at 50% 0%, #16283a 0%, #0c1420 54%, #08040d 100%);
+    /* The osd strip on this screen is ice, not a reel accent. */
+    --accent: var(--tape-ice);
+  }
+
+  /* ----------------------------------------------------------- the paper */
+
+  .form {
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 17px 13px 11px;
+    border-radius: 4px;
+    background: linear-gradient(var(--tape-label-bright), var(--tape-label-deep));
+    box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
+    transform: rotate(0.4deg);
+  }
+
+  .form__hole {
+    position: absolute;
+    top: 6px;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background-color: #0c1420;
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 80%);
+  }
+
+  .form__hole--left {
+    left: 26px;
+  }
+
+  .form__hole--right {
+    right: 26px;
+  }
+
+  .form__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgb(35 20 44 / 30%);
+  }
+
+  .form__title {
+    font-family: var(--font-display);
+    font-size: 27px;
+    font-weight: 400;
+    line-height: 0.9;
+    text-transform: uppercase;
+    color: var(--tape-label-ink);
+  }
+
+  .form__ref {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    font-family: var(--font-osd);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: right;
+    color: var(--tape-label-mute);
+  }
+
+  .form__intro {
+    font-family: var(--font-osd);
+    font-size: 13px;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    color: #6d5a48;
+  }
+
+  /* ------------------------------------------------------------- the rows */
+
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 0;
+    border-bottom: 1px dashed rgb(35 20 44 / 22%);
+  }
+
+  .row__id {
+    flex: 0 0 auto;
+    width: 42px;
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--tape-label-mute);
+  }
+
+  .row__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  /* Grey until it has been run, then in ink. */
+  .row__item {
+    font-family: var(--font-osd);
+    font-size: 14px;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: #57405f;
+    transition: color 0.2s ease;
+  }
+
+  .row[data-run='true'] .row__item {
+    color: var(--tape-label-ink);
+  }
+
+  /*
+   * Her note in the margin. The row keeps its height whether or not the note
+   * is showing, so stamping a line does not shunt the rest of the form about.
+   */
+  .row__note {
+    min-height: 18px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-hand);
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.1;
+    color: #a0553f;
+    visibility: hidden;
+  }
+
+  .row[data-run='true'] .row__note {
+    visibility: visible;
+  }
+
+  .row__check {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    min-height: 30px;
+    padding: 0 9px;
+    border: 1px dashed #a08a6a;
+    border-radius: 2px;
+    background: transparent;
+    color: var(--tape-label-mute);
+    font-family: var(--font-osd);
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .row__check:hover {
+    border-style: solid;
+    border-color: var(--tape-label-ink);
+    color: var(--tape-label-ink);
+  }
+
+  /* Run: the button gives its place up to the stamp. */
+  .row[data-run='true'] .row__check {
+    display: none;
+  }
+
+  .row__stamp {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    min-height: 28px;
+    padding: 1px 7px;
+    border: 2px solid;
+    border-radius: 2px;
+    font-family: var(--font-osd);
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.88;
+  }
+
+  .row[data-run='true'] .row__stamp {
+    display: inline-flex;
+  }
+
+  /*
+   * Pass and fail land crooked in opposite directions, so a column of them
+   * reads as separate impressions of a rubber stamp rather than one graphic
+   * repeated. The animations are declared in global.css.
+   */
+  .row__stamp[data-verdict='pass'] {
+    border-color: #1d6a72;
+    color: #1d6a72;
+    animation: tape-stamp-pass 0.3s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+  }
+
+  .row__stamp[data-verdict='fail'] {
+    border-color: #c2452c;
+    color: #c2452c;
+    animation: tape-stamp-fail 0.3s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+  }
+
+  /* ------------------------------------------------------------ the foot */
+
+  .form__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 2px;
+  }
+
+  .form__summary {
+    font-family: var(--font-osd);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--tape-label-mute);
+  }
+
+  .form__all,
+  .form__clear {
+    align-items: center;
+    min-height: 34px;
+    padding: 0 13px;
+    border-radius: 2px;
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .form__all {
+    border: 0;
+    background-color: var(--tape-label-ink);
+    color: var(--tape-label-bright);
+  }
+
+  .form__all:hover {
+    background-color: #c2452c;
+  }
+
+  .form__clear {
+    border: 1px solid #a08a6a;
+    background: transparent;
+    color: var(--tape-label-mute);
+  }
+
+  .form__clear:hover {
+    border-color: var(--tape-label-ink);
+    color: var(--tape-label-ink);
+  }
+
+  /* Only one of the two is ever the useful one. */
+  .form[data-done='false'] .form__clear,
+  .form[data-done='true'] .form__all {
+    display: none;
+  }
+
+  /* --------------------------------------------------------- the signature */
+
+  .form__signed {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding-top: 2px;
+  }
+
+  .form__signed-label,
+  .form__date {
+    flex: 0 0 auto;
+    font-family: var(--font-osd);
+    font-size: 11px;
+    color: var(--tape-label-mute);
+  }
+
+  .form__signed-label {
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .form__date {
+    letter-spacing: 0.1em;
+  }
+
+  .form__rule {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 26px;
+    display: flex;
+    align-items: flex-end;
+    border-bottom: 1px solid rgb(35 20 44 / 40%);
+    /* Signed only once every line has been run. */
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .form[data-done='true'] .form__rule {
+    opacity: 1;
+  }
+
+  .form__hand {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 21px;
+    line-height: 1;
+    color: #c2452c;
+    transform: rotate(-2deg);
+  }
+
+  /* ------------------------------------------------------- with no script */
+
+  /*
+   * Nothing here works without script, so the unscripted page gets the form
+   * already filled in: every item in ink, every note and stamp showing, the
+   * signature down, and none of the dead controls. It is the same trick the
+   * inlay card on reel 07 uses, and it means the b-side reads as a document
+   * rather than as six broken buttons.
+   */
+  .only-js {
+    display: none;
+  }
+
+  :global(html.js) .only-js {
+    display: inline-flex;
+  }
+
+  :global(html.js) .only-static {
+    display: none;
+  }
+
+  :global(html:not(.js)) .row__item {
+    color: var(--tape-label-ink);
+  }
+
+  :global(html:not(.js)) .row__note {
+    visibility: visible;
+  }
+
+  :global(html:not(.js)) .row__stamp {
+    display: inline-flex;
+  }
+
+  :global(html:not(.js)) .form__rule {
+    opacity: 1;
+  }
+
+  @media (max-height: 700px) {
+    /* The instruction is the first thing to go; the form still explains itself. */
+    .form__intro {
+      display: none;
+    }
+
+    .form__title {
+      font-size: 22px;
+    }
+
+    .row {
+      padding: 3px 0;
+    }
+
+    .row__item {
+      font-size: 13px;
+    }
+
+    .row__note {
+      min-height: 17px;
+      font-size: 15px;
+    }
+  }
+</style>
+
+<script>
+  /* Copy via data attribute, not an import — see the note in SaltWater.astro. */
+  const screen = document.querySelector<HTMLElement>('[data-qc]');
+
+  if (screen) {
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as {
+      total: number;
+      summaryIdle: string;
+      summaryRun: string;
+      signedYes: string;
+      signedNo: string;
+    };
+
+    const form = screen.querySelector<HTMLElement>('.form')!;
+    const summary = screen.querySelector<HTMLElement>('[data-qc-summary]')!;
+    const signed = screen.querySelector<HTMLElement>('[data-qc-signed]')!;
+    const rows = [...screen.querySelectorAll<HTMLElement>('[data-qc-row]')];
+
+    const blip = (kind: string) =>
+      document.dispatchEvent(new CustomEvent('tape:blip', { detail: kind }));
+
+    const fill = (template: string, values: Record<string, number>) =>
+      template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
+
+    function paint() {
+      const run = rows.filter((row) => row.dataset.run === 'true');
+      const pass = run.filter(
+        (row) => row.querySelector<HTMLElement>('.row__stamp')?.dataset.verdict === 'pass',
+      ).length;
+
+      const done = run.length;
+      form.dataset.done = String(done === copy.total);
+
+      summary.textContent =
+        done === 0
+          ? fill(copy.summaryIdle, { n: copy.total })
+          : fill(copy.summaryRun, {
+              done,
+              total: copy.total,
+              pass,
+              fail: done - pass,
+            });
+
+      signed.textContent = done === copy.total ? copy.signedYes : copy.signedNo;
+    }
+
+    function run(row: HTMLElement) {
+      row.dataset.run = 'true';
+      // A fail gets the heavier noise, which is most of the joke landing.
+      blip(row.querySelector<HTMLElement>('.row__stamp')?.dataset.verdict === 'pass' ? 'click' : 'clunk');
+    }
+
+    rows.forEach((row) => {
+      row.querySelector<HTMLButtonElement>('[data-qc-run]')?.addEventListener('click', (event) => {
+        event.stopPropagation();
+        run(row);
+        paint();
+      });
+    });
+
+    screen.querySelector<HTMLButtonElement>('[data-qc-all]')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      blip('clunk');
+      rows.forEach((row) => {
+        row.dataset.run = 'true';
+      });
+      paint();
+    });
+
+    screen.querySelector<HTMLButtonElement>('[data-qc-clear]')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      blip('click');
+      rows.forEach((row) => {
+        row.dataset.run = 'false';
+      });
+      paint();
+    });
+
+    paint();
+  }
+</script>

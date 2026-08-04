@@ -1,5 +1,5 @@
 ---
-import { credits, ending } from '../../data/tape';
+import { credits, ending, slugs } from '../../data/tape';
 import { site } from '../../data/site';
 
 interface Props {
@@ -12,7 +12,7 @@ const { index } = Astro.props;
 
 <section
   class="screen screen--credits screen--flat"
-  id={`screen-${index}`}
+  id={slugs[index]}
   data-screen
   data-active="false"
   data-credits
@@ -37,6 +37,8 @@ const { index } = Astro.props;
       </dl>
 
       <p class="signoff">{ending.signoff}</p>
+
+      <p class="the-end">{ending.theEnd}</p>
     </div>
   </div>
 
@@ -56,8 +58,16 @@ const { index } = Astro.props;
       }
     </div>
 
-    <a class="rewind" href="#screen-0" data-tape-go="0">
-      <span aria-hidden="true">&#9664;&#9664;</span> {ending.rewindLabel}
+    {/*
+      A sticker off a rental tape, stuck on crooked. Two lines rather than one
+      because the second is the whole joke, and `data-tape-blip` swaps the
+      transport's clunk for the sound of the tape spooling back.
+    */}
+    <a class="rewind" href={`#${slugs[0]}`} data-tape-go="0" data-tape-blip="rewind">
+      <span class="rewind__label">
+        <span aria-hidden="true">&#9664;&#9664;</span> {ending.rewindLabel}
+      </span>
+      <span class="rewind__note">{ending.rewindNote}</span>
     </a>
   </div>
 </section>
@@ -80,7 +90,7 @@ const { index } = Astro.props;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
     text-align: center;
     /*
      * The same place the animation's first frame puts it, so the held moment
@@ -184,41 +194,61 @@ const { index } = Astro.props;
       -2px 0 0 var(--tape-cyan);
   }
 
+  /*
+   * Two columns, as a credit roll is set: the job on the right of its own
+   * column, the name on the left of the next, so the pairs meet down a single
+   * gutter however long either side runs. `display: contents` on the wrapper
+   * lets the <dt>/<dd> pairs be the grid's own items and keep their semantics.
+   */
   .credits {
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    width: 100%;
+    max-width: 460px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px 16px;
+    align-items: baseline;
   }
 
   .credit {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
+    display: contents;
   }
 
   .credit__role {
+    text-align: right;
     font-family: var(--font-osd);
     font-size: var(--osd-sm);
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
+    line-height: 1.3;
     color: var(--tape-muted);
   }
 
   .credit__who {
     margin: 0;
+    text-align: left;
     font-family: var(--font-serif);
-    font-size: 20px;
+    font-size: 19px;
+    line-height: 1.15;
     color: var(--tape-gold);
   }
 
   .signoff {
     max-width: 26ch;
+    margin-top: 4px;
     font-family: var(--font-hand);
     font-weight: 600;
-    font-size: 24px;
+    font-size: 23px;
     line-height: 1.25;
     color: var(--tape-cream);
+  }
+
+  .the-end {
+    font-family: var(--font-display);
+    font-size: 30px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tape-pink);
   }
 
   /* --------------------------------------------------------------- actions */
@@ -277,31 +307,50 @@ const { index } = Astro.props;
     color: var(--tape-cyan);
   }
 
-  /* Flex, not grid: the glyph and the word share one line. */
   .rewind {
-    min-height: 46px;
-    padding: 12px 8px;
+    min-height: 52px;
+    padding: 9px 8px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 0.5em;
-    border: 2px solid var(--tape-cyan);
-    border-radius: 2px;
-    background-color: transparent;
-    color: var(--tape-cyan);
+    gap: 1px;
+    border: 3px solid #c2452c;
+    border-radius: 3px;
+    background: linear-gradient(var(--tape-label-bright), var(--tape-label-deep));
+    color: #c2452c;
     font-family: var(--font-osd);
-    font-size: 18px;
-    letter-spacing: 0.22em;
     text-transform: uppercase;
     cursor: pointer;
+    transform: rotate(-1.4deg);
+    box-shadow: 0 6px 18px rgb(0 0 0 / 50%);
     transition:
-      background-color 0.2s ease,
+      background 0.2s ease,
+      border-color 0.2s ease,
       color 0.2s ease;
   }
 
   .rewind:hover {
-    background-color: var(--tape-cyan);
-    color: var(--tape-black);
+    background: #c2452c;
+    border-color: var(--tape-label-bright);
+    color: var(--tape-label-bright);
+  }
+
+  .rewind:active {
+    transform: rotate(-1.4deg) translateY(2px);
+  }
+
+  .rewind__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 19px;
+    letter-spacing: 0.26em;
+  }
+
+  .rewind__note {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    opacity: 0.7;
   }
 </style>
 
@@ -348,8 +397,8 @@ const { index } = Astro.props;
 
     watch.observe(credits, { attributes: true, attributeFilter: ['data-active'] });
 
-    // Covers landing straight here via a #screen-8 link, where the attribute
-    // may already be set before this script runs.
+    // Covers landing straight here via an #end link, where the attribute may
+    // already be set before this script runs.
     if (credits.dataset.active === 'true') start();
   }
 </script>

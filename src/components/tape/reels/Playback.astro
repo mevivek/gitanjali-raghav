@@ -1,0 +1,504 @@
+---
+import { Image } from 'astro:assets';
+import { look, lookFor, playback, reelCount, slugs, stepFor } from '../../../data/tape';
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+/* Server-rendered at nothing tapped, which is also the no-script state. */
+const start = 0;
+const opening = lookFor(playback.looks, start);
+
+const vars = [
+  `--accent: ${playback.accent}`,
+  `--edge: ${playback.edge}`,
+  `--reel-bg: ${playback.bg}`,
+  `--photo-pos: ${playback.pos}`,
+  `--lit: ${start}`,
+  `--bulbs: ${playback.bulbs}`,
+].join('; ');
+
+const bulbs = Array.from({ length: playback.bulbs }, (_, i) => i);
+const dots = Array.from({ length: playback.dots }, (_, i) => i);
+---
+
+<section
+  class="screen screen--reel"
+  id={slugs[index]}
+  data-screen
+  data-active="false"
+  data-playback
+  data-copy={JSON.stringify({
+    beat: playback.beat,
+    tolerance: playback.tolerance,
+    bulbs: playback.bulbs,
+    dots: playback.dots,
+    prompts: playback.prompts,
+    looks: playback.looks,
+    tracks: playback.tracks,
+    lines: playback.lines,
+  })}
+  style={vars}
+  aria-label={`Reel ${playback.num} of ${reelCount} — ${playback.label}`}
+>
+  <div class="reel__osd" aria-hidden={osdHidden}>
+    <span>reel {playback.num} / {String(reelCount).padStart(2, '0')}</span>
+    <span class="reel__osd-tc">{playback.tc}</span>
+  </div>
+
+  <div class="reel__frame">
+    {/*
+      The same 320×320 file as the cassette window on the title card, and the
+      only place on the tape it is asked to fill a whole frame. No `widths`:
+      there is nothing to pick between, and asking for 1080 would only upscale
+      it on disk as well as on screen. See CONTENT.md — this is the reason the
+      headshot moved to the top of the assets list.
+    */}
+    <Image
+      class="reel__photo photo"
+      src={playback.photo}
+      alt={playback.alt}
+      width={320}
+      loading="lazy"
+      decoding="async"
+    />
+
+    {/* The mirror's key light, coming up as the bulbs light. */}
+    <div class="glow" aria-hidden="true"></div>
+
+    <div class="reel__scan" aria-hidden="true"></div>
+    <div class="reel__sink" aria-hidden="true"></div>
+
+    {/* A dressing-room mirror's bulbs. Decoration for the combo below. */}
+    <div class="bulbs" aria-hidden="true">
+      {bulbs.map((i) => <span class="bulb" data-playback-bulb={i} data-lit="false" />)}
+    </div>
+
+    {/*
+      A real button rather than a listener on the photograph, so the beat can be
+      played from a keyboard as well as a fingertip. Stops short of the caption
+      so the words below stay selectable — same reasoning as reel 01.
+    */}
+    <button class="tap" type="button" data-nodrag data-playback-tap>
+      <span class="sr-only">{playback.action}</span>
+    </button>
+
+    {/*
+      The combo. Part of the interaction rather than the on-screen display, so
+      `look.osd` leaves it alone — without it there is no sign the tape noticed
+      the beat. Deliberately not aria-live: it would fire on every tap.
+    */}
+    <p class="combo reel__controls" aria-hidden="true">
+      <span class="combo__n" data-playback-combo>{String(start).padStart(2, '0')}</span>
+      <span class="combo__label">{playback.counterLabel}</span>
+    </p>
+
+    <div class="reel__caption">
+      <p class="cue">
+        <span class="cue__glyph" aria-hidden="true">&#9654;</span>
+        <span data-playback-track>{playback.tracks[0]}</span>
+        <span class="cue__look">&middot; <span data-playback-look>{opening.look}</span></span>
+      </p>
+      <h2 class="reel__title">{playback.title}</h2>
+      <p class="reel__hand" data-playback-hand>{opening.hand}</p>
+    </div>
+  </div>
+
+  {/*
+    Four dots keeping time, and the prompt. The prompt is the one thing here
+    worth announcing — it changes on a missed beat and when every bulb is lit,
+    and it changes rarely enough that polite live output is useful rather than
+    a stream.
+  */}
+  <div class="meter reel__controls" data-nodrag>
+    <span class="meter__prompt" aria-live="polite" data-playback-prompt>
+      {playback.prompts.idle}
+    </span>
+    <span class="meter__dots" aria-hidden="true">
+      {dots.map((i) => <span class="dot" data-playback-dot={i} data-on={i === 0 ? 'true' : 'false'} />)}
+    </span>
+  </div>
+
+  <p class="reel__line" data-playback-line>{stepFor(playback.lines, start)}</p>
+</section>
+
+<style>
+  .screen--reel {
+    background: var(--reel-bg);
+  }
+
+  /*
+   * She starts underexposed — the mirror is off — and comes up as the bulbs
+   * light. `--lit` is the combo, capped at the number of bulbs, so all three
+   * numbers below move together off one property.
+   */
+  .photo {
+    filter: saturate(calc(1.1 + 0.05 * var(--lit))) contrast(calc(1.14 - 0.01 * var(--lit)))
+      brightness(calc(0.72 + 0.032 * var(--lit)));
+    transition: filter 0.25s linear;
+  }
+
+  /*
+   * With no script the bulbs never light, so the dim opening grade would be
+   * the permanent one. A plainly exposed photograph is the right still.
+   */
+  :global(html:not(.js)) .photo {
+    filter: saturate(1.45) contrast(1.06) brightness(0.95);
+  }
+
+  .glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: radial-gradient(60% 46% at 50% 34%, rgb(255 224 160 / 55%), transparent 70%);
+    opacity: calc(var(--lit) / var(--bulbs) * 0.5);
+    transition: opacity 0.25s linear;
+  }
+
+  :global(html:not(.js)) .glow {
+    opacity: 0;
+  }
+
+  /* ---------------------------------------------------------------- bulbs */
+
+  .bulbs {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 9px;
+    z-index: 4;
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+    pointer-events: none;
+  }
+
+  .bulb {
+    flex: 0 0 auto;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background-color: rgb(255 233 168 / 26%);
+    transition:
+      background-color 0.18s linear,
+      box-shadow 0.18s linear;
+  }
+
+  .bulb[data-lit='true'] {
+    background-color: #ffe9a8;
+    box-shadow: 0 0 12px 3px rgb(255 213 122 / 55%);
+  }
+
+  /* ---------------------------------------------------------- the surface */
+
+  .tap {
+    position: absolute;
+    inset: 0;
+    /* Stops short of the caption, so the words below stay selectable. */
+    bottom: 84px;
+    z-index: 2;
+    display: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    /* A press on a photograph should not offer to copy it or select round it. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  :global(html.js) .tap {
+    display: block;
+  }
+
+  .tap:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: -6px;
+    border-radius: 2px;
+  }
+
+  /* ---------------------------------------------------------------- combo */
+
+  .combo {
+    position: absolute;
+    right: 12px;
+    top: 30px;
+    z-index: 4;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    pointer-events: none;
+  }
+
+  .combo__n {
+    font-family: var(--font-display);
+    font-size: 46px;
+    line-height: 1;
+    color: #c9a6b8;
+    text-shadow: 0 2px 12px rgb(0 0 0 / 80%);
+    font-variant-numeric: tabular-nums;
+    transition: color 0.2s linear;
+  }
+
+  /* In time, then every bulb lit. */
+  [data-going='true'] .combo__n {
+    color: var(--tape-pink);
+  }
+
+  [data-full='true'] .combo__n {
+    color: var(--tape-gold);
+  }
+
+  .combo__label {
+    font-family: var(--font-osd);
+    font-size: var(--osd-sm);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #e7b9cd;
+  }
+
+  /* --------------------------------------------------------------- the cue */
+
+  .cue {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tape-gold);
+  }
+
+  .cue__glyph {
+    color: var(--tape-pink);
+  }
+
+  .cue__look {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #b78a9f;
+  }
+
+  /* --------------------------------------------------------- the beat bar */
+
+  .meter {
+    height: 46px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 13px;
+    border-radius: 3px;
+    background-color: rgb(30 10 22 / 70%);
+    box-shadow: inset 0 0 0 1px #5a2440;
+  }
+
+  .meter__prompt {
+    font-family: var(--font-osd);
+    font-size: var(--osd-lg);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #e7b9cd;
+    transition: color 0.2s linear;
+  }
+
+  /* Off the beat, and back at nothing. */
+  [data-missed='true'] .meter__prompt {
+    color: var(--tape-pink);
+  }
+
+  .meter__dots {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background-color: rgb(255 46 136 / 22%);
+    transition:
+      transform 0.12s ease-out,
+      background-color 0.12s linear;
+  }
+
+  /*
+   * The dot on the beat. This is the one piece of movement on the reel that is
+   * information rather than decoration — it is *where the beat is*, and the
+   * whole reel is unplayable without it — so it is driven by an attribute the
+   * script sets rather than by an animation the motion kill-switch would stop.
+   */
+  .dot[data-on='true'] {
+    background-color: var(--tape-pink);
+    transform: scale(1.5);
+  }
+
+  @media (max-height: 700px) {
+    .combo__n {
+      font-size: 34px;
+    }
+  }
+</style>
+
+<script>
+  /* Copy via data attribute, not an import — see the note in SaltWater.astro. */
+  type Step = { min: number; text: string };
+  type Look = { min: number; look: string; hand: string };
+
+  const stepFor = (steps: Step[], value: number): string => {
+    for (const step of steps) if (value >= step.min) return step.text;
+    return steps[steps.length - 1]?.text ?? '';
+  };
+
+  const lookFor = (looks: Look[], value: number): Look => {
+    for (const entry of looks) if (value >= entry.min) return entry;
+    return looks[looks.length - 1];
+  };
+
+  const screen = document.querySelector<HTMLElement>('[data-playback]');
+  const tap = document.querySelector<HTMLButtonElement>('[data-playback-tap]');
+
+  if (screen && tap) {
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as {
+      beat: number;
+      tolerance: number;
+      bulbs: number;
+      dots: number;
+      prompts: { idle: string; missed: string; going: string; full: string };
+      looks: Look[];
+      tracks: string[];
+      lines: Step[];
+    };
+
+    const comboOut = screen.querySelector<HTMLElement>('[data-playback-combo]')!;
+    const trackOut = screen.querySelector<HTMLElement>('[data-playback-track]')!;
+    const lookOut = screen.querySelector<HTMLElement>('[data-playback-look]')!;
+    const hand = screen.querySelector<HTMLElement>('[data-playback-hand]')!;
+    const line = screen.querySelector<HTMLElement>('[data-playback-line]')!;
+    const prompt = screen.querySelector<HTMLElement>('[data-playback-prompt]')!;
+    const bulbs = [...screen.querySelectorAll<HTMLElement>('[data-playback-bulb]')];
+    const dots = [...screen.querySelectorAll<HTMLElement>('[data-playback-dot]')];
+
+    const blip = (kind: string) =>
+      document.dispatchEvent(new CustomEvent('tape:blip', { detail: kind }));
+
+    let combo = 0;
+    let missed = false;
+    let track = 0;
+    /** Which of the four dots is lit, and when it lit. */
+    let beat = 0;
+    let beatAt = 0;
+    let timer: number | null = null;
+
+    function paint() {
+      const lit = Math.min(combo, copy.bulbs);
+      const stage = lookFor(copy.looks, combo);
+
+      screen!.style.setProperty('--lit', String(lit));
+      screen!.dataset.going = String(combo > 0);
+      screen!.dataset.full = String(lit >= copy.bulbs);
+      screen!.dataset.missed = String(missed && combo === 0);
+
+      comboOut.textContent = String(combo).padStart(2, '0');
+      bulbs.forEach((bulb, i) => {
+        bulb.dataset.lit = String(i < lit);
+      });
+
+      trackOut.textContent = copy.tracks[track];
+      lookOut.textContent = stage.look;
+      hand.textContent = stage.hand;
+      line.textContent = stepFor(copy.lines, combo);
+
+      prompt.textContent =
+        missed && combo === 0
+          ? copy.prompts.missed
+          : combo === 0
+            ? copy.prompts.idle
+            : lit >= copy.bulbs
+              ? copy.prompts.full
+              : copy.prompts.going;
+    }
+
+    /* ---------------------------------------------------------- the clock */
+
+    function start() {
+      if (timer !== null) return;
+      beatAt = performance.now();
+      timer = window.setInterval(() => {
+        beatAt = performance.now();
+        beat = (beat + 1) % copy.dots;
+        dots.forEach((dot, i) => {
+          dot.dataset.on = String(i === beat);
+        });
+        blip('tick');
+      }, copy.beat);
+    }
+
+    /*
+     * Nothing keeps time from three reels away: the interval is cleared the
+     * moment this screen is not the one in front, and the combo goes with it —
+     * a run held from off-screen would not have been played to anything.
+     */
+    function stop() {
+      if (timer === null) return;
+      window.clearInterval(timer);
+      timer = null;
+      combo = 0;
+      missed = false;
+      paint();
+    }
+
+    /*
+     * `data-active` is maintained by the observer in index.astro, which already
+     * works out which screen is in front. Watching the attribute keeps that
+     * knowledge in one place — the same arrangement EndCredits.astro uses for
+     * the roll.
+     */
+    const watch = new MutationObserver(() => {
+      if (screen.dataset.active === 'true') start();
+      else stop();
+    });
+
+    watch.observe(screen, { attributes: true, attributeFilter: ['data-active'] });
+    if (screen.dataset.active === 'true') start();
+
+    /* ----------------------------------------------------------- the taps */
+
+    tap.addEventListener('click', (event) => {
+      event.stopPropagation();
+
+      /*
+       * A tap counts if it lands within the tolerance *either side* of a beat,
+       * so being a hair early is as good as being a hair late. Before the first
+       * beat has fired there is nothing to be early for, so it misses.
+       */
+      const since = performance.now() - beatAt;
+      const onBeat = timer !== null && (since <= copy.tolerance || since >= copy.beat - copy.tolerance);
+
+      if (onBeat) {
+        combo += 1;
+        missed = false;
+        // A different song each time, so the frame keeps saying something new.
+        track = (track + 1) % copy.tracks.length;
+        blip('hit');
+      } else {
+        combo = 0;
+        missed = true;
+        blip('click');
+      }
+
+      paint();
+    });
+  }
+</script>

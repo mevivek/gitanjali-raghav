@@ -53,7 +53,7 @@ const asset = (file: string) => new URL(path(file), Astro.site);
  * indefinitely, so a redrawn share image under an unchanged name would go on
  * showing the old headline to everyone who had already shared the link.
  */
-const ASSET_VERSION = 3;
+const ASSET_VERSION = 4;
 
 /**
  * The share image. A JPEG, not a PNG: it is mostly a photograph and a
@@ -135,9 +135,14 @@ const icon = (file: string) => `${path(file)}?v=${ASSET_VERSION}`;
       anything — the tape itself is a scroll container and moves without
       them — so they are hidden until this class lands. Inline and tiny so it
       runs before first paint and they never flash in and out.
+
+      `deep` marks arriving at a named reel, which means skipping the cold open.
+      It has to be decided here, before first paint, or the opening would flash
+      up for a frame on its way out. See TapeBoot.astro.
     */}
     <script is:inline>
       document.documentElement.classList.add('js');
+      if (location.hash) document.documentElement.classList.add('deep');
     </script>
   </head>
 

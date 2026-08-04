@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { look, reelCount, stepFor, wheels } from '../../../data/tape';
+import { look, reelCount, slugs, stepFor, wheels } from '../../../data/tape';
 
 interface Props {
   index: number;
@@ -26,7 +26,7 @@ const vars = [
 
 <section
   class="screen screen--reel"
-  id={`screen-${index}`}
+  id={slugs[index]}
   data-screen
   data-active="false"
   data-wheels
@@ -48,7 +48,7 @@ const vars = [
         alt={wheels.alt}
         width={1080}
         widths={[400, 720, 1080]}
-        sizes="(min-width: 900px) min(62vw, 720px), 100vw"
+        sizes="(min-width: 900px) min(44vw, 560px), 100vw"
         loading="lazy"
         decoding="async"
       />

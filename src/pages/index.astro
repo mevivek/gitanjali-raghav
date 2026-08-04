@@ -6,29 +6,35 @@ import TwoWheels from '../components/tape/reels/TwoWheels.astro';
 import AnyExcuse from '../components/tape/reels/AnyExcuse.astro';
 import TakeFour from '../components/tape/reels/TakeFour.astro';
 import ColdAir from '../components/tape/reels/ColdAir.astro';
+import Playback from '../components/tape/reels/Playback.astro';
 import SideA from '../components/tape/reels/SideA.astro';
 import IntervalCard from '../components/tape/IntervalCard.astro';
+import QualityCheck from '../components/tape/QualityCheck.astro';
 import EndCredits from '../components/tape/EndCredits.astro';
+import TapeBoot from '../components/tape/TapeBoot.astro';
 import TapeChrome from '../components/tape/TapeChrome.astro';
 import TapeGrain from '../components/tape/TapeGrain.astro';
 import TapePrefetch from '../components/tape/TapePrefetch.astro';
-import { reelCount } from '../data/tape';
+import { reelCount, screenCount } from '../data/tape';
 
 /*
- * Nine screens on one strip: the title card, six reels, the interval, the end
- * credits. The order is the whole argument of the site — the photographs come
- * first and the job is an interval near the end, not a section at the top.
+ * Eleven screens on one strip: the title card, seven reels, the interval, the
+ * interval's b-side, the end credits. The order is the whole argument of the
+ * site — the photographs come first and the job is an interval near the end,
+ * not a section at the top.
  *
- * The reels are six separate components rather than six passes over one,
- * because each is a different toy: you touch the water, hold the throttle,
- * pick the occasion, roll the take, drag the temperature down, play a line.
- * They share a skeleton (src/styles/tape.css) and nothing else.
+ * The reels are seven separate components rather than seven passes over one,
+ * because each is a different toy: you touch the water, hold the throttle, pick
+ * the occasion, roll the take, drag the temperature down, tap on the beat, play
+ * a line. They share a skeleton (src/styles/tape.css) and nothing else.
  *
- * Each screen gets an `id` so the play, resume and rewind links are real
- * links. With no script they jump; with script they glide.
+ * Each screen's `id` is its own name — `#cold-air`, not `#screen-5` — so the
+ * play, resume, b-side and rewind links are real links, a single reel can be
+ * linked to from outside, and the URL says where you are.
  */
 const intervalIndex = reelCount + 1;
-const creditsIndex = reelCount + 2;
+const bsideIndex = reelCount + 2;
+const creditsIndex = reelCount + 3;
 ---
 
 <Base>
@@ -38,7 +44,7 @@ const creditsIndex = reelCount + 2;
       data-tape-track
       tabindex="0"
       role="region"
-      aria-label="Home video — nine screens. Scroll, swipe or use the arrow keys."
+      aria-label={`Home video — ${screenCount} screens. Scroll, swipe or use the arrow keys.`}
     >
       <TitleCard index={0} />
 
@@ -47,14 +53,19 @@ const creditsIndex = reelCount + 2;
       <AnyExcuse index={3} />
       <TakeFour index={4} />
       <ColdAir index={5} />
-      <SideA index={6} />
+      <Playback index={6} />
+      <SideA index={7} />
 
       <IntervalCard index={intervalIndex} />
+      <QualityCheck index={bsideIndex} />
       <EndCredits index={creditsIndex} />
     </div>
 
     <TapeChrome />
     <TapeGrain />
+
+    {/* The tracking noise before the picture settles. Clears itself. */}
+    <TapeBoot />
   </div>
 
   {/* Behaviour only, renders nothing — warms the photographs after load. */}
@@ -69,9 +80,10 @@ const creditsIndex = reelCount + 2;
    * without a line of this the site still swipes between reels, scrolls with
    * a wheel, takes arrow keys and Page Up/Down once focused, and moves when
    * you click play, resume tape or rewind. What script adds is knowing *which*
-   * reel is in front — which is what the dimming, the progress segments and
-   * the running timecode need — plus the two transport keys and drag-to-scrub
-   * on a wide screen.
+   * reel is in front — which is what the dimming, the progress segments, the
+   * running timecode, the credits roll, reel 06's beat and the interval's clock
+   * all need — plus the two transport keys, drag-to-scrub on a wide screen, and
+   * keeping the URL pointed at the reel you are looking at.
    */
   const track = document.querySelector<HTMLElement>('[data-tape-track]');
   const screens = [...document.querySelectorAll<HTMLElement>('[data-screen]')];
@@ -84,15 +96,22 @@ const creditsIndex = reelCount + 2;
     /** True while the tape lies sideways — matches the 900px break in CSS. */
     const wide = window.matchMedia('(min-width: 900px)');
 
-    let current = 0;
+    /*
+     * Where the counter says the tape is, screen by screen. Read off the
+     * counter's own data attribute rather than recomputed here: it used to be
+     * the same arithmetic written twice, which is one copy too many, and the
+     * numbers now come from the timecodes each screen prints on itself. Not
+     * imported, because importing src/data/tape.ts would pull fifteen
+     * photographs into this bundle's module graph.
+     */
+    let positions: string[] = [];
+    try {
+      positions = JSON.parse(counter?.dataset.tapePositions ?? '[]');
+    } catch {
+      positions = [];
+    }
 
-    /** Same arithmetic as `timecode` in src/data/tape.ts. */
-    const timecode = (i: number) => {
-      const total = 18 + i * 392;
-      const mm = String(Math.floor(total / 60)).padStart(2, '0');
-      const ss = String(total % 60).padStart(2, '0');
-      return `0:${mm}:${ss}`;
-    };
+    let current = 0;
 
     function paint(i: number) {
       if (i === current) return;
@@ -112,7 +131,7 @@ const creditsIndex = reelCount + 2;
         seg.dataset.state = n === i ? 'now' : n < i ? 'seen' : 'todo';
       });
 
-      if (counter) counter.textContent = timecode(i);
+      if (counter && positions[i]) counter.textContent = positions[i];
     }
 
     /*
@@ -152,12 +171,28 @@ const creditsIndex = reelCount + 2;
 
     /* ------------------------------------------------------------- moving */
 
-    function go(n: number, instant = false) {
+    /**
+     * Ask the deck for a noise. It answers only if the visitor has turned sound
+     * on; if TapeChrome's script never ran, nobody is listening and nothing
+     * happens. See the note at the foot of TapeChrome.astro.
+     */
+    const blip = (kind: string) =>
+      document.dispatchEvent(new CustomEvent('tape:blip', { detail: kind }));
+
+    function go(n: number, instant = false, noise = 'clunk') {
       const i = Math.max(0, Math.min(screens.length - 1, n));
       const target = screens[i];
       // `scrollTo`'s smooth behaviour is set in JS, so it ignores the CSS
       // reduced-motion kill-switch and has to be checked here.
       const behavior: ScrollBehavior = instant || reduceMotion.matches ? 'auto' : 'smooth';
+
+      /*
+       * The transport's clunk, and only for a move somebody asked for. It is
+       * deliberately not fired from the observer: a wheel-flick or a fling
+       * crosses several screens, and a deck does not clunk eleven times.
+       * Restoring the layout after a resize is not a move either.
+       */
+      if (!instant && i !== current) blip(noise);
 
       if (wide.matches) {
         // The track scrolls sideways; centre the panel in it.
@@ -174,17 +209,32 @@ const creditsIndex = reelCount + 2;
         const top = target.getBoundingClientRect().top + window.scrollY;
         window.scrollTo({ top, behavior });
       }
+
+      /*
+       * Point the URL at the reel. `replaceState` rather than `pushState`: the
+       * back button should leave the tape, not walk back through eleven screens
+       * of it. Screen 0 drops the fragment entirely, so the tape's own address
+       * stays clean.
+       */
+      try {
+        const at = i === 0 ? location.pathname + location.search : `#${target.id}`;
+        history.replaceState(null, '', at);
+      } catch {
+        /* file:// and a few embedded webviews refuse this; nothing depends on it */
+      }
     }
 
     document.querySelector('[data-tape-prev]')?.addEventListener('click', () => go(current - 1));
     document.querySelector('[data-tape-next]')?.addEventListener('click', () => go(current + 1));
 
-    // The play, resume and rewind anchors. Intercepted so they glide rather
-    // than jump; if anything here throws, the href still does the job.
+    // The play, resume, b-side and rewind anchors. Intercepted so they glide
+    // rather than jump; if anything here throws, the href still does the job.
+    // `data-tape-blip` lets one of them ask for a different noise — the rewind
+    // sticker on the credits wants the sound of the tape spooling back.
     document.querySelectorAll<HTMLAnchorElement>('[data-tape-go]').forEach((link) => {
       link.addEventListener('click', (event) => {
         event.preventDefault();
-        go(Number(link.dataset.tapeGo));
+        go(Number(link.dataset.tapeGo), false, link.dataset.tapeBlip ?? 'clunk');
       });
     });
 
@@ -294,7 +344,7 @@ const creditsIndex = reelCount + 2;
      * below. `visualViewport.height` is by definition the visible area, so it
      * cannot disagree.
      *
-     * And a layout change moves every snap position at once: nine screens that
+     * And a layout change moves every snap position at once: eleven screens that
      * each grew by the height of a collapsing toolbar put the tape N × that
      * far out, wrong by more the further along you are. Chromium re-snaps after
      * a resize; Safari does not, so this does it by hand — instantly, because a
@@ -307,7 +357,7 @@ const creditsIndex = reelCount + 2;
     function measure() {
       const height = Math.round(viewport ? viewport.height : window.innerHeight);
       // The collapse animates, firing this continuously; only a real change is
-      // worth reflowing nine full-screen sections for.
+      // worth reflowing eleven full-screen sections for.
       if (!height || Math.abs(height - lastHeight) < 2) return;
       lastHeight = height;
 
@@ -323,15 +373,41 @@ const creditsIndex = reelCount + 2;
       }, 150);
     };
 
+    /* ---------------------------------------------------------- arriving */
+
+    /*
+     * Where the tape opens: screen 0, or the reel the URL names.
+     *
+     * This has to be settled *before* the first `measure()`, not after. The
+     * first measurement always ends in `restore()`, which schedules a jump back
+     * to whichever screen it believed was in front — so landing on `#cold-air`
+     * first and measuring second put the tape on the right reel and then a
+     * frame later slid it back to the title card.
+     */
+    let landing = 0;
+    if (location.hash) {
+      const named = screens.findIndex((screen) => `#${screen.id}` === location.hash);
+      if (named > 0) landing = named;
+    }
+
+    // The server marks screen 0 active, but the parallax offsets and the
+    // segment states still need setting — and if the URL named a reel, that is
+    // the one that is really in front.
+    current = -1;
+    paint(landing);
+
     measure();
     viewport?.addEventListener('resize', remeasure);
     // Fallback for anything without visualViewport, and a second chance if the
     // toolbar settles without firing one.
     window.addEventListener('resize', remeasure);
 
-    // Paint the opening state: the server marks screen 0 active, but the
-    // parallax offsets and segment states still need setting.
-    current = -1;
-    paint(0);
+    /*
+     * The browser has already jumped roughly to a named reel from the fragment,
+     * but on a wide screen "roughly" is the left edge of the panel rather than
+     * its centre. Redone properly, instantly, and without a noise — nobody
+     * pressed anything.
+     */
+    if (landing > 0) go(landing, true);
   }
 </script>

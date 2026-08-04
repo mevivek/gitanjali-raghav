@@ -46,7 +46,7 @@ export const site = {
    * anyone arrived.
    */
   description:
-    'Six reels of hills, salt water, one motorcycle and a very short interval about the day job.',
+    'Seven reels of hills, salt water, one motorcycle, a song, and a very short interval about the day job.',
 
   /** Shown as two buttons on the end credits. `rel="me"` on both. */
   socials: [

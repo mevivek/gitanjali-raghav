@@ -16,7 +16,7 @@ export interface Job {
   company: string;
   /** Shown as-is, e.g. "2022 — 2026" or "May 2026 — now". */
   years: string;
-  /** Marks the current role. Renders the "on air" badge. */
+  /** Marks the current role. Renders the cyan "now showing" chip. */
   current?: boolean;
   /** Optional aside — a former company name. Kept short; shown after a dot. */
   note?: string;
@@ -61,8 +61,17 @@ export interface Study {
 
 export const study: Study[] = [
   {
-    // LinkedIn gives the institution and the dates but not the subject, so
-    // only those are shown. Add `what` once she says what she read.
+    /*
+     * LinkedIn gives the institution and the dates but not the subject, so
+     * only those are shown. Add `what` once she says what she read.
+     *
+     * The second design handoff filled this in as "B.Sc" and shortened the
+     * institution to "Rohilkhand University". Neither was taken: nothing
+     * confirms the degree, and a design tool guessing at a real person's
+     * qualification is not a source. The full name is what the university is
+     * called, and the interval's layout gives way to its length rather than the
+     * other way round.
+     */
     where: 'Mahatma Jyotiba Phule Rohilkhand University',
     place: 'Bareilly',
     years: '2015 — 2018',

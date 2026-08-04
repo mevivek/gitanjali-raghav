@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { look, reelCount, salt, stepFor } from '../../../data/tape';
+import { look, reelCount, salt, slugs, stepFor } from '../../../data/tape';
 
 interface Props {
   index: number;
@@ -23,7 +23,7 @@ const vars = [
 
 <section
   class="screen screen--reel"
-  id={`screen-${index}`}
+  id={slugs[index]}
   data-screen
   data-active="false"
   data-salt
@@ -48,7 +48,7 @@ const vars = [
       alt={salt.alt}
       width={1080}
       widths={[400, 720, 1080]}
-      sizes="(min-width: 900px) min(62vw, 720px), 100vw"
+      sizes="(min-width: 900px) min(44vw, 560px), 100vw"
       loading="eager"
       decoding="async"
     />
@@ -235,6 +235,7 @@ const vars = [
     }
 
     tap.addEventListener('click', (event) => {
+      document.dispatchEvent(new CustomEvent('tape:blip', { detail: 'click' }));
       splashes += 1;
       ripple(event);
 
