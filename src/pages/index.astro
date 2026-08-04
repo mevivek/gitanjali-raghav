@@ -152,12 +152,12 @@ const creditsIndex = reelCount + 2;
 
     /* ------------------------------------------------------------- moving */
 
-    function go(n: number) {
+    function go(n: number, instant = false) {
       const i = Math.max(0, Math.min(screens.length - 1, n));
       const target = screens[i];
       // `scrollTo`'s smooth behaviour is set in JS, so it ignores the CSS
       // reduced-motion kill-switch and has to be checked here.
-      const behavior: ScrollBehavior = reduceMotion.matches ? 'auto' : 'smooth';
+      const behavior: ScrollBehavior = instant || reduceMotion.matches ? 'auto' : 'smooth';
 
       if (wide.matches) {
         // The track scrolls sideways; centre the panel in it.
@@ -274,13 +274,60 @@ const creditsIndex = reelCount + 2;
       // Let the new layout settle before measuring it.
       requestAnimationFrame(() => {
         current = -1;
-        go(i);
+        go(i, true);
         paint(i);
       });
     };
 
     wide.addEventListener('change', restore);
     window.addEventListener('orientationchange', restore);
+
+    /* ------------------------------------------------- the visible height */
+
+    /*
+     * Measures what the visitor can actually see and hands it to the CSS, then
+     * puts the reel that was in front back in front.
+     *
+     * Both halves are needed. On iOS Safari with `viewport-fit=cover`, `100dvh`
+     * and the genuinely visible area disagree, so screens came out shorter than
+     * the window and left a sliver of the previous reel above and the next one
+     * below. `visualViewport.height` is by definition the visible area, so it
+     * cannot disagree.
+     *
+     * And a layout change moves every snap position at once: nine screens that
+     * each grew by the height of a collapsing toolbar put the tape N × that
+     * far out, wrong by more the further along you are. Chromium re-snaps after
+     * a resize; Safari does not, so this does it by hand — instantly, because a
+     * smooth correction would fight the scroll that caused it.
+     */
+    const viewport = window.visualViewport;
+    let lastHeight = 0;
+    let settle: number | null = null;
+
+    function measure() {
+      const height = Math.round(viewport ? viewport.height : window.innerHeight);
+      // The collapse animates, firing this continuously; only a real change is
+      // worth reflowing nine full-screen sections for.
+      if (!height || Math.abs(height - lastHeight) < 2) return;
+      lastHeight = height;
+
+      document.documentElement.style.setProperty('--screen-h', `${height}px`);
+      restore();
+    }
+
+    const remeasure = () => {
+      if (settle !== null) clearTimeout(settle);
+      settle = window.setTimeout(() => {
+        settle = null;
+        measure();
+      }, 150);
+    };
+
+    measure();
+    viewport?.addEventListener('resize', remeasure);
+    // Fallback for anything without visualViewport, and a second chance if the
+    // toolbar settles without firing one.
+    window.addEventListener('resize', remeasure);
 
     // Paint the opening state: the server marks screen 0 active, but the
     // parallax offsets and segment states still need setting.

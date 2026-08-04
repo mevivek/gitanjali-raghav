@@ -105,15 +105,23 @@ html {
   flex: 0 0 auto;
   width: 100%;
   /*
-   * dvh, not svh or lvh, and the choice matters here. svh would size every
-   * screen to the viewport with the toolbars *showing*, leaving a band of
-   * background once they collapse; lvh would size to the collapsed viewport and
-   * spill the next screen into view while they are still up. dvh tracks the
-   * live value, so each screen fills whatever the viewport actually is — which
-   * is the whole point of letting the toolbars go.
+   * `--screen-h` is the *measured* visible height, written by the script from
+   * `visualViewport.height`. It exists because the viewport units are not
+   * trustworthy enough here.
+   *
+   * dvh is the right idea — svh would size every screen to the viewport with the
+   * toolbars showing and leave a band of background once they collapse, lvh
+   * would spill the next screen into view while they are still up — but on iOS
+   * Safari with `viewport-fit=cover` dvh and the actually-visible area disagree,
+   * which showed up as a sliver of the previous reel above and the next one
+   * below. `visualViewport.height` is by definition what the visitor can see.
+   *
+   * The dvh fallback is what a browser with no script gets, and is close enough
+   * there because nothing resizes.
    */
   height: 100vh;
   height: 100dvh;
+  height: var(--screen-h, 100dvh);
   padding: var(--pad-screen);
   display: flex;
   flex-direction: column;
