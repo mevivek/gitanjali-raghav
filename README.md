@@ -121,25 +121,39 @@ Both land on `<html>` as data attributes and become four numbers in
   keyboard input on its own, and the flick has real platform momentum. Script
   then adds what genuinely needs it — knowing which reel is in front, which is
   what the dimming, the progress rail and the timecode key off, plus the two
-  transport buttons and drag-to-scrub on a wide screen. With JavaScript off,
-  all eleven screens are still reachable by swipe, wheel, arrow key and the
-  play / resume / rewind links, which are real anchors.
-- **On a phone the *document* is that scroll container, deliberately.** Safari
-  and Chrome only collapse their own toolbars when the page scrolls. The tape
-  was a fixed `100dvh` box with the strip scrolling inside it, so the document
-  never moved and both browsers kept full-size chrome permanently — the tape sat
-  in a letterbox between them. Handing the scrolling to the document is what
-  lets them get out of the way, and it reclaims roughly 60–110px with nothing to
-  install. Above 900px it reverts to a fixed viewport with the strip scrolling
-  sideways inside it, because there the tape is dragged and there is no chrome
-  to reclaim.
+  transport buttons and drag-to-scrub on a wide screen.
 
-  Two things follow from that and must not be undone. The chrome and the wear
-  overlays are `position: fixed`, not absolute — on a phone the tape is eleven
-  screens tall, so absolute would pin them to the top of the strip and scroll
-  them away with the first reel. And `html, body` use `min-height`, not
-  `height`: `height: 100%` would cap the document at one screen and the snapping
-  would have nothing to scroll.
+  With JavaScript off, all eleven screens stay reachable. On a phone every route
+  works — swipe, wheel, arrow keys once the strip has focus, and the play /
+  resume / b-side / rewind links, which are real anchors. On a wide screen the
+  keyboard and a horizontal trackpad swipe work, but the anchors do not move it:
+  `scroll-snap-type: x mandatory` with centre alignment pulls the browser's own
+  fragment scroll back to the panel it started on. That is a scripted-only path
+  on desktop, and has been since the strip turned sideways — not a consequence of
+  who owns the scroll.
+- **The strip is the scroll container at every width, and the mobile letterbox
+  is the accepted price.** `.tape` is one viewport tall with `overflow: hidden`;
+  `.tape__track` holds the eleven screens' worth of overflow. Because the
+  document never scrolls, Safari and Chrome on a phone keep their full-size
+  toolbars and the tape sits letterboxed between them.
+
+  That was tried the other way. Handing the scrolling to the document does make
+  both browsers collapse their chrome and reclaims roughly 60–110px — see
+  `2e9534e` — but it was reverted after being looked at on a real device. The
+  trade is recorded rather than rediscovered, so if the letterbox looks like a
+  bug, read that commit before undoing this one.
+
+  Two things hold it together and must not be undone. `html, body` use
+  `height: 100%`, which is the cap that stops the document scrolling. And the
+  chrome, the wear and the cold open are `position: fixed` — they sit outside the
+  track, because anything positioned against it travels with the reels.
+
+- **The height is measured, not declared, and decided in one place.** `.tape`
+  takes `visualViewport.height` from the script via `--screen-h`, because on iOS
+  with `viewport-fit=cover` `100dvh` and the genuinely visible area disagree and
+  leave a sliver of the neighbouring reel showing. The screens inside are plain
+  `height: 100%`: eleven screens each sizing themselves is eleven chances to
+  disagree with the box around them.
 - **Above 900px it is a strip of film in a gate.** The second handoff narrowed
   the panel from `min(62vw, 720px)` to `min(44vw, 560px)` and added the furniture
   that makes the narrowing read: sprocket perforations along the top and bottom

@@ -17,12 +17,12 @@ const { index } = Astro.props;
   data-active={index === 0 ? 'true' : 'false'}
   aria-label="Title card"
 >
-  {/* Gold on the left, the tape's own catalogue number on the right. */}
-  <p class="kicker">
-    <span>{title.kicker}</span>
-    <span class="kicker__code">{title.kickerRight}</span>
-  </p>
-
+  {/*
+    The card opens on the cassette. There was a strip above it reading
+    "home video · delhi · e-180" — the design's own name for the file, which
+    means nothing to somebody arriving here, for the same reason `site.ts`
+    keeps it out of the page title. The tape says what it is by looking like one.
+  */}
   <div class="cassette">
     <span class="cassette__screw cassette__screw--left" aria-hidden="true"></span>
     <span class="cassette__screw cassette__screw--right" aria-hidden="true"></span>
@@ -108,24 +108,6 @@ const { index } = Astro.props;
 </section>
 
 <style>
-  .kicker {
-    width: 100%;
-    max-width: 520px;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    font-family: var(--font-osd);
-    font-size: var(--osd-md);
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--tape-gold);
-  }
-
-  .kicker__code {
-    color: var(--tape-muted-dim);
-  }
-
   /* ------------------------------------------------------------- cassette */
 
   .cassette {

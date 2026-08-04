@@ -23,7 +23,7 @@ Every word on the site is in this file, in the order you meet it.
 | Section | What it holds |
 |---|---|
 | `look` | How worn the tape is: `grade`, `grain`, `osd`. See the table in [README.md](./README.md#the-three-switches) — `osd: false` hides a fair amount of writing, which is worth knowing before you edit it. |
-| `title` | The opening card: the two ends of the line above the cassette, the three-line heading, the intro sentence, and both lines written on the cassette's paper label. |
+| `title` | The opening card: the three-line heading, the intro sentence, and both lines written on the cassette's paper label. There is deliberately nothing above the cassette — see the note in the file. |
 | `salt`, `wheels`, `excuse`, `takes`, `cold`, `playback`, `sideA` | The seven reels, in order. One block each — they are seven different things, so they do not share a shape. |
 | `interval` | The framing around the day job, including the three-minute countdown. The jobs themselves come from `work.ts`. |
 | `qualityCheck` | The interval's b-side: the QA form, its six checks, and everything printed on it. |

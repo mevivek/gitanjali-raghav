@@ -99,11 +99,12 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   /* ------------------------------------------------------- film furniture */
 
   /*
-   * Fixed, like everything else that floats: on a phone the tape is eleven
-   * screens tall and the document is what scrolls, so anything absolute would
-   * be pinned to the top of the strip and scroll away with the first reel.
-   * These two are wide-only, where that does not arise — but they follow the
-   * same rule so nobody has to work out which ones are the exception.
+   * Fixed, like everything else that floats over the tape. What matters is that
+   * these sit *outside* `.tape__track`, which is the scroller — anything inside
+   * it, or positioned against it, would travel with the reels. `.tape` is
+   * exactly one viewport tall, so fixed and absolute-within-the-tape describe
+   * the same rectangle; fixed says the intent more plainly and does not depend
+   * on which ancestor happens to be positioned.
    */
   .bezel,
   .sprocket {

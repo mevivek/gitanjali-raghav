@@ -43,13 +43,14 @@
 }
 
 /*
- * `min-height`, not `height`. On a phone the document is the tape's scroller and
- * has to be free to grow to eleven screens tall; `height: 100%` would cap it at
- * one and the snapping would have nothing to scroll.
+ * `height`, not `min-height`, and that is what stops the document scrolling at
+ * all: it is capped at one screen, and the eleven screens' worth of overflow
+ * belongs to `.tape__track` instead. See the note at the top of tape.css — this
+ * was briefly the other way round.
  */
 html,
 body {
-  min-height: 100%;
+  height: 100%;
 }
 
 /*

@@ -28,10 +28,10 @@ const noise =
 
 <style>
   /*
-   * Fixed, for the same reason as the chrome: on a phone the tape is eleven
-   * screens tall and the document scrolls, so an absolute overlay would sit over
-   * the first reel only and scroll away with it. The wear has to stay on the
-   * glass.
+   * Fixed, for the same reason as the chrome: the wear has to stay on the glass
+   * rather than travel with the strip, and the strip — `.tape__track` — is what
+   * scrolls. An overlay positioned against the track would slide away with the
+   * first reel.
    */
   .grain,
   .scan,

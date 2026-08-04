@@ -100,11 +100,14 @@ export function stepFor(steps: Step[], value: number): string {
 
 /* ----------------------------------------------------------- title card */
 
+/*
+ * There is deliberately no line above the cassette. It used to read
+ * "home video" on the left and "delhi · e-180" on the right — the first of
+ * which is the design tool's internal name for the file and means nothing to a
+ * visitor, which is the same reason it is kept out of `site.title`. Both halves
+ * went together; a lone catalogue number is not worth a row of its own.
+ */
 export const title = {
-  /** The strip above the cassette: gold on the left, mauve on the right. */
-  kicker: 'home video',
-  kickerRight: 'delhi · e-180',
-
   /**
    * Three lines, and the field names say which is which because they are not
    * interchangeable: the outer two are stencilled display type with a
