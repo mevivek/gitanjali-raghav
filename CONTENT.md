@@ -53,7 +53,7 @@ but not the subject.
 
 Images live in `src/assets/photos/` (**not** `public/`) so Astro optimises
 them: each is re-encoded to WebP at three widths and served with a `srcset`.
-That is why the whole site is ~1.3MB instead of several times that.
+That is why the site is ~2.3MB with fourteen photographs instead of far more.
 
 ```ts
 import newPhoto from '../assets/photos/new-photo.jpg';
@@ -69,10 +69,11 @@ import newPhoto from '../assets/photos/new-photo.jpg';
 describes what is in the frame. Never make them the same string, or a screen
 reader just reads the emoji aloud.
 
-**Nine photos were pulled from her Instagram; eight are in use.**
-`src/assets/photos/glam.jpg` is downloaded but not shown — it is the most
-glamour-forward of the set and felt like a call she should make rather than
-me. Add it in one line if she wants it.
+**Fourteen photos, each individually approved.**
+Four candidates were turned down specifically because someone other than her
+was recognisable in them — her mother, her sister, her brother, a friend at
+Holi. They have not been asked and cannot consent by proxy. If any are wanted
+later, ask the people in them first.
 
 ## 4. Life cards — `src/content/life/*.md`
 
@@ -93,7 +94,7 @@ A sentence or two.
 
 ## Still worth getting from her
 
-**Her words.** The tagline and all four life cards are currently written *from*
+**Her words.** The tagline and all six life cards are currently written *from*
 her public profiles rather than *by* her. They are accurate, but they are not
 her voice, and on a personal site that is the difference between good and
 right. Each file says so in a comment.
@@ -112,6 +113,6 @@ right. Each file says so in a comment.
 - [ ] Any photos she would rather have than the ones pulled from Instagram
 
 **Permissions**
-- [ ] Confirm she is happy with all eight photographs being on a public page
+- [ ] Confirm she is happy with all fourteen photographs being on a public page
 - [ ] Confirm she is happy for the follower count to be mentioned
 - [ ] Then set `approved: true`

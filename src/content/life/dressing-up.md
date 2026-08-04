@@ -1,11 +1,10 @@
 ---
-# Evidence: several posts tagged to a makeup studio, plus festive and
-# occasion looks across the feed.
+# Evidence: Republic Day saree, Diwali, and a long run of occasion looks.
 title: Dressing up
 icon: '✨'
-order: 4
+order: 5
 draft: false
 ---
 
-Any excuse. Weddings, festivals, a Tuesday — if there is a reason to put on
-the good earrings, I will find it.
+Any excuse. Diwali, Republic Day, Holi, a Tuesday — if there is a reason to
+put on the good earrings, I will find it.

@@ -1,11 +1,11 @@
 ---
-# Evidence: two Instagram captions are Hindi film-song lyrics — "Jab samne
-# tum aa jate ho" and "Tune wo kaam kar".
+# Evidence: several captions are Hindi film-song lyrics — "Jab samne tum aa
+# jate ho", "Tune wo kaam kar", "Main arse se khud se zara laapata hoon".
 title: On repeat
 icon: '🎧'
-order: 2
+order: 4
 draft: false
 ---
 
-Hindi film songs, mostly. The kind that end up as captions because nothing
-else says it better.
+Hindi film songs, mostly. Half my captions are just lyrics I could not
+improve on.

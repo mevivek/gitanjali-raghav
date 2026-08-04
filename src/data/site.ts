@@ -37,7 +37,7 @@ export const site = {
    * sea, a camera never far away. Replace it with hers when you can.
    */
   tagline:
-    'Order to Cash by day. Coastlines, cameras and a camera roll that is 90% sky the rest of the time.',
+    'Order to Cash by day. Coastlines, hill roads and a Royal Enfield the rest of the time.',
 
   description:
     'Geetanjali Raghav — Accounts Receivable and Order to Cash at Genpact, based in Delhi. Photographs, coastlines, and the occasional excellent outfit.',
@@ -50,8 +50,8 @@ export const site = {
   facts: [
     { icon: '📍', text: 'Delhi, India' },
     { icon: '🌊', text: 'Happiest near water' },
+    { icon: '🏍️', text: 'Owns one very good motorcycle photo' },
     { icon: '🎧', text: 'Hindi film songs, always' },
-    { icon: '🎬', text: '10k on the other side of the camera' },
   ] as Fact[],
 
   /**

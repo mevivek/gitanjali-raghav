@@ -1,11 +1,10 @@
 ---
-# Evidence: public creator account, ~10,700 followers, 51 posts, 17 story
-# highlights, reels posted July 2026.
+# Evidence: public creator account, ~10,700 followers, 51 posts since 2019.
 #
 # Check she's happy for the follower count to be mentioned at all.
 title: Behind the camera
 icon: '🎬'
-order: 3
+order: 6
 draft: false
 ---
 
