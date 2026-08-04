@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { site } from '../data/site';
+import { scanContent } from '../../scripts/scan.mjs';
 
 interface Props {
   title?: string;
@@ -8,6 +9,15 @@ interface Props {
 }
 
 const { title = site.title, description = site.description } = Astro.props;
+
+/*
+ * While any placeholder remains, the page is a draft about a real person —
+ * so it asks search engines to skip it. This is evaluated at build time and
+ * disappears on its own once the content is complete; nobody has to remember
+ * to remove it.
+ */
+const { placeholders } = scanContent();
+const isDraft = placeholders.length > 0;
 
 // Astro.site + base are set in astro.config.mjs; this yields absolute URLs
 // for the social tags, which require them.
@@ -23,6 +33,7 @@ const ogImage = new URL(`${import.meta.env.BASE_URL}/og.png`.replace(/\/+/g, '/'
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {isDraft && <meta name="robots" content="noindex, nofollow" />}
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />

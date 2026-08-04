@@ -65,12 +65,39 @@ those for anything a person has to read.
 
 ## Deploying
 
-Pushes to `main` trigger `.github/workflows/deploy.yml`, which runs the
-placeholder check, builds, and publishes to GitHub Pages. Enable it once under
-**Settings → Pages → Build and deployment → Source: GitHub Actions**.
+**One-time setup** — go to **Settings → Pages → Build and deployment** and set
+*Source* to **GitHub Actions**. Nothing publishes until this is done; it cannot
+be enabled from code.
 
-The site is configured as a *project* site at
-`https://mevivek.github.io/gitanjali-raghav`.
+After that, every push to `main` or `claude/personal-professional-website-jlhzqu`
+runs `.github/workflows/deploy.yml`, which checks the content, builds, and
+publishes to:
 
-To move it to a custom domain: drop `base` from `astro.config.mjs`, set `site`
-to the domain, and add a `public/CNAME` file containing the hostname.
+```
+https://mevivek.github.io/gitanjali-raghav
+```
+
+### Preview mode
+
+The site currently deploys while placeholders remain, so it can be reviewed on
+a real device. Two things make that safe:
+
+- **The page carries `<meta name="robots" content="noindex, nofollow">` for as
+  long as any placeholder exists.** It is computed at build time from the
+  content itself and vanishes on its own when the last `TODO` is filled — there
+  is nothing to remember to remove. A draft about a real person stays out of
+  search results.
+- CI runs `npm run check -- --warn-only`, which reports what is unfilled and
+  annotates the run without blocking it.
+
+**When the content is complete**, drop `-- --warn-only` from the workflow. The
+check becomes a hard gate again and any unfilled field fails the deploy.
+
+> A GitHub Pages site on a public repository is public. Anyone with the URL can
+> read it, indexed or not. Keep the repository private until she is happy with
+> what it says about her.
+
+### Custom domain
+
+Drop `base` from `astro.config.mjs`, set `site` to the domain, and add a
+`public/CNAME` file containing the hostname.
