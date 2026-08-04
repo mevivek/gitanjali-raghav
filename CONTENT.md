@@ -113,7 +113,7 @@ because LinkedIn gave the institution but not the subject.
 
 ## Still worth getting from her
 
-### Two things before `approved: true`
+### One thing before `approved: true`
 
 **The follower count.** Reel 05's handwritten line is `10.7k of you 😅`. Nobody
 has asked whether she is happy for her follower count to be on the page. It is
@@ -121,12 +121,13 @@ one string in `tape.ts` and the page is `noindex` until she signs off, but a
 GitHub Pages site on a public repository is readable by anyone with the URL,
 indexed or not.
 
-**Her current job title.** The design labelled the Genpact role *Quality
-Associate*. Her LinkedIn says *Accounts Receivable, Order to Cash*, and that is
-what `work.ts` uses, because this is a factual claim about a real person on a
-page under her name and LinkedIn is the closer source. The design very likely
-picked up the title from the Highspring row below it, which is identical. One
-question to her settles it; it is a one-string change either way.
+### Settled
+
+**Her current job title is *Quality Associate*** — confirmed, and the same as
+the Highspring row above it. That repetition is real: she changed employer and
+kept doing the job. Her LinkedIn still says *Accounts Receivable, Order to
+Cash*, so treat that profile as the stale one rather than the source of truth
+if the two ever disagree again.
 
 ### Facts
 

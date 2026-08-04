@@ -25,16 +25,15 @@ export interface Job {
 export const work: Job[] = [
   {
     /*
-     * This is her LinkedIn title, and it disagrees with the design.
+     * Confirmed as "Quality Associate", which is what the design said and
+     * what her LinkedIn title ("Accounts Receivable, Order to Cash") did not.
+     * The design was right and LinkedIn is the stale one.
      *
-     * The Home Video design labelled this role "Quality Associate" — the
-     * same title as the Highspring row below it, which is very likely how
-     * the slip happened. Her LinkedIn title is the one kept, because this
-     * is a factual claim about a real person on a page under her name and
-     * LinkedIn is the closer source. Worth a single question to her; it is
-     * a one-string change either way.
+     * It is the same title as the Highspring row below — that repetition is
+     * real, not the copy-paste it looked like. She moved employer and kept
+     * doing the job. Leave both rows saying it.
      */
-    role: 'Accounts Receivable, Order to Cash',
+    role: 'Quality Associate',
     company: 'Genpact',
     years: 'May 2026 — now',
     current: true,

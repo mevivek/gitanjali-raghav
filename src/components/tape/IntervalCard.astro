@@ -127,10 +127,11 @@ const rows = [
   }
 
   /*
-   * Deliberately not a flex row. Her current title runs to two lines on a
-   * phone, and as a flex item the badge would be pushed onto a third line of
+   * Deliberately not a flex row. As a flex item the badge sits beside the
+   * whole title block, so a role long enough to wrap pushes it onto a line of
    * its own; flowing them as inline content tucks it in after the last word
-   * however long the title is.
+   * whatever the length. The current titles are short enough not to need it,
+   * but the next one added might not be.
    */
   .row__role {
     font-family: var(--font-serif);

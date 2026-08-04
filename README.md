@@ -11,10 +11,9 @@ in the git history at `f36c0a9`.
 
 > **Status: live, and the voice is now hers.**
 > The reel copy came from the design rather than being written from her public
-> profiles, which is what the old site's did. Two things are still outstanding
+> profiles, which is what the old site's did. One thing is still outstanding
 > before this should be findable in search: reel 05 names her follower count and
-> she has not been asked about that, and the current job title in
-> `src/data/work.ts` disagrees with the design. See [CONTENT.md](./CONTENT.md).
+> she has not been asked about that. See [CONTENT.md](./CONTENT.md).
 >
 > The page carries a `noindex` tag until `approved` in `src/data/site.ts` is
 > `true`, so it stays out of search until she has seen it.
