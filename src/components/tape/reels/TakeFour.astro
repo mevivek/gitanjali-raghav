@@ -46,7 +46,8 @@ const vars = [
   data-active="false"
   data-takes
   data-kept="false"
-  data-list={JSON.stringify(payload)}
+  data-swap={JSON.stringify(payload)}
+  data-swap-sizes={SIZES}
   data-copy={JSON.stringify(takes.lines)}
   data-labels={JSON.stringify({ roll: takes.rollLabel, again: takes.againLabel })}
   style={vars}
@@ -248,7 +249,7 @@ const vars = [
   if (screen) {
     type Shot = { src: string; srcset: string; alt: string; pos: string; n: string; hand: string };
 
-    const shots: Shot[] = JSON.parse(screen.dataset.list ?? '[]');
+    const shots: Shot[] = JSON.parse(screen.dataset.swap ?? '[]');
     const copy = JSON.parse(screen.dataset.copy ?? '{}') as { rolling: string; kept: string };
     const labels = JSON.parse(screen.dataset.labels ?? '{}') as { roll: string; again: string };
 

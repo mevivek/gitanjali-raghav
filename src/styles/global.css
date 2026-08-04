@@ -276,14 +276,18 @@ a:hover {
   }
 }
 
-/* Reel 05: snow drifting across the valley once it is cold enough. */
+/*
+ * Reel 05: snow, once it is cold enough.
+ *
+ * Each layer travels exactly one of its own background tiles and then loops.
+ * That is the whole trick — land anywhere else and the pattern jumps at the
+ * seam, which is what makes cheap snow look like a sliding sheet of dots. The
+ * distance is per-layer, so the keyframe reads it from a custom property
+ * instead of hard-coding a percentage.
+ */
 @keyframes tape-snow {
-  0% {
-    transform: translate3d(0, -30%, 0);
-  }
-
-  100% {
-    transform: translate3d(-6%, 30%, 0);
+  to {
+    transform: translate3d(var(--snow-x), var(--snow-y), 0);
   }
 }
 

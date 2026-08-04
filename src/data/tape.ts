@@ -374,7 +374,13 @@ export const cold = {
   /** Degrees celsius. The dial runs warm on the left to cold on the right. */
   warm: 18,
   coldest: -4,
-  initial: 14,
+  /**
+   * Opens at the cold end, fully frozen — snow, rime, colour drained out. It
+   * used to start at 14° so the dial had somewhere to go, but the coldest state
+   * is the one worth arriving on: it is what the reel is about, and dragging
+   * back up towards the warm end reads as a choice rather than a chore.
+   */
+  initial: -4,
 
   dialLabel: 'drag me colder',
   unit: 'celsius',
@@ -492,6 +498,18 @@ export const ending = {
   headingBottom: 'crew',
   signoff: 'shot on a phone, mostly in winter, mostly on the way somewhere',
   rewindLabel: 'rewind',
+
+  /**
+   * How long the credits sit still after you arrive before they start to roll,
+   * in milliseconds.
+   *
+   * They used to begin on page load and run continuously, so by the time anyone
+   * reached the last screen the roll was already halfway up and the first names
+   * had gone past unseen. Now it waits until this screen is the one in front,
+   * holds on the title for this long, and then moves — and it starts again from
+   * the top on every return.
+   */
+  rollDelay: 2500,
 } as const;
 
 /* ---------------------------------------------------------------- sound */

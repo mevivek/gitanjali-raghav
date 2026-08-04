@@ -57,7 +57,20 @@ const vars = [
 
     {/* Mist off the valley floor, then snow, then rime at the very edges. */}
     <div class="mist" aria-hidden="true"></div>
-    <div class="snow" aria-hidden="true"></div>
+
+    {/*
+      Three layers, not one. Snow only reads as snow if it has depth: flakes
+      near the lens are large, bright, fast and slightly out of focus, and
+      flakes far away are small, dim and slow. One sheet of identical dots all
+      moving at the same speed — which is what the design specified — reads as
+      a texture sliding over the photograph, because that is what it is.
+    */}
+    <div class="snow" aria-hidden="true">
+      <span class="snow__layer snow__far"></span>
+      <span class="snow__layer snow__mid"></span>
+      <span class="snow__layer snow__near"></span>
+    </div>
+
     <div class="rime" aria-hidden="true"></div>
 
     <div class="reel__scan" aria-hidden="true"></div>
@@ -142,6 +155,8 @@ const vars = [
   .rime {
     position: absolute;
     pointer-events: none;
+    /* The layers inside .snow are oversized; the frame must clip them. */
+    overflow: hidden;
   }
 
   .mist {
@@ -157,29 +172,92 @@ const vars = [
 
   /*
    * Only starts once it is genuinely cold — clamp() holds it at zero for the
-   * first third of the dial, then ramps.
+   * first third of the dial, then ramps. Held on the wrapper so all three
+   * layers fade in together and each can keep its own depth-weighting.
    */
   .snow {
-    inset: -30%;
-    background-image:
-      radial-gradient(2px 2px at 20% 30%, #fff, transparent),
-      radial-gradient(2px 2px at 70% 10%, #fff, transparent),
-      radial-gradient(1px 1px at 45% 60%, #fff, transparent),
-      radial-gradient(2px 2px at 85% 45%, #fff, transparent),
-      radial-gradient(1px 1px at 10% 80%, #fff, transparent),
-      radial-gradient(2px 2px at 60% 85%, #fff, transparent);
-    background-size: 180px 180px;
-    opacity: clamp(0, calc((var(--chill) - 0.35) / 0.65), 1);
+    inset: 0;
+    --fall: clamp(0, calc((var(--chill) - 0.35) / 0.65), 1);
+  }
+
+  .snow__layer {
+    position: absolute;
+    /*
+     * Oversized, because each layer slides by up to a full tile and its edge
+     * must never come into view. The background repeats, so the extra costs
+     * nothing but fill.
+     */
+    inset: -50%;
+    pointer-events: none;
     transition: opacity 0.4s linear;
   }
 
   /*
-   * The drift is decoration; the snow being *there* is the information. So
-   * under reduced motion the flakes still appear, they just stop moving.
+   * Far: many small dim flakes, barely moving. Does most of the work of making
+   * the frame feel deep.
+   */
+  .snow__far {
+    background-image:
+      radial-gradient(1px 1px at 18% 12%, #fff, transparent),
+      radial-gradient(1px 1px at 62% 28%, #fff, transparent),
+      radial-gradient(1px 1px at 34% 47%, #fff, transparent),
+      radial-gradient(1px 1px at 82% 61%, #fff, transparent),
+      radial-gradient(1px 1px at 8% 79%, #fff, transparent);
+    background-size: 100px 100px;
+    opacity: calc(var(--fall) * 0.4);
+    --snow-x: -100px;
+    --snow-y: 100px;
+  }
+
+  .snow__mid {
+    background-image:
+      radial-gradient(2px 2px at 24% 9%, #fff, transparent),
+      radial-gradient(2px 2px at 71% 33%, #fff, transparent),
+      radial-gradient(2px 2px at 46% 58%, #fff, transparent),
+      radial-gradient(2px 2px at 88% 81%, #fff, transparent);
+    background-size: 140px 140px;
+    opacity: calc(var(--fall) * 0.65);
+    --snow-x: -140px;
+    --snow-y: 140px;
+  }
+
+  /*
+   * Near: a few big flakes, fast, and softened — anything this close to a lens
+   * is outside its depth of field. The blur is what stops them reading as
+   * white dots stuck to the screen.
+   */
+  .snow__near {
+    background-image:
+      radial-gradient(3px 3px at 30% 17%, #fff, transparent),
+      radial-gradient(3px 3px at 76% 44%, #fff, transparent),
+      radial-gradient(3px 3px at 14% 72%, #fff, transparent);
+    background-size: 190px 190px;
+    opacity: calc(var(--fall) * 0.9);
+    filter: blur(0.7px);
+    --snow-x: -190px;
+    --snow-y: 190px;
+  }
+
+  /*
+   * The falling is decoration; the snow being *there* is the information. So
+   * under reduced motion the flakes still appear at every depth, they just
+   * stop moving.
+   *
+   * Durations set the parallax: the near layer covers 190px in 5.5s (~35px/s)
+   * while the far one covers 100px in 15s (~7px/s). Five times the speed for
+   * roughly three times the size is about what a real lens sees.
    */
   @media (prefers-reduced-motion: no-preference) {
-    .snow {
-      animation: tape-snow 7s linear infinite;
+    .snow__far {
+      animation: tape-snow 15s linear infinite;
+    }
+
+    .snow__mid {
+      animation: tape-snow 9s linear infinite;
+    }
+
+    .snow__near {
+      animation: tape-snow 5.5s linear infinite;
     }
   }
 

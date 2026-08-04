@@ -103,13 +103,30 @@ Both land on `<html>` as data attributes and become four numbers in
   kill-switch in `global.css` can disable them all. The exception is the end
   credits: `creep` *carries* the credits rather than decorating them, and
   freezing it would park the names off the top of the screen. So it only ever
-  runs under `prefers-reduced-motion: no-preference`, and under `reduce` the
-  roll becomes a static scrollable list. It also pauses on hover and focus,
-  which WCAG 2.2.2 asks for.
+  runs under `prefers-reduced-motion: no-preference`, and under `reduce` — or
+  with no script at all — the roll becomes a static scrollable list. It also
+  pauses on hover and focus, which WCAG 2.2.2 asks for.
+- **The credits wait for you.** The roll does not start on page load; it starts
+  when the credits are the screen in front, holds still for `ending.rollDelay`
+  so the first names can be read, and replays from the top on every return.
+  Previously it ran continuously from load, so by the time anyone reached the
+  last screen it was already halfway up.
 - **Images are optimised, not just uploaded.** Photos live in `src/assets/` so
   Astro re-encodes each to WebP at three widths with a `srcset`. Explicit
   `width` caps the fallback — without it Astro ships the full 1080px original
   as the base `src`.
+- **And prefetched, once the page has settled.** `TapePrefetch.astro` waits for
+  `load`, then idle time, then flips every remaining `loading="lazy"` reel photo
+  to eager and warms the occasion and take alternatives that are not in the DOM
+  at all. Swiping to a reel and swapping an occasion both happen against cache
+  instead of the network. It sits out entirely on `Save-Data` or a 2G
+  connection: fifteen photographs is a real amount of somebody's data to spend
+  on screens they may never reach.
+- **The snow has depth.** Reel 05 runs three layers at different tile sizes,
+  speeds and opacities, the nearest slightly blurred, and each travels exactly
+  one of its own tiles before looping so the pattern never jumps at the seam.
+  The design specified a single sheet of identical dots on one translate, which
+  reads as a texture sliding over the photograph rather than as weather.
 - **No third-party requests.** All four fonts are self-hosted, latin subsets
   only; no analytics, no CDN, no tracking. Caveat is declared by hand in
   `global.css` because its package ships one stylesheet covering all four
