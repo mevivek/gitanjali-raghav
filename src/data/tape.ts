@@ -497,31 +497,61 @@ export const ending = {
 /* ---------------------------------------------------------------- sound */
 
 /**
- * The tape's own noise, synthesised in the browser rather than served as a
- * file: filtered noise for head hiss, a low sine for the transport motor, and
- * a slow wobble on the gain for the capstan.
+ * A slow piano, synthesised in the browser rather than served as a file.
  *
- * Nothing is committed and nothing is licensed, which is the point — the
- * soundtrack this tape claims (Hindi film songs) is commercial music that
- * cannot go on a public page. What a cassette actually sounds like can.
+ * This replaced a tape-hiss-and-transport-hum bed, which was accurate to a
+ * cassette and unpleasant to sit under — a 50Hz drone is a drone.
+ *
+ * Nothing is committed and nothing is licensed, which is the point twice over.
+ * The soundtrack this tape claims in its own credits is Hindi film music, which
+ * is commercial and cannot go on a public page. And what plays instead is not a
+ * transcription of anything: it is four chords arpeggiated with a bit of drift,
+ * so there is no melody to have borrowed. Chord progressions are not
+ * copyrightable; tunes are, so there deliberately isn't one.
  *
  * Silent until asked. See TapeChrome.astro for the control and the reasons.
  */
 export const sound = {
-  toggleLabel: 'Tape hiss',
-  onLabel: 'sound on',
-  offLabel: 'sound off',
+  toggleLabel: 'Piano',
+  onLabel: 'music on',
+  offLabel: 'music off',
 
   /** Overall level. Deliberately low — this sits under a page, not on it. */
-  gain: 0.045,
-  /** Head hiss: white noise rolled off so it whispers instead of sizzling. */
-  hissHz: 1600,
-  /** Transport motor. 50Hz is mains hum, which is what these machines had. */
-  humHz: 50,
-  humGain: 0.16,
-  /** Capstan wobble: how fast the level drifts, and by how much. */
-  wobbleHz: 0.7,
-  wobbleDepth: 0.32,
+  gain: 0.1,
+
+  /** Seconds between notes. Slow enough to feel like thinking, not playing. */
+  step: 0.55,
+
+  /**
+   * MIDI note numbers, four to a chord, arpeggiated in order and looped:
+   * Am7 · Fmaj7 · Cmaj7 · G6. Wistful, unresolved, and nobody's song.
+   */
+  progression: [
+    [57, 60, 64, 67],
+    [53, 57, 60, 64],
+    [48, 52, 55, 59],
+    [55, 59, 62, 64],
+  ],
+
+  /** How often a note gets doubled an octave up. Keeps the loop from settling. */
+  sparkle: 0.22,
+
+  /* --- tone: a struck string, faked with a decaying triangle ------------- */
+
+  /** Seconds for a note to fall away. Long, so notes overlap and ring. */
+  decay: 3.2,
+  /** Cents of random detune per note, so no two are identical. */
+  detune: 5,
+  /** The brightness a note starts and ends at — real strings dull as they fade. */
+  openHz: 4200,
+  closeHz: 900,
+
+  /* --- room: a feedback delay, which is cheaper than an impulse response - */
+
+  reverbTime: 0.28,
+  reverbFeedback: 0.34,
+  reverbTone: 2200,
+  reverbMix: 0.38,
 } as const;
 
 /* -------------------------------------------------------------- helpers */

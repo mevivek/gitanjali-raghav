@@ -27,7 +27,7 @@ Every word on the site is in this file, in the order you meet it.
 | `salt`, `wheels`, `excuse`, `takes`, `cold`, `sideA` | The six reels, in order. One block each — they are six different things, so they do not share a shape. |
 | `interval` | The framing around the day job. The jobs themselves come from `work.ts`. |
 | `credits`, `ending` | The cast-and-crew roll and the sign-off. |
-| `sound` | Levels for the synthesised tape hiss. |
+| `sound` | The synthesised piano: its chords, tempo, tone and room. `progression` is MIDI note numbers, four to a chord. Changing them changes the music. |
 
 ### The reels are toys
 

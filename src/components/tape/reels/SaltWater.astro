@@ -121,6 +121,10 @@ const vars = [
     cursor: pointer;
     /* The caption below must stay selectable, so this stops short of it. */
     bottom: 84px;
+    /* A press on a photograph should not offer to copy it or select round it. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   :global(html.js) .water {

@@ -78,12 +78,16 @@ Both land on `<html>` as data attributes and become four numbers in
   hold-to-rev throttle also holds on Space and Enter, because a
   pointerdown-only control is unusable from a keyboard. Anything that would be
   dead without JavaScript is not rendered without it — no inert buttons.
-- **Sound is synthesised, not served.** The tape hiss is three Web Audio voices
-  built on first press: filtered noise, a 50Hz hum, a slow wobble on the gain.
-  No audio file is committed and nothing needs licensing — which is the point,
-  since the soundtrack this tape claims is commercial Hindi film music that
-  cannot go on a public page. Silent until asked, and the choice is remembered
-  but never auto-resumed.
+- **Sound is synthesised, not served.** A slow piano, built with Web Audio on
+  first press: a decaying triangle for the body, a quiet sine an octave up for
+  the strike, a filter that closes as the note fades, and a feedback delay for
+  the room. No audio file is committed and nothing needs licensing — which is
+  the point twice over. The soundtrack this tape claims in its own credits is
+  commercial Hindi film music, which cannot go on a public page; and what plays
+  instead is four chords arpeggiated with some drift rather than a tune, so
+  there is no melody to have borrowed either. Chord progressions are not
+  copyrightable, and there is deliberately no melody on top of them. Silent
+  until asked, and the choice is remembered but never auto-resumed.
 - **The tape is a scroll container, not a transform.** The design prototype
   moved the strip with a JS-driven `translate3d` and an index in component
   state. This is native scroll snapping instead, which looks the same and gets

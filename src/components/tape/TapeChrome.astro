@@ -48,11 +48,14 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   </button>
 
   {/*
-    The tape's own noise — head hiss, transport hum, a capstan wobble —
-    synthesised in the browser rather than served as a file. Nothing is
-    committed and nothing needs licensing, which is the point: the soundtrack
-    this tape claims is commercial Hindi film music, which cannot go on a
-    public page. What a cassette sounds like can.
+    A slow piano, synthesised in the browser rather than served as a file. This
+    replaced a hiss-and-hum bed that was faithful to a cassette and tiring to
+    sit under.
+
+    Nothing is committed and nothing needs licensing, which is the point twice
+    over: the soundtrack this tape claims is commercial Hindi film music, which
+    cannot go on a public page, and what plays instead is four chords with some
+    drift rather than a tune, so there is no melody to have borrowed either.
 
     Silent until pressed. Browsers block autoplay anyway, and WCAG 1.4.2 wants
     a control for anything over three seconds — so the control *is* the only
@@ -273,28 +276,39 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
       onLabel: string;
       offLabel: string;
       gain: number;
-      hissHz: number;
-      humHz: number;
-      humGain: number;
-      wobbleHz: number;
-      wobbleDepth: number;
+      step: number;
+      progression: number[][];
+      sparkle: number;
+      decay: number;
+      detune: number;
+      openHz: number;
+      closeHz: number;
+      reverbTime: number;
+      reverbFeedback: number;
+      reverbTone: number;
+      reverbMix: number;
     };
     const state = button.querySelector<HTMLElement>('[data-tape-sound-state]')!;
     const KEY = 'tape-sound';
 
     let ctx: AudioContext | null = null;
     let master: GainNode | null = null;
+    /** Where notes are played into: dry to the output, and into the room. */
+    let voice: GainNode | null = null;
     let on = false;
+    /** The scheduler's clock, and how far through the progression it is. */
+    let nextAt = 0;
+    let cursor = 0;
+    let pumping: number | null = null;
 
     /**
      * Built on first press, never before: constructing an AudioContext outside
      * a user gesture leaves it suspended and logs an autoplay warning, and
      * building one at all costs an audio thread nobody asked for.
      *
-     * Three voices, which is what a cassette deck actually gives you:
-     *   hiss   — white noise through a low-pass, the tape head
-     *   hum    — a 50Hz sine, the transport motor (these ran off mains)
-     *   wobble — a slow LFO on the master gain, the capstan not quite true
+     * Sets up the output and the room only. Notes are made per strike in
+     * `pluck` and thrown away afterwards, which is how Web Audio expects
+     * oscillators to be used — they are single-use by design.
      */
     function build() {
       const context = new (window.AudioContext ||
@@ -304,53 +318,117 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
       out.gain.value = 0;
       out.connect(context.destination);
 
-      // Two seconds of noise, looped. Long enough that the loop is inaudible.
-      const frames = context.sampleRate * 2;
-      const buffer = context.createBuffer(1, frames, context.sampleRate);
-      const channel = buffer.getChannelData(0);
-      for (let i = 0; i < frames; i += 1) channel[i] = Math.random() * 2 - 1;
+      /*
+       * A room, made with a feedback delay rather than a convolver: an impulse
+       * response would be another file to fetch and licence, and for a wash
+       * this soft the difference is inaudible. The lowpass inside the loop is
+       * what stops it turning metallic as it repeats.
+       */
+      const bus = context.createGain();
+      const delay = context.createDelay(1);
+      delay.delayTime.value = sound.reverbTime;
 
-      const hiss = context.createBufferSource();
-      hiss.buffer = buffer;
-      hiss.loop = true;
+      const feedback = context.createGain();
+      feedback.gain.value = sound.reverbFeedback;
 
-      const shelf = context.createBiquadFilter();
-      shelf.type = 'lowpass';
-      shelf.frequency.value = sound.hissHz;
+      const damp = context.createBiquadFilter();
+      damp.type = 'lowpass';
+      damp.frequency.value = sound.reverbTone;
 
-      hiss.connect(shelf).connect(out);
+      const wet = context.createGain();
+      wet.gain.value = sound.reverbMix;
 
-      const hum = context.createOscillator();
-      hum.type = 'sine';
-      hum.frequency.value = sound.humHz;
+      delay.connect(damp);
+      damp.connect(feedback);
+      feedback.connect(delay);
+      damp.connect(out);
 
-      const humLevel = context.createGain();
-      humLevel.gain.value = sound.humGain;
-      hum.connect(humLevel).connect(out);
-
-      const wobble = context.createOscillator();
-      wobble.type = 'sine';
-      wobble.frequency.value = sound.wobbleHz;
-
-      const wobbleDepth = context.createGain();
-      wobbleDepth.gain.value = sound.gain * sound.wobbleDepth;
-      wobble.connect(wobbleDepth).connect(out.gain);
-
-      hiss.start();
-      hum.start();
-      wobble.start();
+      bus.connect(out);
+      bus.connect(wet);
+      wet.connect(delay);
 
       ctx = context;
       master = out;
+      voice = bus;
     }
 
-    /** Ramped rather than switched — a hard gate on noise clicks audibly. */
+    /** MIDI note number to hertz, A4 = 69 = 440Hz. */
+    const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
+
+    /**
+     * One struck note. There is no piano sample here — it is a triangle for the
+     * body plus a quiet sine an octave up for the strike, run through a filter
+     * that closes as the note decays. Real strings lose their brightness before
+     * they lose their volume, and imitating that is most of what sells it.
+     */
+    function pluck(midi: number, at: number, velocity = 1) {
+      if (!ctx || !voice) return;
+
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, at);
+      env.gain.linearRampToValueAtTime(0.22 * velocity, at + 0.006);
+      env.gain.exponentialRampToValueAtTime(0.0001, at + sound.decay);
+
+      const tone = ctx.createBiquadFilter();
+      tone.type = 'lowpass';
+      tone.frequency.setValueAtTime(sound.openHz, at);
+      tone.frequency.exponentialRampToValueAtTime(sound.closeHz, at + sound.decay * 0.8);
+
+      const body = ctx.createOscillator();
+      body.type = 'triangle';
+      body.frequency.value = hz(midi);
+      // A few cents either way, so no two notes are quite the same.
+      body.detune.value = (Math.random() * 2 - 1) * sound.detune;
+
+      const strike = ctx.createOscillator();
+      strike.type = 'sine';
+      strike.frequency.value = hz(midi) * 2;
+
+      const strikeLevel = ctx.createGain();
+      strikeLevel.gain.value = 0.3;
+
+      body.connect(tone);
+      strike.connect(strikeLevel);
+      strikeLevel.connect(tone);
+      tone.connect(env);
+      env.connect(voice);
+
+      const until = at + sound.decay + 0.1;
+      body.start(at);
+      strike.start(at);
+      body.stop(until);
+      strike.stop(until);
+    }
+
+    /*
+     * Notes are scheduled a little ahead of the clock rather than fired by a
+     * timer. setTimeout drifts by tens of milliseconds under load, which on
+     * something this exposed is audible as an unsteady hand; the audio clock
+     * does not drift, so each note is booked against it in advance.
+     */
+    function pump() {
+      if (!ctx) return;
+      while (nextAt < ctx.currentTime + 0.6) {
+        const chord = sound.progression[Math.floor(cursor / 4) % sound.progression.length];
+        const note = chord[cursor % 4];
+
+        pluck(note, nextAt);
+        // An occasional octave up, slightly late, so the loop keeps moving.
+        if (Math.random() < sound.sparkle) pluck(note + 12, nextAt + 0.11, 0.45);
+
+        // ±4% on the gap. Metronomic would sound like a machine, which it is.
+        nextAt += sound.step * (0.96 + Math.random() * 0.08);
+        cursor += 1;
+      }
+    }
+
+    /** Ramped rather than switched — a hard gate clicks audibly. */
     function level(to: number) {
       if (!ctx || !master) return;
       const now = ctx.currentTime;
       master.gain.cancelScheduledValues(now);
       master.gain.setValueAtTime(master.gain.value, now);
-      master.gain.linearRampToValueAtTime(to, now + 0.4);
+      master.gain.linearRampToValueAtTime(to, now + 0.6);
     }
 
     async function set(next: boolean) {
@@ -366,12 +444,27 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
 
       if (!on) {
         level(0);
+        // Stop booking notes, but let the ones already ringing fade out rather
+        // than cutting them dead — 0.9s covers the gain ramp and the room.
+        if (pumping !== null) {
+          clearInterval(pumping);
+          pumping = null;
+        }
+        window.setTimeout(() => {
+          if (!on && ctx && ctx.state === 'running') ctx.suspend();
+        }, 900);
         return;
       }
 
       if (!ctx) build();
       // Safari hands back a suspended context even inside a gesture.
       if (ctx && ctx.state === 'suspended') await ctx.resume();
+
+      // Pick up half a beat from now, not from wherever the clock has got to.
+      if (ctx) nextAt = Math.max(nextAt, ctx.currentTime + 0.15);
+      if (pumping === null) pumping = window.setInterval(pump, 60);
+      pump();
+
       level(sound.gain);
     }
 
