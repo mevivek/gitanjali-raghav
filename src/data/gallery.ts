@@ -72,9 +72,10 @@ export const gallery: Photo[] = [
     caption: 'Don’t change who you are to impress someone',
   },
   {
+    // Her caption on this one was "🏔️☮️" — emoji only, so no caption is
+    // used. `caption` is optional and the photo renders fine without it.
     src: hills,
     alt: 'Leaning on a railing with her back to the camera, looking out over forested hills',
-    caption: '🏔️ ☮️',
   },
   {
     src: holi,

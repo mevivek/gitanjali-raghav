@@ -28,14 +28,16 @@ import { gallery } from '../data/gallery';
           <li class="snap">
             <figure>
               {/*
-                `width` caps the fallback `src`. Without it Astro emits the
-                full 1080px original as the base — a 330KB file that no
-                layout ever needs, shipped on every build.
+                Served at the source's full 1080px at the top of the srcset,
+                so a high-density screen gets every pixel that exists. The
+                smaller widths are what an ordinary display actually
+                downloads — the browser picks one from `sizes`, it does not
+                fetch them all.
               */}
               <Image
                 src={photo.src}
-                width={640}
-                widths={[280, 420, 640]}
+                width={1080}
+                widths={[400, 720, 1080]}
                 sizes="(min-width: 64rem) 22vw, (min-width: 40rem) 30vw, 44vw"
                 alt={photo.alt}
                 loading={i < 2 ? 'eager' : 'lazy'}

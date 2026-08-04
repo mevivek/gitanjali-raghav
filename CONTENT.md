@@ -69,6 +69,17 @@ import newPhoto from '../assets/photos/new-photo.jpg';
 describes what is in the frame. Never make them the same string, or a screen
 reader just reads the emoji aloud.
 
+**Captions must contain words.** Several of her Instagram captions are pure
+emoji — `🏔️☮️`, `🌠💫`, `💖💖✨`. Those are left off entirely rather than
+printed under a photograph, where they say nothing and read as noise. `caption`
+is optional; a photo without one looks fine.
+
+**Photographs are committed at full resolution** — 1080×1080, exactly as
+downloaded, never resized on disk. Astro generates 400 / 720 / 1080 variants at
+build time and the browser picks one from `sizes`, so a high-density screen
+gets the full file while an ordinary one does not pay for it. Do not
+pre-shrink anything you add here.
+
 **Fourteen photos, each individually approved.**
 Four candidates were turned down specifically because someone other than her
 was recognisable in them — her mother, her sister, her brother, a friend at
