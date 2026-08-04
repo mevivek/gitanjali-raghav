@@ -8,9 +8,9 @@
  *
  * Latin subsets only. Rozha One also ships Devanagari and Caveat ships
  * Cyrillic; nothing on the tape uses either, and loading them would double
- * the font weight for glyphs that never render. The one Hindi line on the
- * tape ("Main arse se khud se zara laapata hoon") is written in Latin script,
- * as she wrote it.
+ * the font weight for glyphs that never render. The Hindi on the tape — the six
+ * song titles on reel 07 and the tracks named on reel 06 — is transliterated
+ * into Latin script, which is how she writes it.
  */
 @import '@fontsource/anton/latin-400.css';
 @import '@fontsource/rozha-one/latin-400.css';
@@ -22,9 +22,6 @@
  * a visitor would never *download* the Cyrillic ones, but they would still be
  * committed to gh-pages on every deploy. Every handwritten line on the tape is
  * plain ASCII, so latin alone is the whole of what is needed.
- *
- * The emoji in reel 05 is not in this face and never will be — it falls
- * through to the system emoji font, which is what should render it.
  */
 @font-face {
   font-family: 'Caveat Variable';
@@ -47,7 +44,7 @@
 
 /*
  * `min-height`, not `height`. On a phone the document is the tape's scroller and
- * has to be free to grow to nine screens tall; `height: 100%` would cap it at
+ * has to be free to grow to eleven screens tall; `height: 100%` would cap it at
  * one and the snapping would have nothing to scroll.
  */
 html,
@@ -296,7 +293,101 @@ a:hover {
   }
 }
 
-/* Reel 06: the VU needles twitching beside the track that is playing. */
+/* The title card's spools, turning behind the cassette window. */
+@keyframes tape-spool {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * The interval's b-side: a rubber stamp coming down. Pass and fail land
+ * crooked in opposite directions, which is why there are two of these rather
+ * than one with a variable — a column of identical impressions reads as a
+ * graphic repeated, and a stamp is never twice in the same place.
+ *
+ * They settle at 0.88 rather than 1, because ink on paper is never solid.
+ */
+@keyframes tape-stamp-pass {
+  from {
+    transform: scale(2.3) rotate(-16deg);
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  to {
+    transform: scale(1) rotate(-5deg);
+    opacity: 0.88;
+  }
+}
+
+@keyframes tape-stamp-fail {
+  from {
+    transform: scale(2.3) rotate(14deg);
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  to {
+    transform: scale(1) rotate(4deg);
+    opacity: 0.88;
+  }
+}
+
+/* The cold open: a tracking bar rolling down an untuned picture. */
+@keyframes tape-track {
+  from {
+    transform: translateY(-140%);
+  }
+
+  to {
+    transform: translateY(1400%);
+  }
+}
+
+/*
+ * The cold open clearing itself. The last keyframe hides it outright rather
+ * than only fading it: an overlay left at zero opacity would still be a sheet
+ * over the whole tape swallowing every tap, and this is the belt to the
+ * script's braces if the script never runs at all.
+ */
+@keyframes tape-bootout {
+  0%,
+  62% {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  99% {
+    opacity: 0;
+    visibility: visible;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* The interval's clock once it has run out. */
+@keyframes tape-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Reel 07: the VU needles twitching beside the track that is playing. */
 @keyframes tape-vu {
   0%,
   100% {

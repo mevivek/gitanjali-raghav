@@ -1,15 +1,26 @@
 # Working in this repo
 
-A personal site for Geetanjali Raghav — a VHS home-video tape, nine screens on
+A personal site for Geetanjali Raghav — a VHS home-video tape, eleven screens on
 one scroll-snapped strip. [README.md](./README.md) explains how it is built and
 [CONTENT.md](./CONTENT.md) explains how to change what it says. This file is
 only the things that will bite you.
 
 ## Where it stands
 
-The tape is finished and live at <https://mevivek.dev/gitanjali-raghav>. `main`
-and the deployed site are in sync. Nine screens: a title card, six reels that
-are each interactive in their own way, an interval for the day job, end credits.
+The tape is live at <https://mevivek.dev/gitanjali-raghav>. **Eleven screens**: a
+title card, seven reels that are each interactive in their own way, an interval
+for the day job, that interval's b-side, and end credits.
+
+**A second design handoff was applied on 2026-08-04** and is what took it from
+nine screens to eleven. It added reel 06 (Playback — tap on the beat) and the
+interval's b-side (a QA form she runs on herself), renumbered Side A to reel 07,
+rewrote the title card's heading and the interval's rows, replaced the piano with
+interaction blips, and narrowed the wide panel to 560px with sprockets and a
+bezel around it. Three things in that bundle were deliberately **not** taken:
+its `grain: 46` / `osd: true` defaults, its desktop contact sheet (an alternate
+layout the designer built but did not select), and its `B.Sc` against the
+university — see below. Check `git log` before assuming a difference from the
+bundle is an oversight.
 
 **Three things are waiting on her, and none of them are code.** Do not decide
 any of them on her behalf:
@@ -19,13 +30,19 @@ any of them on her behalf:
 2. **Reel 04's "posted · 10.7k" badge names her follower count.** Nobody has
    asked whether she is happy with that on a public page. One string in
    `src/data/tape.ts`.
-3. **A headshot.** `portrait.jpg` is her Instagram avatar at 320×320 — the
-   lowest-resolution image here, shown in the cassette window at ~284px and in
-   the share image. Anything 1000px+ is the single biggest upgrade available and
-   needs only a file swap (then re-render `og.jpg` and bump `ASSET_VERSION`).
+3. **A headshot, and this is now the most visible gap on the site.**
+   `portrait.jpg` is her Instagram avatar at 320×320 — the lowest-resolution
+   image here. It was shown at ~284px in the cassette window and in the share
+   image, where it holds. **Reel 06 now fills a whole screen with the same
+   file** — ~420 CSS px on a phone, ~600 on a desktop — so it is upscaled 2–3×
+   and is plainly the softest thing on the tape. Anything 1000px+ is the single
+   biggest upgrade available and needs only a file swap (then re-render `og.jpg`
+   and bump `ASSET_VERSION`). If she supplies one, that fixes three places.
 
 `CONTENT.md` has the longer list of smaller unknowns — her Highspring start
-year, what she studied at MJPRU.
+year, what she studied at MJPRU. On that last one: **the second handoff wrote
+`B.Sc` and it was not adopted.** Nothing confirms it. Do not let a later bundle
+quietly put a guessed qualification on a real person's page.
 
 **One open question from the last session.** The reels used to show a sliver of
 their neighbours on iOS Safari. It was fixed by measuring `visualViewport.height`
@@ -62,7 +79,7 @@ letterbox between full-size browser chrome forever. Three things follow, and
 undoing any of them breaks the layout in a way that is not obvious from the diff:
 
 - The chrome and the wear overlays are `position: fixed`. On a phone the tape is
-  nine screens tall, so `absolute` pins them to the top of the strip and they
+  eleven screens tall, so `absolute` pins them to the top of the strip and they
   scroll away with the first reel.
 - `html, body` use `min-height`, not `height`. `height: 100%` caps the document
   at one screen and the snapping has nothing to scroll.
@@ -81,7 +98,15 @@ they are still up.
 fifteen photographs. Pulling it into the client bundle's module graph makes the
 build emit all fifteen originals as assets — 2.6MB that nothing references —
 even though Vite tree-shakes the bindings back out of the JS. Pass what a script
-needs on a `data-` attribute instead; every reel already does this.
+needs on a `data-` attribute instead; every reel already does this — including
+the table of tape positions, which rides on the transport counter.
+
+That rule is also why **sound is asked for with an event, not a function call**:
+a reel does
+`document.dispatchEvent(new CustomEvent('tape:blip', { detail: 'click' }))` and
+`TapeChrome.astro` is the only thing that listens. Importing across components
+would drag the data module into a second bundle; a global would need a
+load order. The event needs neither, and no-ops if the chrome's script never ran.
 
 **Bump `ASSET_VERSION` in `src/layouts/Base.astro` when you change `og.jpg`,
 `favicon.svg` or `apple-touch-icon.png`.** Cloudflare fronts `mevivek.dev` and
@@ -103,6 +128,28 @@ resolve a relative path against, so that one must stay absolute.
 headline or the intro and the share image still shows the old wording until it
 is re-rendered — and `site.description` and `og:image:alt` quote it too.
 
+To re-render it there is no need to add Playwright to this project — the
+container already has Chromium at
+`/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. Install `playwright` into a
+scratch directory with `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`, point
+`executablePath` at that binary, load the template at 1200×630 and screenshot it
+as a JPEG. The template mirrors the title card by hand, so any change to
+`TitleCard.astro`'s composition has to be made in both.
+
+## Two clocks, and neither may run off-screen
+
+Reel 06's beat and the interval's countdown are both timers, and both are started
+and stopped by a `MutationObserver` on their screen's `data-active` — the
+attribute `index.astro`'s IntersectionObserver already maintains. The credits
+roll works the same way. **Do not start a timer on load.** A metronome ticking
+from reel 01 and an interval that empties out before anybody reaches it are the
+two failures this arrangement exists to prevent.
+
+Related, and it cost a debugging round: **the first `measure()` call ends in
+`restore()`, which schedules a jump to whichever screen it believed was in
+front.** So the landing screen has to be settled *before* `measure()` runs, or a
+deep link lands correctly and then slides back to the title card a frame later.
+
 ## Outstanding, and not ours to decide
 
 - **`approved: false` in `src/data/site.ts` keeps every page `noindex`.** Do not
@@ -116,8 +163,11 @@ is re-rendered — and `site.description` and `og:image:alt` quote it too.
 ## Two more that cost time last session
 
 **The build emits no `.js` files, and that is correct.** Every component script
-is standalone and small enough that Astro inlines them into `index.html` (48KB,
-12KB gzipped). `find dist -name '*.js'` returning nothing is not a broken build.
+is standalone and small enough that Astro inlines them into `index.html` (70KB,
+16KB gzipped — it was 48KB before the second handoff added two screens and the
+blips). `find dist -name '*.js'` returning nothing is not a broken build. The
+built weight is otherwise unchanged: 38 WebP variants, ~3.2MB, because the
+photographs and their widths did not move.
 
 **Browser UI colour is not something the page controls.** `theme-color` and
 `color-scheme: dark` are both set and correct. iOS Safari honours them; **Chrome

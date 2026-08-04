@@ -1,6 +1,6 @@
 ---
 import { getImage } from 'astro:assets';
-import { excuse, look, reelCount } from '../../../data/tape';
+import { excuse, look, reelCount, slugs } from '../../../data/tape';
 
 interface Props {
   index: number;
@@ -10,7 +10,7 @@ const { index } = Astro.props;
 
 const osdHidden = look.osd ? undefined : true;
 
-const SIZES = '(min-width: 900px) min(62vw, 720px), 100vw';
+const SIZES = '(min-width: 900px) min(44vw, 560px), 100vw';
 
 /*
  * One <img> that the script re-points, rather than four stacked on top of each
@@ -49,7 +49,7 @@ const vars = [
 
 <section
   class="screen screen--reel"
-  id={`screen-${index}`}
+  id={slugs[index]}
   data-screen
   data-active="false"
   data-excuse
@@ -180,6 +180,7 @@ const vars = [
     chips.forEach((chip) => {
       chip.addEventListener('click', (event) => {
         event.stopPropagation();
+        document.dispatchEvent(new CustomEvent('tape:blip', { detail: 'click' }));
         const i = Number(chip.dataset.excusePick);
         const shot = shots[i];
         if (!shot) return;

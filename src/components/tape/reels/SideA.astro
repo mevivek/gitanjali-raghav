@@ -1,5 +1,5 @@
 ---
-import { look, reelCount, sideA } from '../../../data/tape';
+import { look, reelCount, sideA, slugs } from '../../../data/tape';
 
 interface Props {
   index: number;
@@ -14,7 +14,7 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
 
 <section
   class="screen screen--reel screen--sidea screen--flat"
-  id={`screen-${index}`}
+  id={slugs[index]}
   data-screen
   data-active="false"
   data-sidea
@@ -36,50 +36,41 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
       <span class="inlay__len">{sideA.inlayLength}</span>
     </div>
 
+    {/*
+      Six lines, all filled in. The card used to carry three lyrics and three
+      deliberately blank rules; it now names the songs instead, so there is
+      nothing left to leave empty — and nothing quoted that belongs to
+      somebody else. See the note on `sideA` in src/data/tape.ts.
+    */}
     <ol class="tracks">
       {
-        sideA.tracks.map((track, i) =>
-          track.line ? (
-            <li class="track">
-              {/*
-                A real button, so the list is walkable by keyboard and each
-                line's pressed state is announced. Hidden without script,
-                since it would do nothing — the lines still read as a list.
-              */}
-              <button
-                class="track__play"
-                type="button"
-                aria-pressed="false"
-                data-sidea-play={i}
-                data-nodrag
-              >
-                <span class="track__n">{track.n}</span>
-                <span class="track__line">{track.line}</span>
-                <span class="track__note">{track.note}</span>
-                <span class="vu" aria-hidden="true">
-                  <i></i><i></i><i></i>
-                </span>
-              </button>
-
-              <span class="track__static" aria-hidden="true">
-                <span class="track__n">{track.n}</span>
-                <span class="track__line">{track.line}</span>
-              </span>
-            </li>
-          ) : (
-            /*
-              A blank ruled line. Deliberate, not missing content — an inlay
-              card always has more lines than anyone fills in, and the empty
-              ones are what make it read as a real one. Not focusable, and
-              hidden from screen readers, which have nothing to gain from
-              being told about a rule.
-            */
-            <li class="track track--blank" aria-hidden="true">
+        sideA.tracks.map((track, i) => (
+          <li class="track">
+            {/*
+              A real button, so the list is walkable by keyboard and each
+              line's pressed state is announced. Hidden without script,
+              since it would do nothing — the lines still read as a list.
+            */}
+            <button
+              class="track__play"
+              type="button"
+              aria-pressed="false"
+              data-sidea-play={i}
+              data-nodrag
+            >
               <span class="track__n">{track.n}</span>
-              <span class="track__rule" />
-            </li>
-          ),
-        )
+              <span class="track__line">{track.line}</span>
+              <span class="vu" aria-hidden="true">
+                <i /><i /><i />
+              </span>
+            </button>
+
+            <span class="track__static" aria-hidden="true">
+              <span class="track__n">{track.n}</span>
+              <span class="track__line">{track.line}</span>
+            </span>
+          </li>
+        ))
       }
     </ol>
   </div>
@@ -112,7 +103,7 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
     flex: 0 0 auto;
     padding: 12px 12px 10px;
     border-radius: 4px;
-    background: linear-gradient(var(--tape-label), #e9d8b4);
+    background: linear-gradient(var(--tape-label), var(--tape-label-deep));
     box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
     transform: rotate(-0.5deg);
   }
@@ -172,23 +163,6 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
     text-align: left;
   }
 
-  /* Where the caption came from. Only worth the room once it is playing. */
-  .track__note {
-    flex: 0 0 auto;
-    max-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    font-family: var(--font-osd);
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    color: var(--tape-label-mute);
-    transition: max-width 0.35s ease;
-  }
-
-  .track__play[aria-pressed='true'] .track__note {
-    max-width: 12ch;
-  }
-
   .track__play {
     display: flex;
     width: 100%;
@@ -236,18 +210,6 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
 
   :global(html.js) .track__static {
     display: none;
-  }
-
-  .track--blank {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 2px;
-  }
-
-  .track__rule {
-    flex: 1 1 auto;
-    border-bottom: 1px solid rgb(35 20 44 / 30%);
   }
 
   /* ------------------------------------------------------------ vu meter */
@@ -304,6 +266,7 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
     buttons.forEach((button) => {
       button.addEventListener('click', (event) => {
         event.stopPropagation();
+        document.dispatchEvent(new CustomEvent('tape:blip', { detail: 'click' }));
         const i = Number(button.dataset.sideaPlay);
 
         // Pressing the playing track stops it, so there is a way back to

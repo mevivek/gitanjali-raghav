@@ -1,17 +1,31 @@
 ---
-import { screenCount, sound, timecode } from '../../data/tape';
+import { positions, screenCount, sound, timecode } from '../../data/tape';
 
 /*
  * Everything that floats over the tape rather than travelling with it: the
- * progress segments, and the transport at the bottom.
+ * progress segments, the film furniture on a wide screen, and the transport at
+ * the bottom.
  *
- * Two indicators, one per orientation. The bar across the top belongs to the
- * wide layout where the tape runs sideways; the rail up the right-hand edge
- * belongs to the phone, where it reads as tape remaining. Only one is ever
+ * Two progress indicators, one per orientation. The bar across the top belongs
+ * to the wide layout where the tape runs sideways; the rail up the right-hand
+ * edge belongs to the phone, where it reads as tape remaining. Only one is ever
  * displayed.
  */
 const segments = Array.from({ length: screenCount }, (_, i) => i);
 ---
+
+{/*
+  Wide only, and both purely scenery: an inner frame around the centre panel,
+  and the sprocket holes running along the top and bottom edges. Together they
+  are what make the wide layout read as a strip of film through a gate rather
+  than a big photograph with slivers either side of it — which is the whole
+  reason the panel narrowed to 560px.
+
+  The bezel comes first so the perforations paint over it where they meet.
+*/}
+<div class="bezel" aria-hidden="true"></div>
+<span class="sprocket sprocket--top" aria-hidden="true"></span>
+<span class="sprocket sprocket--bottom" aria-hidden="true"></span>
 
 <div class="bar" aria-hidden="true">
   {segments.map((i) => <span class="seg" data-seg={i} data-state={i === 0 ? 'now' : 'todo'} />)}
@@ -35,11 +49,15 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     <span class="key__glyph key__glyph--wide" aria-hidden="true">&#9664;&#9664;</span>
   </button>
 
+  {/*
+    The counter carries the whole table of tape positions, because the script
+    in index.astro needs to know where every screen sits and must not import
+    src/data/tape.ts to find out — see the note at the foot of this file.
+  */}
   <p class="counter">
     <span class="sr-only">Tape position</span>
-    <span data-tape-counter>{timecode(0)}</span><span class="counter__caret" aria-hidden="true"
-      >_</span
-    >
+    <span data-tape-counter data-tape-positions={JSON.stringify(positions)}>{timecode(0)}</span
+    ><span class="counter__caret" aria-hidden="true">_</span>
   </p>
 
   <button class="key" type="button" data-tape-next aria-label="Next reel">
@@ -48,18 +66,15 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   </button>
 
   {/*
-    A slow piano, synthesised in the browser rather than served as a file. This
-    replaced a hiss-and-hum bed that was faithful to a cassette and tiring to
-    sit under.
+    Five short blips, synthesised in the browser: the transport clunk when the
+    tape moves, a key click on a control, a tick and a ping on reel 06, and the
+    spooling sweep on rewind. Nothing is fetched and nothing is licensed — see
+    the note on `sound` in src/data/tape.ts for why that matters twice over.
 
-    Nothing is committed and nothing needs licensing, which is the point twice
-    over: the soundtrack this tape claims is commercial Hindi film music, which
-    cannot go on a public page, and what plays instead is four chords with some
-    drift rather than a tune, so there is no melody to have borrowed either.
-
-    Silent until pressed. Browsers block autoplay anyway, and WCAG 1.4.2 wants
-    a control for anything over three seconds — so the control *is* the only
-    way it ever starts, and the choice is remembered.
+    Off by default and remembered. Every blip is caused by something the visitor
+    did, so a remembered "on" can simply be restored: there is nothing that can
+    make a noise before the first gesture, which is what the autoplay rules are
+    protecting against.
   */}
   <button
     class="key key--sound"
@@ -71,25 +86,82 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     data-sound={JSON.stringify(sound)}
   >
     {/*
-      A music note rather than a speaker emoji: an emoji renders in full colour
-      from the system font and breaks the row of monochrome transport glyphs
-      beside it. The state is carried by the button's lit/unlit face for sighted
-      users and by the text below for everyone else, so the glyph itself does
-      not need to change.
+      A filled or hollow ring rather than a speaker emoji: an emoji renders in
+      full colour from the system font and breaks the row of monochrome
+      transport glyphs beside it.
     */}
-    <span class="key__glyph" aria-hidden="true">&#9834;</span>
+    <span class="key__glyph" aria-hidden="true" data-tape-sound-glyph>&#9675;</span>
     <span class="sr-only" data-tape-sound-state>{sound.offLabel}</span>
   </button>
 </div>
 
 <style>
-  /* -------------------------------------------------------------- segments */
+  /* ------------------------------------------------------- film furniture */
 
   /*
-   * Fixed, not absolute. On a phone the tape is nine screens tall and the
-   * document scrolls, so anything absolute would be pinned to the top of the
-   * strip and scroll away with the first reel.
+   * Fixed, like everything else that floats: on a phone the tape is eleven
+   * screens tall and the document is what scrolls, so anything absolute would
+   * be pinned to the top of the strip and scroll away with the first reel.
+   * These two are wide-only, where that does not arise — but they follow the
+   * same rule so nobody has to work out which ones are the exception.
    */
+  .bezel,
+  .sprocket {
+    position: fixed;
+    z-index: 5;
+    display: none;
+    pointer-events: none;
+  }
+
+  /* An inner frame, exactly the width of the panel the reels snap to. */
+  .bezel {
+    top: 0;
+    bottom: 0;
+    left: calc((100% - var(--panel-w)) / 2);
+    right: calc((100% - var(--panel-w)) / 2);
+    box-shadow:
+      inset 0 0 0 1px rgb(246 239 230 / 14%),
+      inset 0 0 40px rgb(0 0 0 / 70%);
+  }
+
+  .sprocket {
+    left: 0;
+    right: 0;
+    height: 20px;
+    background-color: var(--tape-void);
+  }
+
+  /* The perforations themselves — a repeating gradient, not an image. */
+  .sprocket::before {
+    content: '';
+    position: absolute;
+    inset: 4px 0;
+    background: repeating-linear-gradient(
+      to right,
+      transparent 0 16px,
+      rgb(246 239 230 / 20%) 16px 28px
+    );
+  }
+
+  .sprocket--top {
+    top: 0;
+    box-shadow: inset 0 -1px 0 #2e2140;
+  }
+
+  .sprocket--bottom {
+    bottom: 0;
+    box-shadow: inset 0 1px 0 #2e2140;
+  }
+
+  @media (min-width: 900px) {
+    .bezel,
+    .sprocket {
+      display: block;
+    }
+  }
+
+  /* -------------------------------------------------------------- segments */
+
   .bar,
   .rail {
     position: fixed;
@@ -219,25 +291,14 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   }
 
   .key--sound:hover {
-    border-color: var(--tape-gold);
-    color: var(--tape-gold);
+    border-color: var(--tape-cyan);
+    color: var(--tape-cyan);
   }
 
-  /* Lit while it is making noise, so the source of the sound is obvious. */
+  /* Lit while it is armed, so the source of the noise is obvious. */
   .key--sound[aria-pressed='true'] {
-    border-color: var(--tape-gold);
-    background-color: rgb(255 197 61 / 18%);
-    color: var(--tape-gold);
-  }
-
-  /*
-   * Turned on last visit, but not yet this one — nothing may make noise before
-   * a gesture. A dim outline says "this is where it was" without pretending it
-   * is playing.
-   */
-  .key--sound.key--armed:not([aria-pressed='true']) {
-    border-color: rgb(255 197 61 / 45%);
-    color: rgb(255 197 61 / 70%);
+    border-color: var(--tape-cyan);
+    color: var(--tape-cyan);
   }
 
   .key__glyph--wide {
@@ -261,6 +322,7 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     font-size: var(--osd-lg);
     letter-spacing: 0.16em;
     color: var(--tape-gold);
+    font-variant-numeric: tabular-nums;
   }
 
   .counter__caret {
@@ -276,178 +338,208 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
 
 <script>
   /*
+   * The deck's noises.
+   *
    * Levels arrive on a data attribute rather than by importing src/data/tape.ts.
    * That module imports fifteen photographs, and pulling it into the client
    * bundle's graph makes the build emit all fifteen originals as assets — 2.6MB
    * of files nothing references — even though Vite tree-shakes the bindings
    * back out of the JS.
+   *
+   * The reels do not import this file either. They ask for a blip by dispatching
+   * a `tape:blip` event on the document, which means there is no load-order
+   * coupling in either direction and no global to collide with: if this script
+   * never ran, the event is simply nobody's.
    */
   const button = document.querySelector<HTMLButtonElement>('[data-tape-sound]');
 
   if (button) {
+    type Blip = {
+      wave: OscillatorType;
+      hz: number;
+      toHz?: number;
+      glide?: number;
+      gain: number;
+      decay: number;
+    };
+
     const sound = JSON.parse(button.dataset.sound ?? '{}') as {
       onLabel: string;
       offLabel: string;
-      gain: number;
-      step: number;
-      progression: number[][];
-      sparkle: number;
-      decay: number;
-      detune: number;
-      openHz: number;
-      closeHz: number;
-      reverbTime: number;
-      reverbFeedback: number;
-      reverbTone: number;
-      reverbMix: number;
+      blips: Record<string, Blip>;
+      clunk: {
+        noiseDur: number;
+        noiseCurve: number;
+        noiseCutoff: number;
+        noiseGain: number;
+        thudFrom: number;
+        thudTo: number;
+        thudGain: number;
+        thudDecay: number;
+      };
+      rewind: {
+        dur: number;
+        q: number;
+        from: number;
+        peak: number;
+        to: number;
+        peakAt: number;
+        gain: number;
+      };
     };
+
     const state = button.querySelector<HTMLElement>('[data-tape-sound-state]')!;
+    const glyph = button.querySelector<HTMLElement>('[data-tape-sound-glyph]')!;
     const KEY = 'tape-sound';
 
     let ctx: AudioContext | null = null;
-    let master: GainNode | null = null;
-    /** Where notes are played into: dry to the output, and into the room. */
-    let voice: GainNode | null = null;
     let on = false;
-    /** The scheduler's clock, and how far through the progression it is. */
-    let nextAt = 0;
-    let cursor = 0;
-    let pumping: number | null = null;
-
-    /**
-     * Built on first press, never before: constructing an AudioContext outside
-     * a user gesture leaves it suspended and logs an autoplay warning, and
-     * building one at all costs an audio thread nobody asked for.
-     *
-     * Sets up the output and the room only. Notes are made per strike in
-     * `pluck` and thrown away afterwards, which is how Web Audio expects
-     * oscillators to be used — they are single-use by design.
-     */
-    function build() {
-      const context = new (window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-
-      const out = context.createGain();
-      out.gain.value = 0;
-      out.connect(context.destination);
-
-      /*
-       * A room, made with a feedback delay rather than a convolver: an impulse
-       * response would be another file to fetch and licence, and for a wash
-       * this soft the difference is inaudible. The lowpass inside the loop is
-       * what stops it turning metallic as it repeats.
-       */
-      const bus = context.createGain();
-      const delay = context.createDelay(1);
-      delay.delayTime.value = sound.reverbTime;
-
-      const feedback = context.createGain();
-      feedback.gain.value = sound.reverbFeedback;
-
-      const damp = context.createBiquadFilter();
-      damp.type = 'lowpass';
-      damp.frequency.value = sound.reverbTone;
-
-      const wet = context.createGain();
-      wet.gain.value = sound.reverbMix;
-
-      delay.connect(damp);
-      damp.connect(feedback);
-      feedback.connect(delay);
-      damp.connect(out);
-
-      bus.connect(out);
-      bus.connect(wet);
-      wet.connect(delay);
-
-      ctx = context;
-      master = out;
-      voice = bus;
-    }
-
-    /** MIDI note number to hertz, A4 = 69 = 440Hz. */
-    const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
-
-    /**
-     * One struck note. There is no piano sample here — it is a triangle for the
-     * body plus a quiet sine an octave up for the strike, run through a filter
-     * that closes as the note decays. Real strings lose their brightness before
-     * they lose their volume, and imitating that is most of what sells it.
-     */
-    function pluck(midi: number, at: number, velocity = 1) {
-      if (!ctx || !voice) return;
-
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0, at);
-      env.gain.linearRampToValueAtTime(0.22 * velocity, at + 0.006);
-      env.gain.exponentialRampToValueAtTime(0.0001, at + sound.decay);
-
-      const tone = ctx.createBiquadFilter();
-      tone.type = 'lowpass';
-      tone.frequency.setValueAtTime(sound.openHz, at);
-      tone.frequency.exponentialRampToValueAtTime(sound.closeHz, at + sound.decay * 0.8);
-
-      const body = ctx.createOscillator();
-      body.type = 'triangle';
-      body.frequency.value = hz(midi);
-      // A few cents either way, so no two notes are quite the same.
-      body.detune.value = (Math.random() * 2 - 1) * sound.detune;
-
-      const strike = ctx.createOscillator();
-      strike.type = 'sine';
-      strike.frequency.value = hz(midi) * 2;
-
-      const strikeLevel = ctx.createGain();
-      strikeLevel.gain.value = 0.3;
-
-      body.connect(tone);
-      strike.connect(strikeLevel);
-      strikeLevel.connect(tone);
-      tone.connect(env);
-      env.connect(voice);
-
-      const until = at + sound.decay + 0.1;
-      body.start(at);
-      strike.start(at);
-      body.stop(until);
-      strike.stop(until);
-    }
 
     /*
-     * Notes are scheduled a little ahead of the clock rather than fired by a
-     * timer. setTimeout drifts by tens of milliseconds under load, which on
-     * something this exposed is audible as an unsteady hand; the audio clock
-     * does not drift, so each note is booked against it in advance.
+     * Whether anything has been pressed yet. Almost every blip is caused by a
+     * click, so this is nearly always true by the time one is asked for — but
+     * reel 06's metronome ticks on a timer, and building an AudioContext outside
+     * a gesture gets it handed back permanently suspended with a warning logged.
+     * So a timer-driven blip before the first press is simply skipped.
      */
-    function pump() {
-      if (!ctx) return;
-      while (nextAt < ctx.currentTime + 0.6) {
-        const chord = sound.progression[Math.floor(cursor / 4) % sound.progression.length];
-        const note = chord[cursor % 4];
+    let gestured = false;
+    const noteGesture = () => {
+      gestured = true;
+    };
+    window.addEventListener('pointerdown', noteGesture, { once: true, capture: true });
+    window.addEventListener('keydown', noteGesture, { once: true, capture: true });
 
-        pluck(note, nextAt);
-        // An occasional octave up, slightly late, so the loop keeps moving.
-        if (Math.random() < sound.sparkle) pluck(note + 12, nextAt + 0.11, 0.45);
-
-        // ±4% on the gap. Metronomic would sound like a machine, which it is.
-        nextAt += sound.step * (0.96 + Math.random() * 0.08);
-        cursor += 1;
+    function context(): AudioContext | null {
+      if (!ctx) {
+        const Ctor =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!Ctor) return null;
+        ctx = new Ctor();
       }
+      // Safari hands one back suspended even inside a gesture.
+      if (ctx.state === 'suspended') void ctx.resume();
+      return ctx;
     }
 
-    /** Ramped rather than switched — a hard gate clicks audibly. */
-    function level(to: number) {
-      if (!ctx || !master) return;
-      const now = ctx.currentTime;
-      master.gain.cancelScheduledValues(now);
-      master.gain.setValueAtTime(master.gain.value, now);
-      master.gain.linearRampToValueAtTime(to, now + 0.6);
+    /**
+     * A buffer of white noise. `curve` fades it away over its own length, which
+     * is what turns a hiss into a burst — 0 leaves it flat.
+     */
+    function noise(ac: AudioContext, seconds: number, curve = 0) {
+      const buffer = ac.createBuffer(1, Math.max(1, Math.floor(ac.sampleRate * seconds)), ac.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i += 1) {
+        const shape = curve ? (1 - i / data.length) ** curve : 1;
+        data[i] = (Math.random() * 2 - 1) * shape;
+      }
+      const source = ac.createBufferSource();
+      source.buffer = buffer;
+      return source;
     }
 
-    async function set(next: boolean) {
-      on = next;
+    /** One oscillator with a falling envelope. Optionally glides in pitch. */
+    function tone(ac: AudioContext, spec: Blip) {
+      const at = ac.currentTime;
+      const env = ac.createGain();
+      env.connect(ac.destination);
+
+      const osc = ac.createOscillator();
+      osc.type = spec.wave;
+      osc.frequency.setValueAtTime(spec.hz, at);
+      if (spec.toHz) osc.frequency.exponentialRampToValueAtTime(spec.toHz, at + (spec.glide ?? 0.07));
+
+      env.gain.setValueAtTime(spec.gain, at);
+      env.gain.exponentialRampToValueAtTime(0.0004, at + spec.decay);
+
+      osc.connect(env);
+      osc.start(at);
+      osc.stop(at + spec.decay + 0.03);
+    }
+
+    /** The transport: a dull filtered burst over a falling thud. */
+    function clunk(ac: AudioContext) {
+      const c = sound.clunk;
+      const at = ac.currentTime;
+
+      const burst = noise(ac, c.noiseDur, c.noiseCurve);
+      const damp = ac.createBiquadFilter();
+      damp.type = 'lowpass';
+      damp.frequency.value = c.noiseCutoff;
+
+      const env = ac.createGain();
+      env.gain.setValueAtTime(c.noiseGain, at);
+      env.gain.exponentialRampToValueAtTime(0.001, at + c.noiseDur + 0.01);
+
+      burst.connect(damp);
+      damp.connect(env);
+      env.connect(ac.destination);
+      burst.start(at);
+
+      const thud = ac.createOscillator();
+      thud.type = 'sine';
+      thud.frequency.setValueAtTime(c.thudFrom, at);
+      thud.frequency.exponentialRampToValueAtTime(c.thudTo, at + c.thudDecay * 0.87);
+
+      const thudEnv = ac.createGain();
+      thudEnv.gain.setValueAtTime(c.thudGain, at);
+      thudEnv.gain.exponentialRampToValueAtTime(0.001, at + c.thudDecay);
+
+      thud.connect(thudEnv);
+      thudEnv.connect(ac.destination);
+      thud.start(at);
+      thud.stop(at + c.thudDecay + 0.03);
+    }
+
+    /** Rewind: bandpassed noise swept up and back down, like spooling tape. */
+    function rewind(ac: AudioContext) {
+      const r = sound.rewind;
+      const at = ac.currentTime;
+
+      const hiss = noise(ac, r.dur);
+      const band = ac.createBiquadFilter();
+      band.type = 'bandpass';
+      band.Q.value = r.q;
+      band.frequency.setValueAtTime(r.from, at);
+      band.frequency.linearRampToValueAtTime(r.peak, at + r.peakAt);
+      band.frequency.linearRampToValueAtTime(r.to, at + r.dur - 0.02);
+
+      const env = ac.createGain();
+      env.gain.setValueAtTime(0.001, at);
+      env.gain.linearRampToValueAtTime(r.gain, at + 0.1);
+      env.gain.linearRampToValueAtTime(0.0008, at + r.dur);
+
+      hiss.connect(band);
+      band.connect(env);
+      env.connect(ac.destination);
+      hiss.start(at);
+    }
+
+    function blip(kind: string) {
+      if (!on) return;
+      // Nothing before the first press — see the note on `gestured`.
+      if (!ctx && !gestured) return;
+
+      const ac = context();
+      if (!ac) return;
+
+      if (kind === 'clunk') return clunk(ac);
+      if (kind === 'rewind') return rewind(ac);
+
+      const spec = sound.blips[kind];
+      if (spec) tone(ac, spec);
+    }
+
+    function paint() {
       button!.setAttribute('aria-pressed', String(on));
       state.textContent = on ? sound.onLabel : sound.offLabel;
+      // Filled while it is on, hollow while it is not.
+      glyph.textContent = on ? '●' : '○';
+    }
+
+    function set(next: boolean) {
+      on = next;
+      paint();
 
       try {
         localStorage.setItem(KEY, on ? 'on' : 'off');
@@ -455,49 +547,30 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
         /* private mode — the choice just will not persist */
       }
 
-      if (!on) {
-        level(0);
-        // Stop booking notes, but let the ones already ringing fade out rather
-        // than cutting them dead — 0.9s covers the gain ramp and the room.
-        if (pumping !== null) {
-          clearInterval(pumping);
-          pumping = null;
-        }
-        window.setTimeout(() => {
-          if (!on && ctx && ctx.state === 'running') ctx.suspend();
-        }, 900);
-        return;
-      }
-
-      if (!ctx) build();
-      // Safari hands back a suspended context even inside a gesture.
-      if (ctx && ctx.state === 'suspended') await ctx.resume();
-
-      // Pick up half a beat from now, not from wherever the clock has got to.
-      if (ctx) nextAt = Math.max(nextAt, ctx.currentTime + 0.15);
-      if (pumping === null) pumping = window.setInterval(pump, 60);
-      pump();
-
-      level(sound.gain);
+      // The deck confirming itself, which is also the proof that it works.
+      if (on) blip('clunk');
+      else if (ctx && ctx.state === 'running') void ctx.suspend();
     }
 
     button.addEventListener('click', () => set(!on));
 
+    /* The reels' only way in. */
+    document.addEventListener('tape:blip', (event) => {
+      blip(String((event as CustomEvent).detail ?? ''));
+    });
+
     /*
-     * A remembered "on" is deliberately *not* restored here. It cannot be —
-     * there is no gesture yet, so the context would be blocked — and it should
-     * not be: arriving at a page that starts making noise is exactly what the
-     * autoplay rules exist to prevent. What the stored value does is let the
-     * button show the right face, so someone who turned it on last time is one
-     * press from it rather than hunting.
-     *
-     * Reduced motion is treated as a request for less sensory load generally,
-     * so the invitation is not even shown in that case.
+     * A remembered "on" is restored outright, which the piano this replaced
+     * could not be: it started playing by itself, so it had to wait for a
+     * gesture and the button showed a half-lit "armed" face in the meantime.
+     * Blips only ever answer something the visitor did, so there is nothing to
+     * wait for — the state is simply the state.
      */
     try {
-      const stored = localStorage.getItem(KEY);
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (stored === 'on' && !reduce) button.classList.add('key--armed');
+      if (localStorage.getItem(KEY) === 'on') {
+        on = true;
+        paint();
+      }
     } catch {
       /* nothing to restore */
     }

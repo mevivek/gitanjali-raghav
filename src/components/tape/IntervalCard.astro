@@ -1,5 +1,5 @@
 ---
-import { interval, look } from '../../data/tape';
+import { interval, look, slugs } from '../../data/tape';
 import { study, work } from '../../data/work';
 
 interface Props {
@@ -13,69 +13,129 @@ const osdHidden = look.osd ? undefined : true;
 
 /*
  * Jobs and study render as the same kind of row, which is how the design drew
- * them — one unbroken list rather than a CV's two labelled blocks. They stay
- * separate in the data, though: a university is not an employer, and flattening
- * them in work.ts to save a few lines here would be a lie in the source.
+ * them — one unbroken cinema listing rather than a CV's two labelled blocks.
+ * They stay separate in the data, though: a university is not an employer, and
+ * flattening them in work.ts to save a few lines here would be a lie in the
+ * source.
+ *
+ * The design also wrote "B.Sc" against the university. That is not adopted —
+ * her subject at MJPRU is genuinely not known (see CONTENT.md), and a guess
+ * about a real person's degree does not go on her page because a design tool
+ * filled the gap in.
  */
 const rows = [
   ...work.map((job) => ({
     role: job.role,
     org: job.note ? `${job.company} · ${job.note}` : job.company,
     years: job.years,
-    now: job.current === true,
+    status: job.current === true ? interval.nowBadge : interval.endedBadge,
+    kind: job.current === true ? 'now' : 'ended',
   })),
-  ...study.map((s) => ({
+  ...study.map((entry) => ({
     // Subject leads when it is known; otherwise the institution stands alone
     // rather than heading an empty row.
-    role: s.what ?? s.where,
-    org: s.what ? s.where : (s.place ?? ''),
-    years: s.years,
-    now: false,
+    role: entry.what ?? entry.where,
+    org: entry.what ? entry.where : (entry.place ?? ''),
+    years: entry.years,
+    status: interval.archiveBadge,
+    kind: 'archive',
   })),
 ];
+
+/** MM:SS, which is what the countdown starts on. */
+const opening = `${String(Math.floor(interval.seconds / 60)).padStart(2, '0')}:${String(
+  interval.seconds % 60,
+).padStart(2, '0')}`;
 ---
 
 <section
   class="screen screen--interval screen--flat"
-  id={`screen-${index}`}
+  id={slugs[index]}
   data-screen
   data-active="false"
+  data-interval
+  data-copy={JSON.stringify({
+    seconds: interval.seconds,
+    label: interval.clockLabel,
+    over: interval.clockOver,
+  })}
   aria-label="Interval — the day job"
 >
-  <p class="kicker" aria-hidden={osdHidden}>{interval.kicker}</p>
+  <p class="kicker" aria-hidden={osdHidden}>
+    <span>{interval.kicker} &middot; {interval.tc}</span>
+    <span class="kicker__tag">{interval.screenTag}</span>
+  </p>
 
-  <h2 class="heading">{interval.heading}</h2>
+  <div class="head">
+    <h2 class="heading">{interval.heading}</h2>
 
-  <p class="hand">{interval.hand}</p>
+    {/*
+      A three-minute countdown, for the joke — nothing waits on it. Not
+      aria-live: it would announce a new time every second, which is noise, and
+      it is readable on demand like any other text. It only runs while this is
+      the screen in front, so it does not quietly empty out four reels away.
+    */}
+    <p class="clock" data-interval-clock>
+      <span data-interval-label>{interval.clockLabel}</span>
+      <span class="clock__time" data-interval-time>{opening}</span>
+    </p>
 
-  <ol class="rows">
-    {
-      rows.map((row) => (
-        <li class="row">
-          <div class="row__top">
-            <span class="row__role">{row.role}</span>
-            {row.now && <span class="badge">{interval.nowBadge}</span>}
-          </div>
-          <div class="row__meta">
-            <span>{row.org}</span>
-            <span class="row__years">{row.years}</span>
-          </div>
-        </li>
-      ))
-    }
-  </ol>
+    <p class="hand">{interval.hand}</p>
+  </div>
+
+  <div class="listing">
+    <p class="listing__head" aria-hidden="true">
+      <span>{interval.columnRole}</span>
+      <span>{interval.columnYears}</span>
+    </p>
+
+    <ol class="rows">
+      {
+        rows.map((row) => (
+          <li class="row">
+            <span class="row__what">
+              <span class="row__role">{row.role}</span>
+              <span class="row__org">{row.org}</span>
+            </span>
+            <span class="row__when">
+              <span class="chip" data-kind={row.kind}>
+                {row.status}
+              </span>
+              <span class="row__years">{row.years}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
 
   <p class="body">{interval.body}</p>
 
-  {/* An anchor for the same reason as the play button — it works unscripted. */}
-  <a class="resume" href="#screen-8" data-tape-go="8">
-    <span aria-hidden="true">&#9654;</span> {interval.resumeLabel}
-  </a>
+  {/*
+    Anchors for the same reason as the play key — they work unscripted.
+
+    `resume tape` skips the b-side and goes to the credits; the hint beside it
+    is the way *to* the b-side. The prototype pointed both at the next screen,
+    which would have made two controls one destination and the word "or" false.
+  */}
+  <div class="actions" data-nodrag>
+    <a class="resume" href={`#${slugs[index + 2]}`} data-tape-go={index + 2}>
+      <span aria-hidden="true">&#9654;</span> {interval.resumeLabel}
+    </a>
+
+    <a class="bside" href={`#${slugs[index + 1]}`} data-tape-go={index + 1}>
+      {interval.bsideHint}
+    </a>
+  </div>
 </section>
 
 <style>
   .kicker {
-    align-self: flex-start;
+    align-self: stretch;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
     font-family: var(--font-osd);
     font-size: var(--osd-md);
     letter-spacing: 0.2em;
@@ -84,12 +144,31 @@ const rows = [
     opacity: var(--osd-op, 0);
   }
 
+  .kicker > * {
+    white-space: nowrap;
+  }
+
+  .kicker__tag {
+    color: var(--int-org);
+  }
+
+  /* ----------------------------------------------------------------- head */
+
+  .head {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+
   .heading {
     font-family: var(--font-display);
     font-size: var(--step-int);
     font-weight: 400;
     line-height: 0.8;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
     color: var(--tape-gold);
     /* Knocked out against the black, with a cold edge on the far side. */
@@ -98,16 +177,67 @@ const rows = [
       -4px 0 0 rgb(62 224 232 / 55%);
   }
 
+  .clock {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    font-family: var(--font-osd);
+    font-size: 15px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--int-org);
+  }
+
+  .clock__time {
+    font-size: 20px;
+    letter-spacing: 0.1em;
+    color: var(--tape-gold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Run out. The pulse is decoration; the wording is what carries it. */
+  .clock[data-over='true'] .clock__time {
+    color: var(--tape-cyan);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .clock[data-over='true'] {
+      animation: tape-pulse 1.8s ease-in-out infinite;
+    }
+  }
+
   .hand {
     max-width: 30ch;
+    margin-top: 2px;
     font-family: var(--font-hand);
     font-weight: 600;
     font-size: var(--step-hand);
+    line-height: 1.1;
     color: var(--int-hand);
     transform: rotate(-1deg);
   }
 
-  /* ----------------------------------------------------------------- rows */
+  /* -------------------------------------------------------- the listing */
+
+  .listing {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .listing__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 2px;
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--int-years);
+  }
 
   .rows {
     margin: 0;
@@ -115,24 +245,66 @@ const rows = [
     list-style: none;
     display: flex;
     flex-direction: column;
-    border-top: 2px solid rgb(255 197 61 / 40%);
-  }
-
-  .row {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 11px 0;
-    border-bottom: 1px solid rgb(255 197 61 / 22%);
+    gap: 5px;
   }
 
   /*
-   * Deliberately not a flex row. As a flex item the badge sits beside the
-   * whole title block, so a role long enough to wrap pushes it onto a line of
-   * its own; flowing them as inline content tucks it in after the last word
-   * whatever the length. The current titles are short enough not to need it,
-   * but the next one added might not be.
+   * Each row is a listing on a cinema board, with the board's own rule ruled
+   * straight through it. The rule is a pseudo-element rather than a border so
+   * it can cross the middle of the card; the two columns sit above it on their
+   * own stacking level.
    */
+  /*
+   * Top-aligned, not centred. The design centred the two columns, which is
+   * right for a one-line title — but "Mahatma Jyotiba Phule Rohilkhand
+   * University" runs to three lines, and centring put its status chip beside the
+   * second line and its dates beside the third, as though they belonged to
+   * different rows. Level with the first line reads as one entry at any length.
+   * (The design also shortened that name to make it fit; the full one is what
+   * the institution is called, so the layout gives way instead.)
+   */
+  .row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 11px;
+    border-radius: 2px;
+    background: linear-gradient(#2c0a1a, #1a0611);
+    box-shadow: inset 0 0 0 1px rgb(255 197 61 / 16%);
+  }
+
+  .row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background-color: rgb(0 0 0 / 55%);
+  }
+
+  .row__what,
+  .row__when {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .row__what {
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .row__when {
+    flex: 0 0 auto;
+    align-items: flex-end;
+    gap: 3px;
+    /* Sits with the cap height of the title rather than its box. */
+    padding-top: 3px;
+  }
+
   .row__role {
     font-family: var(--font-serif);
     font-size: var(--step-role);
@@ -140,35 +312,45 @@ const rows = [
     color: var(--tape-cream);
   }
 
-  .row__meta {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
+  .row__org {
     font-family: var(--font-osd);
-    font-size: 15px;
-    letter-spacing: 0.08em;
+    font-size: var(--osd-md);
+    letter-spacing: 0.1em;
     color: var(--int-org);
   }
 
   .row__years {
+    font-family: var(--font-osd);
+    font-size: var(--osd-sm);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
     color: var(--int-years);
+  }
+
+  .chip {
+    padding: 2px 7px;
+    border-radius: 2px;
+    font-family: var(--font-osd);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     white-space: nowrap;
   }
 
-  .badge {
-    display: inline-block;
-    margin-left: 9px;
-    /* Sits with the cap height rather than the baseline. */
-    transform: translateY(-3px);
-    padding: 2px 8px;
-    border-radius: 2px;
+  /* Showing now, finished, and the one that is not a job at all. */
+  .chip[data-kind='now'] {
     background-color: var(--tape-cyan);
     color: var(--tape-black);
-    font-family: var(--font-osd);
-    font-size: 12px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+  }
+
+  .chip[data-kind='ended'] {
+    background-color: rgb(255 197 61 / 18%);
+    color: var(--tape-gold);
+  }
+
+  .chip[data-kind='archive'] {
+    background-color: rgb(255 255 255 / 10%);
+    color: var(--int-org);
   }
 
   /* ---------------------------------------------------------------- words */
@@ -182,8 +364,15 @@ const rows = [
     color: var(--int-body);
   }
 
+  .actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+  }
+
   .resume {
-    align-self: flex-start;
     min-height: 46px;
     padding: 12px 20px;
     display: inline-flex;
@@ -191,8 +380,8 @@ const rows = [
     gap: 6px;
     border: 2px solid var(--tape-gold);
     border-radius: 2px;
-    background-color: transparent;
-    color: var(--tape-gold);
+    background-color: var(--tape-gold);
+    color: var(--int-near);
     font-family: var(--font-display);
     font-size: 16px;
     letter-spacing: 0.12em;
@@ -204,7 +393,86 @@ const rows = [
   }
 
   .resume:hover {
-    background-color: var(--tape-gold);
-    color: var(--int-near);
+    background-color: transparent;
+    color: var(--tape-gold);
+  }
+
+  .bside {
+    font-family: var(--font-osd);
+    font-size: var(--osd-sm);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--int-years);
+    transition: color 0.2s ease;
+  }
+
+  .bside:hover {
+    color: var(--tape-gold);
+  }
+
+  @media (max-height: 700px) {
+    /* The b-side is still one swipe away; the sentence about it is not vital. */
+    .bside {
+      display: none;
+    }
   }
 </style>
+
+<script>
+  /* Copy via data attribute, not an import — see the note in SaltWater.astro. */
+  const screen = document.querySelector<HTMLElement>('[data-interval]');
+
+  if (screen) {
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as {
+      seconds: number;
+      label: string;
+      over: string;
+    };
+
+    const clock = screen.querySelector<HTMLElement>('[data-interval-clock]')!;
+    const label = screen.querySelector<HTMLElement>('[data-interval-label]')!;
+    const time = screen.querySelector<HTMLElement>('[data-interval-time]')!;
+
+    let left = copy.seconds;
+    let timer: number | null = null;
+
+    function paint() {
+      const mm = String(Math.floor(left / 60)).padStart(2, '0');
+      const ss = String(left % 60).padStart(2, '0');
+      time.textContent = `${mm}:${ss}`;
+      label.textContent = left > 0 ? copy.label : copy.over;
+      clock.dataset.over = String(left <= 0);
+    }
+
+    function stop() {
+      if (timer === null) return;
+      window.clearInterval(timer);
+      timer = null;
+    }
+
+    /*
+     * Only while this screen is the one in front. An interval that ran itself
+     * out while the visitor was on reel 02 would be over before they arrived,
+     * which loses the only thing the clock is for.
+     *
+     * `data-active` is maintained by the observer in index.astro — the same
+     * arrangement the credits roll and reel 06's beat both use.
+     */
+    function start() {
+      if (timer !== null || left <= 0) return;
+      timer = window.setInterval(() => {
+        left = Math.max(0, left - 1);
+        paint();
+        if (left <= 0) stop();
+      }, 1000);
+    }
+
+    const watch = new MutationObserver(() => {
+      if (screen.dataset.active === 'true') start();
+      else stop();
+    });
+
+    watch.observe(screen, { attributes: true, attributeFilter: ['data-active'] });
+    if (screen.dataset.active === 'true') start();
+  }
+</script>

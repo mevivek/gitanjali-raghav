@@ -1,0 +1,154 @@
+---
+import { boot } from '../../data/tape';
+
+/*
+ * The second and a half of tracking noise before the picture settles.
+ *
+ * It is decoration over a page that is already complete underneath, so it is
+ * `aria-hidden` and holds no focus — a screen reader never meets it at all, and
+ * neither does anyone without script. Three separate things clear it, which is
+ * deliberate for something that covers the whole page:
+ *
+ *   - the script removes it on a click, on Escape, and on a timer
+ *   - the animation's last keyframe sets `visibility: hidden`, so even if the
+ *     script never runs the overlay cannot end up an invisible sheet over the
+ *     tape swallowing taps
+ *   - reduced motion and arriving at a named reel hide it outright, in CSS, so
+ *     there is not even a frame of it
+ */
+---
+
+<div class="boot" aria-hidden="true" data-tape-boot data-hold={boot.hold}>
+  <div class="boot__lines"></div>
+  <div class="boot__band"></div>
+
+  <div class="boot__words">
+    <span class="boot__head">{boot.heading}</span>
+    <span class="boot__detail">{boot.detail}</span>
+  </div>
+</div>
+
+<style>
+  /*
+   * Fixed, for the same reason as the chrome and the wear: on a phone the tape
+   * is eleven screens tall and the document is what scrolls, so an absolute
+   * overlay would cover the first screen and scroll away with it.
+   */
+  .boot {
+    position: fixed;
+    inset: 0;
+    z-index: 12;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background-color: #0b1c4a;
+    cursor: pointer;
+    animation: tape-bootout 1.5s linear forwards;
+  }
+
+  /* Dead without script, so absent without script. */
+  :global(html:not(.js)) .boot {
+    display: none;
+  }
+
+  /*
+   * Arriving at a reel by name — `#cold-air` — means skipping the opening. The
+   * class is set by the inline script in Base.astro, before first paint, so
+   * this never flashes.
+   */
+  :global(html.deep) .boot {
+    display: none;
+  }
+
+  /* Not a frame of it if motion is unwelcome. */
+  @media (prefers-reduced-motion: reduce) {
+    .boot {
+      display: none;
+    }
+  }
+
+  .boot__lines,
+  .boot__band {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .boot__lines {
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 6%) 0 2px,
+      transparent 2px 5px
+    );
+  }
+
+  /* The tracking bar rolling down an untuned picture. */
+  .boot__band {
+    left: 0;
+    right: 0;
+    height: 46px;
+    background: linear-gradient(rgb(255 255 255 / 50%), rgb(255 255 255 / 5%));
+    filter: blur(2px);
+    animation: tape-track 1.1s linear infinite;
+  }
+
+  .boot__words {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .boot__head {
+    font-family: var(--font-osd);
+    font-size: 22px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow:
+      2px 0 0 var(--tape-pink),
+      -2px 0 0 var(--tape-cyan);
+  }
+
+  .boot__detail {
+    font-family: var(--font-osd);
+    font-size: var(--osd-lg);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 66%);
+  }
+</style>
+
+<script>
+  const boot = document.querySelector<HTMLElement>('[data-tape-boot]');
+
+  /*
+   * Never shown at all — hidden by `html.deep` or by reduced motion. Take it out
+   * of the document straight away rather than leaving a `display: none` sheet
+   * lying over the tape for a second and a half waiting on a timer.
+   */
+  if (boot && getComputedStyle(boot).display === 'none') boot.remove();
+  else if (boot) {
+    const hold = Number(boot.dataset.hold ?? 1500);
+    let timer: number | null = null;
+
+    function clear() {
+      if (timer !== null) {
+        window.clearTimeout(timer);
+        timer = null;
+      }
+      boot!.remove();
+      window.removeEventListener('keydown', onKey);
+    }
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') clear();
+    }
+
+    boot.addEventListener('click', clear);
+    window.addEventListener('keydown', onKey);
+    timer = window.setTimeout(clear, hold);
+  }
+</script>

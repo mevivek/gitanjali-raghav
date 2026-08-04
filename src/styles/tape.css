@@ -1,5 +1,5 @@
 /*
- * The tape's transport: how nine screens sit on one strip, and how you move
+ * The tape's transport: how eleven screens sit on one strip, and how you move
  * along it.
  *
  * These rules are global rather than scoped because a screen's <section> is
@@ -206,9 +206,11 @@ html {
 /* ------------------------------------------------------------ the screens */
 
 /*
- * The title and interval cards centre their contents and scroll internally
+ * The title card and the interval centre their contents and scroll internally
  * if a short window cannot hold them — losing the bottom of the interval on
- * a landscape phone would take the day job with it.
+ * a landscape phone would take the day job with it. Side A and the interval's
+ * b-side do the same thing from inside their own components, because both are
+ * a single paper card that has to stay whole.
  */
 .screen--title,
 .screen--interval {
@@ -246,7 +248,7 @@ html {
  * then does something completely different inside it. These are the parts they
  * share; anything a single reel invents lives in that reel's own component.
  *
- * Global for the same reason as the strip above: six components render these
+ * Global for the same reason as the strip above: seven components render these
  * classes, and scoped styles cannot be shared across components.
  */
 .reel__osd {
