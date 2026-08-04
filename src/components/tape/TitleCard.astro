@@ -1,0 +1,306 @@
+---
+import { Image } from 'astro:assets';
+import { title } from '../../data/tape';
+
+interface Props {
+  /** Position on the strip. Screen 0 is the one the tape opens on. */
+  index: number;
+}
+
+const { index } = Astro.props;
+---
+
+<section
+  class="screen screen--title screen--flat"
+  id={`screen-${index}`}
+  data-screen
+  data-active={index === 0 ? 'true' : 'false'}
+  aria-label="Title card"
+>
+  <p class="kicker">{title.kicker}</p>
+
+  <div class="cassette">
+    <div class="cassette__window">
+      {/*
+        320×320 source — her Instagram profile picture, and the smallest
+        image on the site. Shown at ~284px so it still holds, but it cannot
+        go bigger. No `widths` here: there is nothing to pick between.
+      */}
+      <Image
+        class="cassette__photo"
+        src={title.photo}
+        alt={title.alt}
+        width={320}
+        loading="eager"
+        decoding="async"
+      />
+      <div class="cassette__scan" aria-hidden="true"></div>
+      <div class="cassette__bleed" aria-hidden="true"></div>
+
+      <div class="rec" aria-hidden="true">
+        <span class="rec__dot"></span>REC
+      </div>
+
+      <p class="cassette__scribble" aria-hidden="true">{title.scribble}</p>
+    </div>
+
+    <div class="cassette__label" aria-hidden="true">
+      <span class="cassette__name">{title.labelName}</span>
+      <span class="cassette__code">{title.labelCode}</span>
+    </div>
+  </div>
+
+  <h1 class="title">
+    {title.headingTop}<br />{title.headingBottom}{' '}<span class="title__accent"
+      >{title.headingAccent}</span
+    >
+  </h1>
+
+  <p class="intro">{title.intro}</p>
+
+  {/*
+    Anchors, not buttons: with no script this still moves the tape to reel 01,
+    because the strip is a real scroll container. The script upgrades it to a
+    smooth glide.
+  */}
+  <a class="play" href="#screen-1" data-tape-go="1">
+    <span class="play__glyph" aria-hidden="true">&#9654;&#9654;</span>{title.playLabel}
+  </a>
+
+  {/* The gesture differs by layout, so both are written and CSS picks one. */}
+  <p class="hint">
+    <span class="hint--narrow">swipe up &#8593;</span>
+    <span class="hint--wide">drag the tape &#8592; &#8594;</span>
+  </p>
+</section>
+
+<style>
+  .kicker {
+    font-family: var(--font-osd);
+    font-size: var(--osd-lg);
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--tape-gold);
+  }
+
+  /* ------------------------------------------------------------- cassette */
+
+  .cassette {
+    position: relative;
+    width: var(--cassette-w);
+    aspect-ratio: 5 / 3.1;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    border: 1px solid var(--tape-edge);
+    border-radius: 8px;
+    background: linear-gradient(160deg, #241831, #140c1d 60%, #0d0813);
+    box-shadow:
+      0 26px 60px rgb(0 0 0 / 75%),
+      inset 0 1px 0 rgb(255 255 255 / 9%);
+  }
+
+  /* The cassette rocks very slightly, as if resting on an uneven surface. */
+  @media (prefers-reduced-motion: no-preference) {
+    .cassette {
+      animation: tape-wob 11s ease-in-out infinite;
+    }
+  }
+
+  .cassette__window {
+    position: relative;
+    flex: 1;
+    border-radius: 3px;
+    overflow: hidden;
+    background-color: var(--tape-panel);
+    box-shadow: inset 0 0 0 1px rgb(62 224 232 / 28%);
+  }
+
+  .cassette__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 6%;
+    filter: saturate(1.5) contrast(1.1) brightness(0.95);
+  }
+
+  .cassette__scan {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 40%) 0 1px, transparent 1px 3px);
+    /* Scanlines belong to the full VHS grade only — see tape.css. */
+    opacity: var(--scan-op, 0);
+  }
+
+  .cassette__bleed {
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: screen;
+    background: linear-gradient(
+      90deg,
+      rgb(255 46 136 / 24%),
+      transparent 32%,
+      transparent 68%,
+      rgb(62 224 232 / 24%)
+    );
+  }
+
+  .rec {
+    position: absolute;
+    left: 9px;
+    top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.12em;
+    color: #fff;
+    text-shadow: 0 1px 3px #000;
+  }
+
+  .rec__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background-color: var(--tape-pink);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rec__dot {
+      animation: tape-rec 1.4s steps(1) infinite;
+    }
+  }
+
+  .cassette__scribble {
+    position: absolute;
+    right: 9px;
+    bottom: 6px;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--tape-gold);
+    transform: rotate(-4deg);
+    text-shadow: 0 2px 6px #000;
+  }
+
+  /* The paper label, stuck on slightly crooked. */
+  .cassette__label {
+    height: 30px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 3px;
+    background: linear-gradient(var(--tape-label), var(--tape-label-shade));
+    transform: rotate(-0.5deg);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 50%);
+  }
+
+  .cassette__name {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--tape-label-ink);
+  }
+
+  .cassette__code {
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--tape-label-mute);
+  }
+
+  /* ---------------------------------------------------------------- words */
+
+  .title {
+    font-family: var(--font-display);
+    font-size: var(--step-h1);
+    font-weight: 400;
+    line-height: 0.82;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--tape-cream);
+    /* Mis-registered colour, like a tape tracking a shade off. */
+    text-shadow:
+      3px 0 0 var(--tape-pink),
+      -3px 0 0 var(--tape-cyan);
+  }
+
+  .title__accent {
+    color: var(--tape-gold);
+  }
+
+  .intro {
+    max-width: 32ch;
+    text-align: center;
+    font-family: var(--font-osd);
+    font-size: var(--step-body);
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    color: var(--tape-body-dim);
+  }
+
+  .play {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 50px;
+    padding: 14px 26px;
+    border: 2px solid var(--tape-gold);
+    border-radius: 2px;
+    background-color: var(--tape-pink);
+    color: var(--tape-black);
+    font-family: var(--font-display);
+    font-size: 19px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 5px 5px 0 var(--tape-cyan);
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .play:hover {
+    background-color: var(--tape-gold);
+    color: var(--tape-black);
+    box-shadow: 5px 5px 0 var(--tape-pink);
+  }
+
+  .play:active {
+    transform: translate(3px, 3px);
+    box-shadow: 2px 2px 0 var(--tape-cyan);
+  }
+
+  .play__glyph {
+    font-size: 14px;
+  }
+
+  .hint {
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.16em;
+    color: var(--tape-muted-dim);
+  }
+
+  .hint--wide {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .hint--narrow {
+      display: none;
+    }
+
+    .hint--wide {
+      display: inline;
+    }
+  }
+</style>

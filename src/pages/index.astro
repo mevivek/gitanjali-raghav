@@ -1,27 +1,255 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
-import Hero from '../components/Hero.astro';
-import Gallery from '../components/Gallery.astro';
-import LifeGrid from '../components/LifeGrid.astro';
-import Work from '../components/Work.astro';
-import Contact from '../components/Contact.astro';
-import SiteFooter from '../components/SiteFooter.astro';
+import TitleCard from '../components/tape/TitleCard.astro';
+import Reel from '../components/tape/Reel.astro';
+import IntervalCard from '../components/tape/IntervalCard.astro';
+import EndCredits from '../components/tape/EndCredits.astro';
+import TapeChrome from '../components/tape/TapeChrome.astro';
+import TapeGrain from '../components/tape/TapeGrain.astro';
+import { reels } from '../data/tape';
+
+/*
+ * Nine screens on one strip: the title card, six reels, the interval, the end
+ * credits. The order is the whole argument of the site — the photographs come
+ * first and the job is an interval near the end, not a section at the top.
+ *
+ * Each screen gets an `id` so the play, resume and rewind links are real
+ * links. With no script they jump; with script they glide.
+ */
+const intervalIndex = reels.length + 1;
+const creditsIndex = reels.length + 2;
 ---
 
 <Base>
-  <SiteHeader slot="header" />
+  <div class="tape" id="tape">
+    <div
+      class="tape__track"
+      data-tape-track
+      tabindex="0"
+      role="region"
+      aria-label="Home video — nine screens. Scroll, swipe or use the arrow keys."
+    >
+      <TitleCard index={0} />
 
-  {/*
-    Order is deliberate: this is a personal site that happens to mention a
-    job, not a CV with a hobbies section bolted on. The photographs come
-    first and the work history sits near the bottom, kept to a few lines.
-  */}
-  <Hero />
-  <Gallery />
-  <LifeGrid />
-  <Work />
-  <Contact />
+      {reels.map((reel, i) => <Reel reel={reel} index={i + 1} />)}
 
-  <SiteFooter slot="footer" />
+      <IntervalCard index={intervalIndex} />
+      <EndCredits index={creditsIndex} />
+    </div>
+
+    <TapeChrome />
+    <TapeGrain />
+  </div>
 </Base>
+
+<script>
+  /*
+   * Everything below is an upgrade to a tape that already works.
+   *
+   * The strip is a native scroll container with CSS scroll snapping, so
+   * without a line of this the site still swipes between reels, scrolls with
+   * a wheel, takes arrow keys and Page Up/Down once focused, and moves when
+   * you click play, resume tape or rewind. What script adds is knowing *which*
+   * reel is in front — which is what the dimming, the progress segments and
+   * the running timecode need — plus the two transport keys and drag-to-scrub
+   * on a wide screen.
+   */
+  const track = document.querySelector<HTMLElement>('[data-tape-track]');
+  const screens = [...document.querySelectorAll<HTMLElement>('[data-screen]')];
+
+  if (track && screens.length) {
+    const segs = [...document.querySelectorAll<HTMLElement>('[data-seg]')];
+    const counter = document.querySelector<HTMLElement>('[data-tape-counter]');
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    /** True while the tape lies sideways — matches the 900px break in CSS. */
+    const wide = window.matchMedia('(min-width: 900px)');
+
+    let current = 0;
+
+    /** Same arithmetic as `timecode` in src/data/tape.ts. */
+    const timecode = (i: number) => {
+      const total = 18 + i * 392;
+      const mm = String(Math.floor(total / 60)).padStart(2, '0');
+      const ss = String(total % 60).padStart(2, '0');
+      return `0:${mm}:${ss}`;
+    };
+
+    function paint(i: number) {
+      if (i === current) return;
+      current = i;
+
+      screens.forEach((screen, n) => {
+        screen.dataset.active = n === i ? 'true' : 'false';
+        // How far away this reel is, and in which direction. The photographs
+        // drift against their frames by 10px a screen.
+        screen.style.setProperty('--dist', String(n - i));
+      });
+
+      // Both indicators are in the DOM — one per orientation — so every
+      // segment is updated and CSS decides which set is visible.
+      segs.forEach((seg) => {
+        const n = Number(seg.dataset.seg);
+        seg.dataset.state = n === i ? 'now' : n < i ? 'seen' : 'todo';
+      });
+
+      if (counter) counter.textContent = timecode(i);
+    }
+
+    /*
+     * Which screen is in front. Comparing intersection ratios rather than
+     * measuring scroll offsets keeps one code path for both orientations, and
+     * stays correct through a snap, a drag and a fling alike.
+     */
+    const ratios = new Map<Element, number>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) ratios.set(entry.target, entry.intersectionRatio);
+
+        let best = 0;
+        let bestRatio = -1;
+        screens.forEach((screen, n) => {
+          const ratio = ratios.get(screen) ?? 0;
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            best = n;
+          }
+        });
+
+        paint(best);
+      },
+      { root: track, threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+
+    screens.forEach((screen) => observer.observe(screen));
+
+    /* ------------------------------------------------------------- moving */
+
+    function go(n: number) {
+      const i = Math.max(0, Math.min(screens.length - 1, n));
+      const target = screens[i];
+      // `scrollTo`'s smooth behaviour is set in JS, so it ignores the CSS
+      // reduced-motion kill-switch and has to be checked here.
+      const behavior: ScrollBehavior = reduceMotion.matches ? 'auto' : 'smooth';
+
+      if (wide.matches) {
+        track!.scrollTo({
+          left: target.offsetLeft - (track!.clientWidth - target.clientWidth) / 2,
+          behavior,
+        });
+      } else {
+        track!.scrollTo({ top: target.offsetTop, behavior });
+      }
+    }
+
+    document.querySelector('[data-tape-prev]')?.addEventListener('click', () => go(current - 1));
+    document.querySelector('[data-tape-next]')?.addEventListener('click', () => go(current + 1));
+
+    // The play, resume and rewind anchors. Intercepted so they glide rather
+    // than jump; if anything here throws, the href still does the job.
+    document.querySelectorAll<HTMLAnchorElement>('[data-tape-go]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        go(Number(link.dataset.tapeGo));
+      });
+    });
+
+    /*
+     * Arrow keys move a whole screen instead of the browser's default nudge.
+     * Only while the tape itself has focus, so a key press meant for a link
+     * or a button is left alone.
+     */
+    track.addEventListener('keydown', (event) => {
+      if (event.target !== track) return;
+
+      const forward = ['ArrowRight', 'ArrowDown', 'PageDown'];
+      const back = ['ArrowLeft', 'ArrowUp', 'PageUp'];
+
+      if (forward.includes(event.key)) {
+        event.preventDefault();
+        go(current + 1);
+      } else if (back.includes(event.key)) {
+        event.preventDefault();
+        go(current - 1);
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        go(0);
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        go(screens.length - 1);
+      }
+    });
+
+    /* ----------------------------------------------------- drag the tape */
+
+    /*
+     * Wide only, where the design's hint says to drag. Snapping is suspended
+     * for the duration — with `scroll-snap-type` still on, every pixel of
+     * movement fights to settle back — then the release picks the nearest
+     * screen and glides to it.
+     */
+    let from: { x: number; scroll: number } | null = null;
+
+    track.addEventListener('pointerdown', (event) => {
+      if (!wide.matches || event.button !== 0) return;
+      // Let a click on something clickable be a click.
+      if ((event.target as HTMLElement).closest('a, button')) return;
+
+      from = { x: event.clientX, scroll: track.scrollLeft };
+      track.dataset.dragging = 'true';
+      track.setPointerCapture(event.pointerId);
+    });
+
+    track.addEventListener('pointermove', (event) => {
+      if (!from) return;
+      track.scrollLeft = from.scroll - (event.clientX - from.x);
+    });
+
+    function endDrag() {
+      if (!from) return;
+      from = null;
+      delete track!.dataset.dragging;
+
+      // Nearest screen by centre, then let `go` do the easing.
+      const centre = track!.scrollLeft + track!.clientWidth / 2;
+      let nearest = 0;
+      let shortest = Infinity;
+      screens.forEach((screen, n) => {
+        const distance = Math.abs(screen.offsetLeft + screen.clientWidth / 2 - centre);
+        if (distance < shortest) {
+          shortest = distance;
+          nearest = n;
+        }
+      });
+
+      go(nearest);
+    }
+
+    track.addEventListener('pointerup', endDrag);
+    track.addEventListener('pointercancel', endDrag);
+
+    /*
+     * Rotating a phone, or crossing the 900px break, changes the scroll axis
+     * out from under us — the tape would be left between two reels. Put the
+     * one that was in front back in front.
+     */
+    const restore = () => {
+      const i = current;
+      // Let the new layout settle before measuring it.
+      requestAnimationFrame(() => {
+        current = -1;
+        go(i);
+        paint(i);
+      });
+    };
+
+    wide.addEventListener('change', restore);
+    window.addEventListener('orientationchange', restore);
+
+    // Paint the opening state: the server marks screen 0 active, but the
+    // parallax offsets and segment states still need setting.
+    current = -1;
+    paint(0);
+  }
+</script>

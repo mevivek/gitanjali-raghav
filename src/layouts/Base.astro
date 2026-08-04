@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { site } from '../data/site';
+import { look } from '../data/tape';
 import { scanContent } from '../../scripts/scan.mjs';
 
 interface Props {
@@ -26,7 +27,7 @@ const ogImage = new URL(`${import.meta.env.BASE_URL}/og.png`.replace(/\/+/g, '/'
 ---
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-grade={look.grade} data-osd={look.osd ? 'on' : 'off'}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -42,49 +43,25 @@ const ogImage = new URL(`${import.meta.env.BASE_URL}/og.png`.replace(/\/+/g, '/'
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <meta name="theme-color" content="#fdfbf7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#14141f" media="(prefers-color-scheme: dark)" />
+    {/* The tape has no light mode, so the browser chrome should not have one. */}
+    <meta name="theme-color" content="#08040d" />
+    <meta name="color-scheme" content="dark" />
 
     <link rel="icon" href={`${import.meta.env.BASE_URL}/favicon.svg`} type="image/svg+xml" />
 
     {/*
-      Runs before first paint so a stored theme preference never flashes the
-      wrong colours. Deliberately inline and tiny — this is the only script
-      in <head>.
+      Marks that scripting is available. The transport buttons need it to do
+      anything — the tape itself is a scroll container and moves without
+      them — so they are hidden until this class lands. Inline and tiny so it
+      runs before first paint and they never flash in and out.
     */}
     <script is:inline>
-      (() => {
-        // Marks that scripting is available. Reveal animations key off this,
-        // so with JS disabled the content renders plainly instead of staying
-        // stuck in its pre-animation hidden state.
-        document.documentElement.classList.add('js');
-
-        try {
-          const stored = localStorage.getItem('theme');
-          if (stored === 'light' || stored === 'dark') {
-            document.documentElement.dataset.theme = stored;
-          }
-        } catch {
-          /* localStorage unavailable (private mode) — fall back to OS setting */
-        }
-      })();
+      document.documentElement.classList.add('js');
     </script>
   </head>
 
   <body>
-    <a
-      href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-paper-raised focus:px-4 focus:py-2 focus:text-ink focus:shadow-lg"
-    >
-      Skip to content
-    </a>
-
-    <slot name="header" />
-
-    <main id="main">
-      <slot />
-    </main>
-
-    <slot name="footer" />
+    <a class="skip-link" href="#tape">Skip to the tape</a>
+    <slot />
   </body>
 </html>

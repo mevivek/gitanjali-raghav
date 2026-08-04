@@ -1,112 +1,232 @@
 @import './tokens.css';
-@import 'tailwindcss';
-
-/* Self-hosted variable fonts — no third-party requests from visitors. */
-@import '@fontsource-variable/fraunces/full.css';
-@import '@fontsource-variable/inter/wght.css';
+@import './tape.css';
 
 /*
- * `inline` matters here: it makes the generated utilities emit
- * `var(--paper)` rather than baking in the literal colour, so a single
- * `data-theme` swap on <html> reskins every utility at once.
+ * Self-hosted fonts — no third-party requests from visitors. The prototype
+ * pulled all four from Google Fonts; these are the same faces, served from
+ * our own origin.
+ *
+ * Latin subsets only. Rozha One also ships Devanagari and Caveat ships
+ * Cyrillic; nothing on the tape uses either, and loading them would double
+ * the font weight for glyphs that never render. The one Hindi line on the
+ * tape ("Main arse se khud se zara laapata hoon") is written in Latin script,
+ * as she wrote it.
  */
-@theme inline {
-  --color-paper: var(--paper);
-  --color-paper-raised: var(--paper-raised);
-  --color-paper-sunk: var(--paper-sunk);
-  --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-rule: var(--rule);
-  --color-career: var(--career);
-  --color-career-text: var(--career-text);
-  --color-life: var(--life);
-  --color-life-text: var(--life-text);
-  --color-focus: var(--focus);
+@import '@fontsource/anton/latin-400.css';
+@import '@fontsource/rozha-one/latin-400.css';
+@import '@fontsource/vt323/latin-400.css';
 
-  --font-display: var(--font-display);
-  --font-sans: var(--font-sans);
-
-  --text-step--1: var(--step--1);
-  --text-step-0: var(--step-0);
-  --text-step-1: var(--step-1);
-  --text-step-2: var(--step-2);
-  --text-step-3: var(--step-3);
-  --text-step-4: var(--step-4);
-  --text-step-5: var(--step-5);
-  --text-step-6: var(--step-6);
+/*
+ * Caveat is declared by hand rather than imported, because the package only
+ * ships one stylesheet covering all four of its subsets. `unicode-range` means
+ * a visitor would never *download* the Cyrillic ones, but they would still be
+ * committed to gh-pages on every deploy. Every handwritten line on the tape is
+ * plain ASCII, so latin alone is the whole of what is needed.
+ *
+ * The emoji in reel 05 is not in this face and never will be — it falls
+ * through to the system emoji font, which is what should render it.
+ */
+@font-face {
+  font-family: 'Caveat Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url('@fontsource-variable/caveat/files/caveat-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-    /* Stops the sticky year marker from covering anchor targets. */
-    scroll-padding-top: 5rem;
-    -webkit-text-size-adjust: 100%;
+/* ---------------------------------------------------------------- reset */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--tape-black);
+  color: var(--tape-cream);
+  font-family: var(--font-osd);
+  /* Stops pull-to-refresh fighting the vertical swipe between reels. */
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+ * Deliberately not `max-width: 100%`: the reel photographs are sized to 108%
+ * inside a 4% negative inset, which is what gives them room to drift as you
+ * move along the tape. A blanket max-width would clamp that to 100% and kill
+ * the parallax. Components size their own images.
+ */
+img {
+  display: block;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--tape-gold);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--tape-pink);
+}
+
+::selection {
+  background-color: var(--tape-pink);
+  color: var(--tape-black);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ------------------------------------------------------------ utilities */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 12px;
+  z-index: 50;
+  padding: 12px 18px;
+  background-color: var(--tape-gold);
+  color: var(--tape-black);
+  font-family: var(--font-osd);
+  font-size: var(--osd-lg);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.skip-link:focus {
+  top: 12px;
+  color: var(--tape-black);
+}
+
+/* ----------------------------------------------------------- animations */
+
+/*
+ * Every one of these is decoration over a layout that is already complete,
+ * so the reduced-motion block below can switch them all off without hiding
+ * anything. The one exception is `creep`, which *carries* the end credits
+ * rather than decorating them — see the note in EndCredits.astro. It is
+ * declared there, inside a no-preference query, so that reduced motion gets
+ * a static scrollable list instead of a frozen one scrolled off-screen.
+ */
+@keyframes tape-rec {
+  0%,
+  45% {
+    opacity: 1;
   }
 
-  body {
-    background-color: var(--paper);
-    color: var(--ink);
-    font-family: var(--font-sans);
-    font-size: var(--step-0);
-    line-height: 1.65;
-    font-synthesis-weight: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-display);
-    line-height: 1.1;
-    text-wrap: balance;
-    /* Fraunces' optical-size and soft axes — warmer than the default cut. */
-    font-variation-settings: 'SOFT' 30, 'WONK' 1;
-  }
-
-  p {
-    text-wrap: pretty;
-  }
-
-  :focus-visible {
-    outline: 3px solid var(--focus);
-    outline-offset: 3px;
-    border-radius: 2px;
-  }
-
-  ::selection {
-    background-color: var(--life);
-    color: var(--paper);
-  }
-
-  img {
-    max-width: 100%;
-    height: auto;
+  55%,
+  100% {
+    opacity: 0.12;
   }
 }
 
-@layer utilities {
-  .wrap {
-    width: min(100% - (var(--gutter) * 2), 72rem);
-    margin-inline: auto;
+@keyframes tape-grain {
+  0% {
+    transform: translate(0, 0);
   }
 
-  .measure {
-    max-width: var(--measure);
+  20% {
+    transform: translate(-6%, 4%);
+  }
+
+  40% {
+    transform: translate(4%, -7%);
+  }
+
+  60% {
+    transform: translate(-8%, -3%);
+  }
+
+  80% {
+    transform: translate(7%, 6%);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes tape-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes tape-wob {
+  0%,
+  100% {
+    transform: rotate(-1.3deg);
+  }
+
+  50% {
+    transform: rotate(0.5deg);
+  }
+}
+
+@keyframes tape-frost {
+  0%,
+  100% {
+    opacity: 0.14;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.32;
+    transform: scale(1.06);
   }
 }
 
 /*
- * Global motion kill-switch. Every animation on the site is additive to a
- * layout that is already complete and readable, so disabling motion never
- * hides content.
+ * Motion kill-switch. Safe to apply blanket-style because nothing on the
+ * tape depends on an animation to become readable.
  */
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {

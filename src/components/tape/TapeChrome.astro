@@ -1,0 +1,206 @@
+---
+import { screenCount, timecode } from '../../data/tape';
+
+/*
+ * Everything that floats over the tape rather than travelling with it: the
+ * progress segments, and the transport at the bottom.
+ *
+ * Two indicators, one per orientation. The bar across the top belongs to the
+ * wide layout where the tape runs sideways; the rail up the right-hand edge
+ * belongs to the phone, where it reads as tape remaining. Only one is ever
+ * displayed.
+ */
+const segments = Array.from({ length: screenCount }, (_, i) => i);
+---
+
+<div class="bar" aria-hidden="true">
+  {segments.map((i) => <span class="seg" data-seg={i} data-state={i === 0 ? 'now' : 'todo'} />)}
+</div>
+
+<div class="rail" aria-hidden="true">
+  {segments.map((i) => <span class="seg" data-seg={i} data-state={i === 0 ? 'now' : 'todo'} />)}
+</div>
+
+<div class="transport">
+  {/*
+    These two do need script — "one back from wherever you are" is not
+    something an anchor can express. They are hidden until the inline script
+    in Base.astro adds `.js`, so they never appear as dead controls. The tape
+    is a scroll container, so without them it still swipes, scrolls, and takes
+    arrow keys; and the play, resume and rewind anchors on the cards are all
+    real links.
+  */}
+  <button class="key" type="button" data-tape-prev aria-label="Previous reel">
+    <span class="key__glyph key__glyph--narrow" aria-hidden="true">&#9650;</span>
+    <span class="key__glyph key__glyph--wide" aria-hidden="true">&#9664;&#9664;</span>
+  </button>
+
+  <p class="counter">
+    <span class="sr-only">Tape position</span>
+    <span data-tape-counter>{timecode(0)}</span><span class="counter__caret" aria-hidden="true"
+      >_</span
+    >
+  </p>
+
+  <button class="key" type="button" data-tape-next aria-label="Next reel">
+    <span class="key__glyph key__glyph--narrow" aria-hidden="true">&#9660;</span>
+    <span class="key__glyph key__glyph--wide" aria-hidden="true">&#9654;&#9654;</span>
+  </button>
+</div>
+
+<style>
+  /* -------------------------------------------------------------- segments */
+
+  .bar,
+  .rail {
+    position: absolute;
+    z-index: 6;
+    pointer-events: none;
+  }
+
+  .bar {
+    left: 0;
+    right: 0;
+    top: 0;
+    display: none;
+    gap: 3px;
+    padding: var(--pad-bar);
+    /* The bar is part of the on-screen display; the rail is not. */
+    opacity: var(--osd-op, 0);
+  }
+
+  .rail {
+    right: 7px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .bar .seg {
+    flex: 1 1 0;
+    height: 3px;
+  }
+
+  .rail .seg {
+    width: 3px;
+    height: 16px;
+  }
+
+  .seg {
+    border-radius: 2px;
+    background-color: rgb(255 255 255 / 14%);
+    transition: background-color 0.35s ease;
+  }
+
+  .seg[data-state='seen'] {
+    background-color: rgb(255 197 61 / 55%);
+  }
+
+  .seg[data-state='now'] {
+    background-color: var(--tape-pink);
+  }
+
+  @media (min-width: 900px) {
+    .bar {
+      display: flex;
+    }
+
+    .rail {
+      display: none;
+    }
+  }
+
+  /* ------------------------------------------------------------- transport */
+
+  .transport {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: var(--pad-transport);
+    background: linear-gradient(to top, rgb(8 4 13 / 92%), transparent);
+    /* The gradient is decoration; only the controls inside should take input. */
+    pointer-events: none;
+  }
+
+  .transport > * {
+    pointer-events: auto;
+  }
+
+  .key,
+  .counter {
+    border: 1px solid var(--tape-edge);
+    border-radius: 3px;
+    background-color: rgb(20 10 28 / 82%);
+    backdrop-filter: blur(6px);
+    font-family: var(--font-osd);
+  }
+
+  .key {
+    width: 44px;
+    height: 44px;
+    display: none;
+    place-items: center;
+    color: var(--tape-body);
+    font-size: var(--osd-lg);
+    cursor: pointer;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  /* Dead without script, so absent without script. */
+  :global(html.js) .key {
+    display: grid;
+  }
+
+  [data-tape-prev]:hover {
+    border-color: var(--tape-cyan);
+    color: var(--tape-cyan);
+  }
+
+  [data-tape-next]:hover {
+    border-color: var(--tape-pink);
+    color: var(--tape-pink);
+  }
+
+  .key__glyph--wide {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .key__glyph--narrow {
+      display: none;
+    }
+
+    .key__glyph--wide {
+      display: inline;
+    }
+  }
+
+  .counter {
+    min-width: 112px;
+    padding: 11px 10px;
+    text-align: center;
+    font-size: var(--osd-lg);
+    letter-spacing: 0.16em;
+    color: var(--tape-gold);
+  }
+
+  .counter__caret {
+    color: var(--tape-pink);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .counter__caret {
+      animation: tape-blink 1.1s steps(1) infinite;
+    }
+  }
+</style>

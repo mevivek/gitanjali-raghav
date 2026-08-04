@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import tailwindcss from '@tailwindcss/vite';
 
 // A GitHub Pages *project* site, so `base` is the repository name.
 //
@@ -15,7 +14,4 @@ export default defineConfig({
   site: 'https://mevivek.dev',
   base: '/gitanjali-raghav',
   trailingSlash: 'ignore',
-  vite: {
-    plugins: [tailwindcss()],
-  },
 });

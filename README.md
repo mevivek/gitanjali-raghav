@@ -1,19 +1,23 @@
 # gitanjali-raghav
 
-Personal and professional website for Gitanjali Raghav.
+Personal site for Geetanjali Raghav — a Bollywood-VHS home-video tape rather
+than a CV. Nine screens on one strip: a title card, six reels, an interval for
+the day job, and end credits. Built with [Astro](https://astro.build) and
+published to GitHub Pages.
 
-A static site built with [Astro](https://astro.build) and Tailwind CSS,
-published to GitHub Pages. It leads with a photo wall and keeps the work
-history to a few lines — a personal site that mentions a job, rather than a CV
-with a hobbies section bolted on.
+Built from the `Home Video` design in the Claude Design handoff bundle. The
+previous version of this site — a light-themed photo wall with a work list — is
+in the git history at `f36c0a9`.
 
-> **Status: live, and readable — but the voice is not hers yet.**
-> The tagline and the life cards were written *from* her public profiles, not
-> *by* her. They are accurate but generic, and replacing them is the single
-> biggest improvement left. See [CONTENT.md](./CONTENT.md).
+> **Status: live, and the voice is now hers.**
+> The reel copy came from the design rather than being written from her public
+> profiles, which is what the old site's did. Two things are still outstanding
+> before this should be findable in search: reel 05 names her follower count and
+> she has not been asked about that, and the current job title in
+> `src/data/work.ts` disagrees with the design. See [CONTENT.md](./CONTENT.md).
 >
-> The page also carries a `noindex` tag until `approved` in `src/data/site.ts`
-> is set to `true`, so it stays out of search until she has seen it.
+> The page carries a `noindex` tag until `approved` in `src/data/site.ts` is
+> `true`, so it stays out of search until she has seen it.
 
 ## Getting started
 
@@ -28,45 +32,77 @@ npm run dev      # http://localhost:4321/gitanjali-raghav
 | `npm run check` | Lists every unfilled placeholder; fails if any remain |
 | `npm run build` | Static build into `dist/` |
 | `npm run preview` | Serves the built output, exactly as deployed |
+| `npm run deploy` | Builds and pushes to `gh-pages` |
 
 ## Editing the content
 
-All of it lives in text files — no component ever needs touching:
+All of it lives in two text files — no component ever needs touching:
 
 ```
-src/data/site.ts            name, tagline, facts, contact, social links
-src/data/work.ts            roles, companies, years
-src/data/gallery.ts         the photo wall
-src/content/life/*.md       hobby and interest cards
-src/assets/photos/          image files
+src/data/tape.ts       every word on the tape, the reels, the look
+src/data/site.ts       name, description, social links, the publish gate
+src/data/work.ts       the jobs and the university on the interval card
+src/assets/photos/     image files
 ```
 
 [CONTENT.md](./CONTENT.md) explains every field in plain English.
 
+### The three switches
+
+`look` at the top of `src/data/tape.ts` sets how worn the tape is. The defaults
+are what the design shipped with, so the site looks like what she was shown.
+
+| Switch | Default | What it does |
+|---|---|---|
+| `grade` | `'poster'` | `'clean'`, `'poster'` or `'tape'`. **`'tape'` is the full VHS look** — scanlines, the head-switching band along the bottom, and each reel's own colour treatment instead of one uniform grade. The other two trade that per-reel character for consistency. |
+| `grain` | `80` | Film grain over everything, 0–80. |
+| `osd` | `false` | The on-screen display: `reel 01 / 06`, the running timecode, the burnt-in date stamps, and the progress bar on wide screens. **Off by default**, which is worth knowing — turning it on is the single biggest change to how the tape reads, and there is a fair amount of writing in `tape.ts` that nobody currently sees. |
+
+Both land on `<html>` as data attributes and become four numbers in
+`src/styles/tape.css`; every overlay reads one of them.
+
 ## How it's put together
 
-- **Content as data.** Every fact lives in `src/data/` or Markdown, never
-  inside a component. The life cards are a Zod-typed content collection, so a
-  malformed entry fails the build instead of rendering an empty section.
-- **Three safety nets.** `TODO` marks a missing fact and blocks publishing.
-  `draft: true` hides an unverified life card. `approved: false` keeps the
-  whole page out of search.
+- **Content as data.** Every word lives in `src/data/`, never inside a
+  component. The reels are one array; adding a seventh is adding an object.
+- **The tape is a scroll container, not a transform.** The design prototype
+  moved the strip with a JS-driven `translate3d` and an index in component
+  state. This is native scroll snapping instead, which looks the same and gets
+  three things the prototype could not: it works with no JavaScript, it takes
+  keyboard input on its own, and the flick has real platform momentum. Script
+  then adds what genuinely needs it — knowing which reel is in front, which is
+  what the dimming, the progress rail and the timecode key off, plus the two
+  transport buttons and drag-to-scrub on a wide screen. With JavaScript off,
+  all nine screens are still reachable by swipe, wheel, arrow key and the
+  play / resume / rewind links, which are real anchors.
+- **Motion is additive, with one deliberate exception.** Every animation
+  decorates a layout that is already complete, so the reduced-motion
+  kill-switch in `global.css` can disable them all. The exception is the end
+  credits: `creep` *carries* the credits rather than decorating them, and
+  freezing it would park the names off the top of the screen. So it only ever
+  runs under `prefers-reduced-motion: no-preference`, and under `reduce` the
+  roll becomes a static scrollable list. It also pauses on hover and focus,
+  which WCAG 2.2.2 asks for.
 - **Images are optimised, not just uploaded.** Photos live in `src/assets/` so
   Astro re-encodes each to WebP at three widths with a `srcset`. Explicit
   `width` caps the fallback — without it Astro ships the full 1080px original
-  as the base `src`, which alone was 900KB of the build.
-- **Motion is additive.** Every animation decorates a layout that is already
-  complete. With JavaScript off or `prefers-reduced-motion` set, the page
-  renders fully.
-- **No third-party requests.** Fonts are self-hosted; no analytics, no CDN, no
-  tracking. The only client-side JavaScript is the theme toggle.
+  as the base `src`.
+- **No third-party requests.** All four fonts are self-hosted, latin subsets
+  only; no analytics, no CDN, no tracking. Caveat is declared by hand in
+  `global.css` because its package ships one stylesheet covering all four
+  subsets, and the Cyrillic ones would be committed on every deploy for glyphs
+  that never render.
 
 ### Theming
 
-The whole palette is six colours in `src/styles/tokens.css`, defined once for
-light and once for dark. Changing them reskins the site; nothing else needs
-editing. Each accent has a `-text` variant darkened to meet AA contrast — use
-those for anything a person has to read.
+The palette is five colours over three near-blacks in `src/styles/tokens.css`.
+Change those and the tape reskins. Per-reel gradients live in `src/data/tape.ts`
+next to the copy they belong to. There is no light theme — a cassette on a CRT
+does not have one — so there is no theme toggle and no stored preference.
+
+The type sizes in the same file come in three sets: phone, wide (≥900px, where
+the tape turns sideways) and short (≤700px tall, a phone held landscape). Short
+wins over wide, so it is declared last.
 
 ## Deploying
 
@@ -84,7 +120,7 @@ This is why `site` in `astro.config.mjs` is set to the custom domain — pointin
 it at github.io would emit canonical and Open Graph URLs that instantly
 redirect.
 
-**Every deploy after that:**
+**Every deploy:**
 
 ```bash
 npm run deploy
@@ -130,3 +166,13 @@ outstanding without blocking a preview deploy.
 
 Drop `base` from `astro.config.mjs`, set `site` to the domain, and add a
 `public/CNAME` file containing the hostname.
+
+## Known gaps
+
+- **`og:image` points at a file that does not exist.** `Base.astro` emits
+  `/gitanjali-raghav/og.png` for link previews and there is no `og.png` in
+  `public/`. Pre-existing, and a link to the site currently previews without an
+  image. A single 1200×630 still from one of the reels would fix it.
+- **`portrait.jpg` is 320×320** — her Instagram profile picture, and the
+  lowest-resolution image here. It sits in the cassette window at roughly
+  284px so it holds, but only just.
