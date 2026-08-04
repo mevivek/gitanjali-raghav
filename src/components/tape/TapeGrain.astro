@@ -27,10 +27,16 @@ const noise =
 <div class="band" aria-hidden="true"></div>
 
 <style>
+  /*
+   * Fixed, for the same reason as the chrome: on a phone the tape is nine
+   * screens tall and the document scrolls, so an absolute overlay would sit over
+   * the first reel only and scroll away with it. The wear has to stay on the
+   * glass.
+   */
   .grain,
   .scan,
   .band {
-    position: absolute;
+    position: fixed;
     z-index: 7;
     pointer-events: none;
   }

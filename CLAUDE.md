@@ -22,6 +22,28 @@ only the things that will bite you.
 - `public/.nojekyll` must stay. Without it Pages runs Jekyll, Jekyll ignores
   `_astro/`, and the site deploys with no CSS and no fonts.
 
+## The scroll container is not where you would guess
+
+**On a phone the document scrolls; above 900px an inner element does.** That is
+load-bearing, not incidental: Safari and Chrome only collapse their own toolbars
+when *the page* scrolls, so a fixed-height tape with an inner scroller sits in a
+letterbox between full-size browser chrome forever. Three things follow, and
+undoing any of them breaks the layout in a way that is not obvious from the diff:
+
+- The chrome and the wear overlays are `position: fixed`. On a phone the tape is
+  nine screens tall, so `absolute` pins them to the top of the strip and they
+  scroll away with the first reel.
+- `html, body` use `min-height`, not `height`. `height: 100%` caps the document
+  at one screen and the snapping has nothing to scroll.
+- The `IntersectionObserver` in `index.astro` uses `root: null`. Which element
+  scrolls changes with the breakpoint and a root cannot be changed after the
+  observer is built, so measuring against the viewport is the only thing correct
+  at both sizes.
+
+Screens are sized in `dvh` on purpose. `svh` would leave a band of background
+once the toolbars collapse and `lvh` would spill the next screen into view while
+they are still up.
+
 ## Three things that are easy to get wrong
 
 **No client-side `<script>` may import `src/data/tape.ts`.** That module imports

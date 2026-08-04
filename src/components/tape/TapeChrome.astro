@@ -85,9 +85,14 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
 <style>
   /* -------------------------------------------------------------- segments */
 
+  /*
+   * Fixed, not absolute. On a phone the tape is nine screens tall and the
+   * document scrolls, so anything absolute would be pinned to the top of the
+   * strip and scroll away with the first reel.
+   */
   .bar,
   .rail {
-    position: absolute;
+    position: fixed;
     z-index: 6;
     pointer-events: none;
   }
@@ -151,7 +156,7 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   /* ------------------------------------------------------------- transport */
 
   .transport {
-    position: absolute;
+    position: fixed;
     left: 0;
     right: 0;
     bottom: 0;

@@ -55,42 +55,45 @@ html[data-osd='off'] {
   --osd-op: 0;
 }
 
+/*
+ * ON A PHONE THE DOCUMENT IS THE SCROLLER. This is not an implementation
+ * detail — it is the only way to get an edge-to-edge tape in a browser tab.
+ *
+ * Safari and Chrome collapse their own toolbars when *the page* scrolls. The
+ * tape used to be a fixed 100dvh box with the strip scrolling inside it, which
+ * meant the document never moved, so both browsers kept their full-size chrome
+ * permanently and the tape sat in a letterbox between them. Handing the
+ * scrolling to the document is what lets them get out of the way, and it
+ * reclaims roughly 60–110px with nothing to install.
+ *
+ * Above 900px it goes back to being a fixed viewport with the strip scrolling
+ * sideways inside it, because there the tape is dragged rather than scrolled and
+ * there is no browser chrome to reclaim.
+ */
+html {
+  scroll-snap-type: y mandatory;
+  /* Stops a flick at the top turning into pull-to-refresh. */
+  overscroll-behavior-y: contain;
+}
+
 .tape {
   position: relative;
   width: 100%;
-  height: 100vh;
-  /* dvh so mobile browser chrome sliding away does not clip a reel. */
-  height: 100dvh;
-  overflow: hidden;
   background-color: var(--tape-black);
 }
 
 /* -------------------------------------------------------------- the strip */
 
 .tape__track {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
-  /* Phone: one full-bleed reel at a time, swiped vertically. */
-  scroll-snap-type: y mandatory;
-  /* Keeps a flick inside the tape instead of bouncing the page behind it. */
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-}
-
-.tape__track::-webkit-scrollbar {
-  display: none;
 }
 
 /*
- * The track is a scrollable region, so it has to be focusable to be usable
- * from a keyboard (WCAG 2.1.1). With this, arrow keys and Page Up/Down move
- * along the tape natively — no script involved. The handler in index.astro
- * upgrades that to whole-screen jumps.
+ * Only a scrollable element needs to be focusable for the keyboard (WCAG
+ * 2.1.1), and on a phone this one is not — the document is, and that is always
+ * reachable. The outline is here for the wide layout, where the track does own
+ * the scrolling.
  */
 .tape__track:focus-visible {
   outline: 3px solid var(--focus);
@@ -101,7 +104,16 @@ html[data-osd='off'] {
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  height: 100%;
+  /*
+   * dvh, not svh or lvh, and the choice matters here. svh would size every
+   * screen to the viewport with the toolbars *showing*, leaving a band of
+   * background once they collapse; lvh would size to the collapsed viewport and
+   * spill the next screen into view while they are still up. dvh tracks the
+   * live value, so each screen fills whatever the viewport actually is — which
+   * is the whole point of letting the toolbars go.
+   */
+  height: 100vh;
+  height: 100dvh;
   padding: var(--pad-screen);
   display: flex;
   flex-direction: column;
@@ -130,12 +142,32 @@ html[data-osd='off'] {
  * alone cannot do at the ends of a scroller.
  */
 @media (min-width: 900px) {
+  /* The document goes back to being one screen tall and not snapping. */
+  html {
+    scroll-snap-type: none;
+  }
+
+  .tape {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   .tape__track {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
     cursor: grab;
+  }
+
+  .tape__track::-webkit-scrollbar {
+    display: none;
   }
 
   .tape__track::before,
@@ -146,6 +178,7 @@ html[data-osd='off'] {
 
   .screen {
     width: var(--panel-w);
+    height: 100%;
     scroll-snap-align: center;
   }
 }

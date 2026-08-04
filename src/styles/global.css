@@ -45,9 +45,14 @@
   box-sizing: border-box;
 }
 
+/*
+ * `min-height`, not `height`. On a phone the document is the tape's scroller and
+ * has to be free to grow to nine screens tall; `height: 100%` would cap it at
+ * one and the snapping would have nothing to scroll.
+ */
 html,
 body {
-  height: 100%;
+  min-height: 100%;
 }
 
 /*

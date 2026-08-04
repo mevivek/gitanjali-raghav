@@ -138,7 +138,14 @@ const creditsIndex = reelCount + 2;
 
         paint(best);
       },
-      { root: track, threshold: [0, 0.25, 0.5, 0.75, 1] },
+      /*
+       * The viewport, not the track. Which element does the scrolling changes
+       * with the breakpoint — the document on a phone, the track above 900px —
+       * and an observer's root cannot be changed after it is built. Measuring
+       * against the viewport is correct either way: a screen scrolled past
+       * vertically and a screen slid off sideways are both simply not on screen.
+       */
+      { root: null, threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
 
     screens.forEach((screen) => observer.observe(screen));
@@ -153,12 +160,19 @@ const creditsIndex = reelCount + 2;
       const behavior: ScrollBehavior = reduceMotion.matches ? 'auto' : 'smooth';
 
       if (wide.matches) {
+        // The track scrolls sideways; centre the panel in it.
         track!.scrollTo({
           left: target.offsetLeft - (track!.clientWidth - target.clientWidth) / 2,
           behavior,
         });
       } else {
-        track!.scrollTo({ top: target.offsetTop, behavior });
+        /*
+         * The document scrolls. Measured from the viewport rather than read off
+         * `offsetTop`, which is relative to whichever ancestor happens to be
+         * positioned and would be wrong the moment the layout around it changes.
+         */
+        const top = target.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top, behavior });
       }
     }
 
