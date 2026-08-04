@@ -1,0 +1,304 @@
+---
+import { Image } from 'astro:assets';
+import { look, reelCount, stepFor, wheels } from '../../../data/tape';
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+/* Server-rendered at a standstill, which is also the no-script state. */
+const start = 0;
+
+/** Indian digit grouping — 12,480 rather than 12,480 the other way round. */
+const startKm = wheels.km.toLocaleString('en-IN');
+
+const vars = [
+  `--accent: ${wheels.accent}`,
+  `--edge: ${wheels.edge}`,
+  `--reel-bg: ${wheels.bg}`,
+  `--photo-pos: ${wheels.pos}`,
+].join('; ');
+---
+
+<section
+  class="screen screen--reel"
+  id={`screen-${index}`}
+  data-screen
+  data-active="false"
+  data-wheels
+  data-copy={JSON.stringify({ km: wheels.km, hands: wheels.hands })}
+  style={vars}
+  aria-label={`Reel ${wheels.num} of ${reelCount} — ${wheels.label}`}
+>
+  <div class="reel__osd" aria-hidden={osdHidden}>
+    <span>reel {wheels.num} / {String(reelCount).padStart(2, '0')}</span>
+    <span class="reel__osd-tc">{wheels.tc}</span>
+  </div>
+
+  <div class="reel__frame">
+    {/* The shake is on a wrapper so the photo's own scale is left alone. */}
+    <div class="buzz" data-wheels-buzz>
+      <Image
+        class="reel__photo photo"
+        src={wheels.photo}
+        alt={wheels.alt}
+        width={1080}
+        widths={[400, 720, 1080]}
+        sizes="(min-width: 900px) min(62vw, 720px), 100vw"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="reel__scan" aria-hidden="true"></div>
+    <div class="reel__sink" aria-hidden="true"></div>
+
+    {/*
+      Odometer and rev counter. Part of the interaction, not the on-screen
+      display, so `look.osd` leaves them alone — they are the feedback.
+    */}
+    <div class="odo">
+      <span class="odo__km" data-wheels-km>{startKm}</span>
+      <span class="odo__unit">km</span>
+    </div>
+
+    <div class="rev" aria-hidden="true">
+      <div class="rev__fill" data-wheels-rev></div>
+    </div>
+
+    <div class="reel__caption">
+      <h2 class="reel__title">{wheels.title}</h2>
+      <p class="reel__hand" data-wheels-hand>{stepFor(wheels.hands, start)}</p>
+    </div>
+  </div>
+
+  {/*
+    A hold control, which is a genuine accessibility trap: pointerdown/up alone
+    leaves it unusable from a keyboard. So the script also holds on keydown and
+    releases on keyup for Space and Enter, and the button carries aria-pressed
+    so the state is announced.
+  */}
+  <div class="reel__controls" data-nodrag>
+    <button class="throttle" type="button" aria-pressed="false" data-wheels-throttle>
+      {wheels.throttleLabel}
+    </button>
+  </div>
+
+  <p class="reel__line">{wheels.line}</p>
+</section>
+
+<style>
+  .screen--reel {
+    background: var(--reel-bg);
+  }
+
+  .buzz {
+    position: absolute;
+    inset: 0;
+  }
+
+  /*
+   * Only the buzz is motion for motion's sake, so it is the only part gated on
+   * the motion preference. The revs, the odometer, the vignette and the grade
+   * all still respond under `reduce` — they are information, not decoration.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .buzz[data-buzzing='true'] {
+      animation: tape-shake var(--buzz-rate, 0.13s) linear infinite;
+    }
+  }
+
+  .photo {
+    filter: saturate(calc(1.4 + var(--rpm, 0) * 0.3)) contrast(calc(1.1 + var(--rpm, 0) * 0.1))
+      brightness(0.92) sepia(0.14);
+    transform: scale(calc(1 + var(--rpm, 0) * 0.06));
+    transition:
+      transform 0.18s ease-out,
+      filter 0.2s linear;
+  }
+
+  .vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 70px 26px rgb(0 0 0 / 85%);
+    opacity: calc(var(--rpm, 0) * 0.7);
+    transition: opacity 0.2s linear;
+  }
+
+  .odo {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    z-index: 4;
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+  }
+
+  .odo__km {
+    font-family: var(--font-display);
+    font-size: 34px;
+    letter-spacing: 0.04em;
+    color: #fff;
+    text-shadow: 0 2px 10px rgb(0 0 0 / 80%);
+    /* Stops the reading jittering sideways as the digits climb. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .odo__unit {
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.2em;
+    color: var(--tape-gold);
+    /* Gold on a bright photograph needs the same lift the number gets. */
+    text-shadow: 0 2px 10px rgb(0 0 0 / 90%);
+  }
+
+  .rev {
+    position: absolute;
+    right: 12px;
+    top: 14px;
+    z-index: 4;
+    width: 74px;
+    height: 5px;
+    border-radius: 3px;
+    background-color: rgb(0 0 0 / 50%);
+    overflow: hidden;
+  }
+
+  .rev__fill {
+    height: 100%;
+    width: calc(var(--rpm, 0) * 100%);
+    background: linear-gradient(90deg, var(--tape-gold), var(--tape-pink));
+    transition: width 0.12s linear;
+  }
+
+  .throttle {
+    flex: 1 1 auto;
+    height: 46px;
+    border: 1px solid #5c451c;
+    border-radius: 3px;
+    background-color: transparent;
+    color: var(--tape-gold);
+    font-family: var(--font-osd);
+    font-size: 17px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.15s linear,
+      color 0.15s linear;
+  }
+
+  .throttle[aria-pressed='true'] {
+    background-color: var(--tape-gold);
+    color: #170d09;
+  }
+
+  @media (max-height: 700px) {
+    .odo__km {
+      font-size: 26px;
+    }
+  }
+</style>
+
+<script>
+  /* Copy via data attribute, not an import — see the note in SaltWater.astro. */
+  type Step = { min: number; text: string };
+
+  const stepFor = (steps: Step[], value: number): string => {
+    for (const step of steps) if (value >= step.min) return step.text;
+    return steps[steps.length - 1]?.text ?? '';
+  };
+
+  const screen = document.querySelector<HTMLElement>('[data-wheels]');
+  const button = document.querySelector<HTMLButtonElement>('[data-wheels-throttle]');
+
+  if (screen && button) {
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as { km: number; hands: Step[] };
+    const buzz = screen.querySelector<HTMLElement>('[data-wheels-buzz]')!;
+    const kmOut = screen.querySelector<HTMLElement>('[data-wheels-km]')!;
+    const hand = screen.querySelector<HTMLElement>('[data-wheels-hand]')!;
+
+    let rpm = 0;
+    let km = copy.km;
+    let holding = false;
+    let frame: number | null = null;
+    let last = 0;
+    let shownHand = stepFor(copy.hands, 0);
+
+    function tick(now: number) {
+      const dt = Math.min(0.25, (now - last) / 1000);
+      last = now;
+
+      // Winds up faster than it winds down, like a real throttle.
+      rpm = holding ? Math.min(1, rpm + dt * 1.1) : Math.max(0, rpm - dt * 0.9);
+      // Idles over even at a standstill, then runs on with the revs.
+      if (holding) km += dt * (6 + rpm * 70);
+
+      screen!.style.setProperty('--rpm', rpm.toFixed(3));
+      kmOut.textContent = Math.round(km).toLocaleString('en-IN');
+
+      // Faster revs, tighter buzz.
+      buzz.dataset.buzzing = rpm > 0.08 ? 'true' : 'false';
+      buzz.style.setProperty('--buzz-rate', `${(0.13 - rpm * 0.06).toFixed(3)}s`);
+
+      const next = stepFor(copy.hands, rpm);
+      if (next !== shownHand) {
+        shownHand = next;
+        hand.textContent = next;
+      }
+
+      if (!holding && rpm <= 0) {
+        frame = null;
+        return;
+      }
+      frame = requestAnimationFrame(tick);
+    }
+
+    function hold(on: boolean) {
+      if (holding === on) return;
+      holding = on;
+      button!.setAttribute('aria-pressed', String(on));
+      if (frame === null) {
+        last = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    }
+
+    button.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      // Keeps the release even if the finger slides off the button.
+      button.setPointerCapture(event.pointerId);
+      hold(true);
+    });
+
+    for (const end of ['pointerup', 'pointercancel', 'pointerleave'] as const) {
+      button.addEventListener(end, () => hold(false));
+    }
+
+    // The keyboard path. Without this the reel is pointer-only.
+    button.addEventListener('keydown', (event) => {
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault();
+        hold(true);
+      }
+    });
+
+    button.addEventListener('keyup', (event) => {
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault();
+        hold(false);
+      }
+    });
+
+    // Letting go while the tape moves on would leave it revving unattended.
+    button.addEventListener('blur', () => hold(false));
+  }
+</script>

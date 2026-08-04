@@ -23,44 +23,60 @@ Every word on the site is in this file, in the order you meet it.
 | Section | What it holds |
 |---|---|
 | `look` | How worn the tape is: `grade`, `grain`, `osd`. See the table in [README.md](./README.md#the-three-switches) — `osd: false` hides a fair amount of writing, which is worth knowing before you edit it. |
-| `title` | The opening card: the line above the cassette, the two-line heading, the intro sentence, and what is written on the cassette's paper label. |
-| `reels` | The six reels. One object each. |
+| `title` | The opening card: the line above the cassette, the three-line heading, the intro sentence, and what is written on the cassette's paper label. |
+| `salt`, `wheels`, `excuse`, `takes`, `cold`, `sideA` | The six reels, in order. One block each — they are six different things, so they do not share a shape. |
 | `interval` | The framing around the day job. The jobs themselves come from `work.ts`. |
 | `credits`, `ending` | The cast-and-crew roll and the sign-off. |
+| `sound` | Levels for the synthesised tape hiss. |
 
-### A reel
+### The reels are toys
+
+Each one does something, and most of the copy changes with what the visitor has
+done. So a reel holds more than one version of its words:
+
+- **01 Salt water** — touch the photograph and it ripples. The splash count
+  drives the grade, the prompt, her aside and the paragraph.
+- **02 Two wheels** — hold the throttle and the revs climb, the frame buzzes,
+  the odometer runs on. Her aside changes with the revs.
+- **03 Any excuse** — four occasions to pick from, each with its own
+  photograph, date stamp, aside and paragraph.
+- **04 Take four** — roll through four takes. Three are ruined and cold; the
+  fourth straightens up and gets posted.
+- **05 Cold air** — drag the temperature from 18° down to −4°. Colour drains,
+  mist rises, snow starts, rime creeps in.
+- **06 Side A** — the inlay card of captions that were only ever song lyrics.
+  Tap one to play it.
+
+### Copy that changes: the `Step` tables
+
+Where wording depends on a number, it is a list read top-down — the first entry
+whose `min` has been reached wins. **They must stay sorted highest-first.**
 
 ```ts
-{
-  num: '07',
-  label: 'Late trains',          // used for the screen's accessible name
-  tc: '00:43:10',                // fake running time, only shown if osd is on
-  accent: 'var(--tape-gold)',    // headings, handwriting, the frame's edge
-  edge: 'rgb(255 197 61 / 34%)', // the accent at low alpha, as an inner glow
-  bg: 'radial-gradient(...)',    // full-screen background
-  frost: true,                   // optional: freezing mist. Reel 02 uses it.
-
-  title: 'Late trains',
-  hand: 'always the 6:40',       // handwritten aside, in her voice
-  stamp: 'NOV 2025  06:38',      // burnt-in date stamp, only shown if osd is on
-  line: 'A sentence or two.',    // the paragraph under the photograph
-
-  photo: latePlatform,           // imported at the top of the file
-  alt: 'A plain description, for people who cannot see it',
-  pos: '50% 30%',                // object-position, if the subject is off-centre
-  filter: 'saturate(1.4)',       // this reel's own grade — only used by 'tape'
-  wash: 'linear-gradient(...)',  // colour bleed across the frame
-  thumbs: [{ src: ..., alt: ... }, { src: ..., alt: ... }],
-}
+hands: [
+  { min: 10, text: 'not coming out, do not ask' },  // 10 splashes or more
+  { min: 4,  text: 'this is the good bit' },        // 4 to 9
+  { min: 0,  text: 'I said I was only paddling' },  // the opening state
+]
 ```
+
+The bottom entry is what the page ships with — it is what a visitor sees before
+touching anything, and what someone with no JavaScript sees for good.
+
+`cold`'s tables are the exception: they run on temperature, so they are sorted
+warmest-first and the last entry uses `min: -99` to mean "colder than anything".
+
+### The three blank lines on Side A
+
+`sideA.tracks` has six rows and only three have words. **That is deliberate** —
+an inlay card always has more ruled lines than anyone fills in, and the empty
+ones are what make it read as a real one. They render as rules, cannot be
+focused, and are hidden from screen readers. Adding a fourth lyric is just
+filling one in.
 
 `alt` and `hand` do different jobs. The handwritten line is her voice; the alt
 text describes what is in the frame for someone who cannot see it. Never make
 them the same string.
-
-**`filter` is usually ignored.** Only `grade: 'tape'` uses each reel's own
-treatment. `'clean'` and `'poster'` replace all six with one uniform grade,
-which is what makes them read as a set.
 
 ### Photographs
 

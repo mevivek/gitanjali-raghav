@@ -240,6 +240,73 @@ a:hover {
   }
 }
 
+/* Reel 02: the frame buzzing as the revs climb. */
+@keyframes tape-shake {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(-1px, 0.5px);
+  }
+
+  50% {
+    transform: translate(0.5px, -1px);
+  }
+
+  75% {
+    transform: translate(1px, 0.5px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* Reel 01: a ring spreading from wherever the water was touched. */
+@keyframes tape-ripple {
+  0% {
+    transform: scale(0.15);
+    opacity: 0.85;
+  }
+
+  100% {
+    transform: scale(7);
+    opacity: 0;
+  }
+}
+
+/* Reel 05: snow drifting across the valley once it is cold enough. */
+@keyframes tape-snow {
+  0% {
+    transform: translate3d(0, -30%, 0);
+  }
+
+  100% {
+    transform: translate3d(-6%, 30%, 0);
+  }
+}
+
+/* Reel 06: the VU needles twitching beside the track that is playing. */
+@keyframes tape-vu {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+
+  30% {
+    transform: scaleY(1);
+  }
+
+  55% {
+    transform: scaleY(0.5);
+  }
+
+  80% {
+    transform: scaleY(0.85);
+  }
+}
+
 /*
  * Motion kill-switch. Safe to apply blanket-style because nothing on the
  * tape depends on an animation to become readable.

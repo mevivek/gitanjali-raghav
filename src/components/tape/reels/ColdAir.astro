@@ -1,0 +1,394 @@
+---
+import { Image } from 'astro:assets';
+import { cold, look, reelCount, stepFor } from '../../../data/tape';
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+const start = cold.initial;
+/** 0 at the warm end, 1 at the coldest. Drives every overlay. */
+const chill = (cold.warm - start) / (cold.warm - cold.coldest);
+
+const vars = [
+  `--accent: ${cold.accent}`,
+  `--edge: ${cold.edge}`,
+  `--reel-bg: ${cold.bg}`,
+  `--photo-pos: ${cold.pos}`,
+  `--chill: ${chill.toFixed(3)}`,
+].join('; ');
+---
+
+<section
+  class="screen screen--reel"
+  id={`screen-${index}`}
+  data-screen
+  data-active="false"
+  data-cold
+  data-copy={JSON.stringify({
+    warm: cold.warm,
+    coldest: cold.coldest,
+    hands: cold.hands,
+    lines: cold.lines,
+  })}
+  style={vars}
+  aria-label={`Reel ${cold.num} of ${reelCount} — ${cold.label}`}
+>
+  <div class="reel__osd" aria-hidden={osdHidden}>
+    <span>reel {cold.num} / {String(reelCount).padStart(2, '0')}</span>
+    <span class="reel__osd-tc">{cold.tc}</span>
+  </div>
+
+  <div class="reel__frame">
+    <Image
+      class="reel__photo photo"
+      src={cold.photo}
+      alt={cold.alt}
+      width={1080}
+      widths={[400, 720, 1080]}
+      sizes="(min-width: 900px) min(62vw, 720px), 100vw"
+      loading="lazy"
+      decoding="async"
+    />
+
+    {/* Mist off the valley floor, then snow, then rime at the very edges. */}
+    <div class="mist" aria-hidden="true"></div>
+    <div class="snow" aria-hidden="true"></div>
+    <div class="rime" aria-hidden="true"></div>
+
+    <div class="reel__scan" aria-hidden="true"></div>
+    <div class="reel__sink" aria-hidden="true"></div>
+
+    <div class="thermo">
+      <span class="thermo__deg" data-cold-temp>{start}°</span>
+      <span class="thermo__unit">{cold.unit}</span>
+    </div>
+
+    <div class="reel__caption">
+      <h2 class="reel__title">{cold.title}</h2>
+      <p class="reel__hand" data-cold-hand>{stepFor(cold.hands, start)}</p>
+    </div>
+  </div>
+
+  {/*
+    A native range input, restyled — not the design's custom pointer-drag div.
+    A div responds only to a pointer; this one arrows, pages, homes and ends
+    from the keyboard, announces itself and its value, and works with a switch
+    or a screen reader, for the same look. `dir="rtl"` runs it warm-to-cold
+    left-to-right while keeping the value ascending, so the higher number stays
+    at the warm end where the design put it.
+  */}
+  <div class="dial reel__controls" data-nodrag>
+    <div class="dial__fill" aria-hidden="true"></div>
+    <div class="dial__marks" aria-hidden="true">
+      <span>{cold.warm}°</span>
+      <span class="dial__hint">{cold.dialLabel}</span>
+      <span>{cold.coldest}°</span>
+    </div>
+    <input
+      class="dial__input"
+      type="range"
+      min={cold.coldest}
+      max={cold.warm}
+      step="1"
+      value={start}
+      dir="rtl"
+      aria-label={`Temperature, ${cold.warm} to ${cold.coldest} degrees celsius`}
+      data-cold-dial
+    />
+  </div>
+
+  <p class="reel__line" data-cold-line>{stepFor(cold.lines, start)}</p>
+
+  <ul class="thumbs">
+    {
+      cold.thumbs.map((thumb) => (
+        <li class="thumb">
+          <Image
+            class="thumb__photo"
+            src={thumb.src}
+            alt={thumb.alt}
+            width={400}
+            widths={[200, 400]}
+            sizes="(min-width: 900px) 22vw, 44vw"
+            loading="lazy"
+            decoding="async"
+          />
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .screen--reel {
+    background: var(--reel-bg);
+  }
+
+  /* Colour drains and the light goes blue as it gets colder. */
+  .photo {
+    filter: saturate(calc(1.15 - 0.8 * var(--chill))) contrast(calc(1.04 + 0.16 * var(--chill)))
+      brightness(calc(0.98 - 0.14 * var(--chill)))
+      hue-rotate(calc(-4deg - 20deg * var(--chill)));
+    transition: filter 0.35s linear;
+  }
+
+  .mist,
+  .snow,
+  .rime {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .mist {
+    inset: 0;
+    background: radial-gradient(
+      120% 90% at 50% 100%,
+      rgb(143 232 242 / 85%),
+      rgb(143 232 242 / 0%) 62%
+    );
+    opacity: calc(var(--chill) * 0.6);
+    transition: opacity 0.3s linear;
+  }
+
+  /*
+   * Only starts once it is genuinely cold — clamp() holds it at zero for the
+   * first third of the dial, then ramps.
+   */
+  .snow {
+    inset: -30%;
+    background-image:
+      radial-gradient(2px 2px at 20% 30%, #fff, transparent),
+      radial-gradient(2px 2px at 70% 10%, #fff, transparent),
+      radial-gradient(1px 1px at 45% 60%, #fff, transparent),
+      radial-gradient(2px 2px at 85% 45%, #fff, transparent),
+      radial-gradient(1px 1px at 10% 80%, #fff, transparent),
+      radial-gradient(2px 2px at 60% 85%, #fff, transparent);
+    background-size: 180px 180px;
+    opacity: clamp(0, calc((var(--chill) - 0.35) / 0.65), 1);
+    transition: opacity 0.4s linear;
+  }
+
+  /*
+   * The drift is decoration; the snow being *there* is the information. So
+   * under reduced motion the flakes still appear, they just stop moving.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .snow {
+      animation: tape-snow 7s linear infinite;
+    }
+  }
+
+  .rime {
+    inset: 0;
+    box-shadow: inset 0 0 60px 20px rgb(255 255 255 / 50%);
+    opacity: clamp(0, calc((var(--chill) - 0.6) / 0.4 * 0.7), 0.7);
+    transition: opacity 0.3s linear;
+  }
+
+  .thermo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 4;
+    padding: 12px 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-display);
+    color: #fff;
+    text-shadow: 0 2px 10px rgb(0 0 0 / 70%);
+  }
+
+  .thermo__deg {
+    font-size: 46px;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .thermo__unit {
+    font-family: var(--font-osd);
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    color: var(--tape-ice);
+  }
+
+  /* ----------------------------------------------------------------- dial */
+
+  .dial {
+    position: relative;
+    height: 46px;
+    border: 1px solid #2e3f52;
+    border-radius: 3px;
+    background-color: rgb(20 10 28 / 70%);
+    overflow: hidden;
+  }
+
+  .dial__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--chill) * 100%);
+    background: linear-gradient(90deg, rgb(143 232 242 / 10%), rgb(143 232 242 / 40%));
+    transition: width 0.12s linear;
+  }
+
+  .dial__marks {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--tape-ice);
+    pointer-events: none;
+  }
+
+  .dial__hint {
+    color: #cfe9ef;
+  }
+
+  /*
+   * The input itself is transparent and laid over the whole dial; the visible
+   * knob is its thumb. Track and thumb both need vendor pseudo-elements, which
+   * cannot be combined into one rule — browsers drop the entire declaration
+   * when they meet a selector they do not recognise.
+   */
+  .dial__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: ew-resize;
+  }
+
+  .dial__input::-webkit-slider-thumb {
+    appearance: none;
+    width: 4px;
+    height: 36px;
+    border: 0;
+    border-radius: 2px;
+    background-color: #fff;
+    box-shadow: 0 0 12px rgb(255 255 255 / 80%);
+    cursor: ew-resize;
+  }
+
+  .dial__input::-moz-range-thumb {
+    width: 4px;
+    height: 36px;
+    border: 0;
+    border-radius: 2px;
+    background-color: #fff;
+    box-shadow: 0 0 12px rgb(255 255 255 / 80%);
+    cursor: ew-resize;
+  }
+
+  .dial__input:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: -3px;
+  }
+
+  /* --------------------------------------------------------------- thumbs */
+
+  .thumbs {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .thumb {
+    position: relative;
+    flex: 1 1 0;
+    aspect-ratio: 4 / 3;
+    border-radius: 2px;
+    overflow: hidden;
+    background-color: #120a1a;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 14%);
+  }
+
+  .thumb__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.35) contrast(1.05) brightness(0.86);
+  }
+
+  @media (max-height: 700px) {
+    .thumbs {
+      display: none;
+    }
+
+    .thermo__deg {
+      font-size: 34px;
+    }
+  }
+</style>
+
+<script>
+  /* Copy via data attribute, not an import — see the note in SaltWater.astro. */
+  type Step = { min: number; text: string };
+
+  const stepFor = (steps: Step[], value: number): string => {
+    for (const step of steps) if (value >= step.min) return step.text;
+    return steps[steps.length - 1]?.text ?? '';
+  };
+
+  const screen = document.querySelector<HTMLElement>('[data-cold]');
+  const dial = document.querySelector<HTMLInputElement>('[data-cold-dial]');
+
+  if (screen && dial) {
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as {
+      warm: number;
+      coldest: number;
+      hands: Step[];
+      lines: Step[];
+    };
+    const tempOut = screen.querySelector<HTMLElement>('[data-cold-temp]')!;
+    const hand = screen.querySelector<HTMLElement>('[data-cold-hand]')!;
+    const line = screen.querySelector<HTMLElement>('[data-cold-line]')!;
+
+    const span = copy.warm - copy.coldest;
+    let shownHand = hand.textContent;
+    let shownLine = line.textContent;
+
+    dial.addEventListener('input', () => {
+      const t = Number(dial.value);
+      screen.style.setProperty('--chill', ((copy.warm - t) / span).toFixed(3));
+      tempOut.textContent = `${t}°`;
+
+      // Only touch the DOM when the wording actually changes — this fires on
+      // every pixel of a drag.
+      const nextHand = stepFor(copy.hands, t);
+      if (nextHand !== shownHand) {
+        shownHand = nextHand;
+        hand.textContent = nextHand;
+      }
+
+      const nextLine = stepFor(copy.lines, t);
+      if (nextLine !== shownLine) {
+        shownLine = nextLine;
+        line.textContent = nextLine;
+      }
+    });
+
+    // A drag on the dial is not a drag on the tape.
+    dial.addEventListener('pointerdown', (event) => event.stopPropagation());
+  }
+</script>

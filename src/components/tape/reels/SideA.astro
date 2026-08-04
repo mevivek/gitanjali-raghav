@@ -1,0 +1,324 @@
+---
+import { look, reelCount, sideA } from '../../../data/tape';
+
+interface Props {
+  index: number;
+}
+
+const { index } = Astro.props;
+
+const osdHidden = look.osd ? undefined : true;
+
+const vars = [`--accent: ${sideA.accent}`].join('; ');
+---
+
+<section
+  class="screen screen--reel screen--sidea screen--flat"
+  id={`screen-${index}`}
+  data-screen
+  data-active="false"
+  data-sidea
+  data-copy={JSON.stringify(sideA.lines)}
+  style={vars}
+  aria-label={`Reel ${sideA.num} of ${reelCount} — ${sideA.label}`}
+>
+  <div class="reel__osd" aria-hidden={osdHidden}>
+    <span>reel {sideA.num} / {String(reelCount).padStart(2, '0')}</span>
+    <span class="reel__osd-tc">{sideA.tc}</span>
+  </div>
+
+  <h2 class="heading">{sideA.title}</h2>
+
+  {/* The paper inlay card, stuck in slightly crooked like the cassette label. */}
+  <div class="inlay">
+    <div class="inlay__head">
+      <span class="inlay__title">{sideA.inlayTitle}</span>
+      <span class="inlay__len">{sideA.inlayLength}</span>
+    </div>
+
+    <ol class="tracks">
+      {
+        sideA.tracks.map((track, i) =>
+          track.line ? (
+            <li class="track">
+              {/*
+                A real button, so the list is walkable by keyboard and each
+                line's pressed state is announced. Hidden without script,
+                since it would do nothing — the lines still read as a list.
+              */}
+              <button
+                class="track__play"
+                type="button"
+                aria-pressed="false"
+                data-sidea-play={i}
+                data-nodrag
+              >
+                <span class="track__n">{track.n}</span>
+                <span class="track__line">{track.line}</span>
+                <span class="track__note">{track.note}</span>
+                <span class="vu" aria-hidden="true">
+                  <i></i><i></i><i></i>
+                </span>
+              </button>
+
+              <span class="track__static" aria-hidden="true">
+                <span class="track__n">{track.n}</span>
+                <span class="track__line">{track.line}</span>
+              </span>
+            </li>
+          ) : (
+            /*
+              A blank ruled line. Deliberate, not missing content — an inlay
+              card always has more lines than anyone fills in, and the empty
+              ones are what make it read as a real one. Not focusable, and
+              hidden from screen readers, which have nothing to gain from
+              being told about a rule.
+            */
+            <li class="track track--blank" aria-hidden="true">
+              <span class="track__n">{track.n}</span>
+              <span class="track__rule" />
+            </li>
+          ),
+        )
+      }
+    </ol>
+  </div>
+
+  <p class="reel__line" data-sidea-line>{sideA.lines.idle}</p>
+</section>
+
+<style>
+  .screen--sidea {
+    justify-content: safe center;
+    overflow-y: auto;
+    background: radial-gradient(120% 90% at 50% 0%, #2b1c33 0%, #150c1c 52%, #08040d 100%);
+  }
+
+  .heading {
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-size: var(--step-int);
+    font-weight: 400;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--tape-gold);
+    text-shadow:
+      3px 0 0 var(--tape-black),
+      -3px 0 0 rgb(255 46 136 / 60%);
+  }
+
+  .inlay {
+    flex: 0 0 auto;
+    padding: 12px 12px 10px;
+    border-radius: 4px;
+    background: linear-gradient(var(--tape-label), #e9d8b4);
+    box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
+    transform: rotate(-0.5deg);
+  }
+
+  .inlay__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 7px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgb(35 20 44 / 25%);
+  }
+
+  .inlay__title {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--tape-label-ink);
+  }
+
+  .inlay__len {
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--tape-label-mute);
+    white-space: nowrap;
+  }
+
+  .tracks {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .track {
+    border-bottom: 1px dashed rgb(35 20 44 / 22%);
+  }
+
+  .track__n {
+    flex: 0 0 auto;
+    font-family: var(--font-osd);
+    font-size: var(--osd-md);
+    letter-spacing: 0.1em;
+    color: var(--tape-label-mute);
+  }
+
+  .track__line {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: var(--font-hand);
+    font-weight: 600;
+    font-size: 21px;
+    line-height: 1.1;
+    color: var(--tape-label-ink);
+    text-align: left;
+  }
+
+  /* Where the caption came from. Only worth the room once it is playing. */
+  .track__note {
+    flex: 0 0 auto;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--tape-label-mute);
+    transition: max-width 0.35s ease;
+  }
+
+  .track__play[aria-pressed='true'] .track__note {
+    max-width: 12ch;
+  }
+
+  .track__play {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 2px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .track__play[aria-pressed='true'] .track__line {
+    color: #c2452c;
+  }
+
+  .track__play:hover .track__line {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+  }
+
+  .track__play:focus-visible {
+    outline: 2px solid #c2452c;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /*
+   * Without script the buttons come out and this plain copy stands in, so the
+   * lyrics still read as a track list rather than as dead controls.
+   */
+  .track__play {
+    display: none;
+  }
+
+  .track__static {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 2px;
+  }
+
+  :global(html.js) .track__play {
+    display: flex;
+  }
+
+  :global(html.js) .track__static {
+    display: none;
+  }
+
+  .track--blank {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 2px;
+  }
+
+  .track__rule {
+    flex: 1 1 auto;
+    border-bottom: 1px solid rgb(35 20 44 / 30%);
+  }
+
+  /* ------------------------------------------------------------ vu meter */
+
+  .vu {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 15px;
+    /* Holds the row height steady whether or not a track is playing. */
+    visibility: hidden;
+  }
+
+  .track__play[aria-pressed='true'] .vu {
+    visibility: visible;
+  }
+
+  .vu i {
+    width: 3px;
+    height: 100%;
+    background-color: #c2452c;
+    transform-origin: bottom;
+    /* Something to see under reduced motion, where they do not twitch. */
+    transform: scaleY(0.55);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .vu i {
+      transform: none;
+      animation: tape-vu 0.7s ease-in-out infinite;
+    }
+
+    .vu i:nth-child(2) {
+      animation-duration: 0.55s;
+    }
+
+    .vu i:nth-child(3) {
+      animation-duration: 0.9s;
+    }
+  }
+</style>
+
+<script>
+  const screen = document.querySelector<HTMLElement>('[data-sidea]');
+
+  if (screen) {
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as { idle: string; playing: string };
+    const line = screen.querySelector<HTMLElement>('[data-sidea-line]')!;
+    const buttons = [...screen.querySelectorAll<HTMLButtonElement>('[data-sidea-play]')];
+
+    let playing = -1;
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const i = Number(button.dataset.sideaPlay);
+
+        // Pressing the playing track stops it, so there is a way back to
+        // silence without hunting for another control.
+        playing = playing === i ? -1 : i;
+
+        buttons.forEach((other) =>
+          other.setAttribute(
+            'aria-pressed',
+            String(Number(other.dataset.sideaPlay) === playing),
+          ),
+        );
+
+        line.textContent = playing >= 0 ? copy.playing : copy.idle;
+      });
+    });
+  }
+</script>

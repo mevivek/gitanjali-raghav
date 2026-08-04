@@ -1,5 +1,5 @@
 ---
-import { screenCount, timecode } from '../../data/tape';
+import { screenCount, sound, timecode } from '../../data/tape';
 
 /*
  * Everything that floats over the tape rather than travelling with it: the
@@ -45,6 +45,37 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   <button class="key" type="button" data-tape-next aria-label="Next reel">
     <span class="key__glyph key__glyph--narrow" aria-hidden="true">&#9660;</span>
     <span class="key__glyph key__glyph--wide" aria-hidden="true">&#9654;&#9654;</span>
+  </button>
+
+  {/*
+    The tape's own noise — head hiss, transport hum, a capstan wobble —
+    synthesised in the browser rather than served as a file. Nothing is
+    committed and nothing needs licensing, which is the point: the soundtrack
+    this tape claims is commercial Hindi film music, which cannot go on a
+    public page. What a cassette sounds like can.
+
+    Silent until pressed. Browsers block autoplay anyway, and WCAG 1.4.2 wants
+    a control for anything over three seconds — so the control *is* the only
+    way it ever starts, and the choice is remembered.
+  */}
+  <button
+    class="key key--sound"
+    type="button"
+    aria-pressed="false"
+    aria-label={sound.toggleLabel}
+    title={sound.toggleLabel}
+    data-tape-sound
+    data-sound={JSON.stringify(sound)}
+  >
+    {/*
+      A music note rather than a speaker emoji: an emoji renders in full colour
+      from the system font and breaks the row of monochrome transport glyphs
+      beside it. The state is carried by the button's lit/unlit face for sighted
+      users and by the text below for everyone else, so the glyph itself does
+      not need to change.
+    */}
+    <span class="key__glyph" aria-hidden="true">&#9834;</span>
+    <span class="sr-only" data-tape-sound-state>{sound.offLabel}</span>
   </button>
 </div>
 
@@ -171,6 +202,28 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     color: var(--tape-pink);
   }
 
+  .key--sound:hover {
+    border-color: var(--tape-gold);
+    color: var(--tape-gold);
+  }
+
+  /* Lit while it is making noise, so the source of the sound is obvious. */
+  .key--sound[aria-pressed='true'] {
+    border-color: var(--tape-gold);
+    background-color: rgb(255 197 61 / 18%);
+    color: var(--tape-gold);
+  }
+
+  /*
+   * Turned on last visit, but not yet this one — nothing may make noise before
+   * a gesture. A dim outline says "this is where it was" without pretending it
+   * is playing.
+   */
+  .key--sound.key--armed:not([aria-pressed='true']) {
+    border-color: rgb(255 197 61 / 45%);
+    color: rgb(255 197 61 / 70%);
+  }
+
   .key__glyph--wide {
     display: none;
   }
@@ -204,3 +257,143 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     }
   }
 </style>
+
+<script>
+  /*
+   * Levels arrive on a data attribute rather than by importing src/data/tape.ts.
+   * That module imports fifteen photographs, and pulling it into the client
+   * bundle's graph makes the build emit all fifteen originals as assets — 2.6MB
+   * of files nothing references — even though Vite tree-shakes the bindings
+   * back out of the JS.
+   */
+  const button = document.querySelector<HTMLButtonElement>('[data-tape-sound]');
+
+  if (button) {
+    const sound = JSON.parse(button.dataset.sound ?? '{}') as {
+      onLabel: string;
+      offLabel: string;
+      gain: number;
+      hissHz: number;
+      humHz: number;
+      humGain: number;
+      wobbleHz: number;
+      wobbleDepth: number;
+    };
+    const state = button.querySelector<HTMLElement>('[data-tape-sound-state]')!;
+    const KEY = 'tape-sound';
+
+    let ctx: AudioContext | null = null;
+    let master: GainNode | null = null;
+    let on = false;
+
+    /**
+     * Built on first press, never before: constructing an AudioContext outside
+     * a user gesture leaves it suspended and logs an autoplay warning, and
+     * building one at all costs an audio thread nobody asked for.
+     *
+     * Three voices, which is what a cassette deck actually gives you:
+     *   hiss   — white noise through a low-pass, the tape head
+     *   hum    — a 50Hz sine, the transport motor (these ran off mains)
+     *   wobble — a slow LFO on the master gain, the capstan not quite true
+     */
+    function build() {
+      const context = new (window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+
+      const out = context.createGain();
+      out.gain.value = 0;
+      out.connect(context.destination);
+
+      // Two seconds of noise, looped. Long enough that the loop is inaudible.
+      const frames = context.sampleRate * 2;
+      const buffer = context.createBuffer(1, frames, context.sampleRate);
+      const channel = buffer.getChannelData(0);
+      for (let i = 0; i < frames; i += 1) channel[i] = Math.random() * 2 - 1;
+
+      const hiss = context.createBufferSource();
+      hiss.buffer = buffer;
+      hiss.loop = true;
+
+      const shelf = context.createBiquadFilter();
+      shelf.type = 'lowpass';
+      shelf.frequency.value = sound.hissHz;
+
+      hiss.connect(shelf).connect(out);
+
+      const hum = context.createOscillator();
+      hum.type = 'sine';
+      hum.frequency.value = sound.humHz;
+
+      const humLevel = context.createGain();
+      humLevel.gain.value = sound.humGain;
+      hum.connect(humLevel).connect(out);
+
+      const wobble = context.createOscillator();
+      wobble.type = 'sine';
+      wobble.frequency.value = sound.wobbleHz;
+
+      const wobbleDepth = context.createGain();
+      wobbleDepth.gain.value = sound.gain * sound.wobbleDepth;
+      wobble.connect(wobbleDepth).connect(out.gain);
+
+      hiss.start();
+      hum.start();
+      wobble.start();
+
+      ctx = context;
+      master = out;
+    }
+
+    /** Ramped rather than switched — a hard gate on noise clicks audibly. */
+    function level(to: number) {
+      if (!ctx || !master) return;
+      const now = ctx.currentTime;
+      master.gain.cancelScheduledValues(now);
+      master.gain.setValueAtTime(master.gain.value, now);
+      master.gain.linearRampToValueAtTime(to, now + 0.4);
+    }
+
+    async function set(next: boolean) {
+      on = next;
+      button!.setAttribute('aria-pressed', String(on));
+      state.textContent = on ? sound.onLabel : sound.offLabel;
+
+      try {
+        localStorage.setItem(KEY, on ? 'on' : 'off');
+      } catch {
+        /* private mode — the choice just will not persist */
+      }
+
+      if (!on) {
+        level(0);
+        return;
+      }
+
+      if (!ctx) build();
+      // Safari hands back a suspended context even inside a gesture.
+      if (ctx && ctx.state === 'suspended') await ctx.resume();
+      level(sound.gain);
+    }
+
+    button.addEventListener('click', () => set(!on));
+
+    /*
+     * A remembered "on" is deliberately *not* restored here. It cannot be —
+     * there is no gesture yet, so the context would be blocked — and it should
+     * not be: arriving at a page that starts making noise is exactly what the
+     * autoplay rules exist to prevent. What the stored value does is let the
+     * button show the right face, so someone who turned it on last time is one
+     * press from it rather than hunting.
+     *
+     * Reduced motion is treated as a request for less sensory load generally,
+     * so the invitation is not even shown in that case.
+     */
+    try {
+      const stored = localStorage.getItem(KEY);
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (stored === 'on' && !reduce) button.classList.add('key--armed');
+    } catch {
+      /* nothing to restore */
+    }
+  }
+</script>
