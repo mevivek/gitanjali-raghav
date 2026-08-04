@@ -75,6 +75,13 @@
 
   /* layout — phone */
   --panel-w: 100%;
+  /*
+   * `--pad-x` repeats the horizontal value from the shorthands below. It is
+   * needed on its own because a notched phone in landscape puts a rounded
+   * corner over the content, and the fix is `max(--pad-x, safe-area-inset)` —
+   * which cannot read a value out of a shorthand.
+   */
+  --pad-x: 20px;
   --pad-screen: 28px 20px 84px;
   --pad-title: 30px 24px 88px;
   --pad-bar: 11px 15px;
@@ -105,6 +112,7 @@
     --step-role: 28px;
 
     --panel-w: min(62vw, 720px);
+    --pad-x: 36px;
     --pad-screen: 44px 36px 88px;
     --pad-title: 44px 44px 88px;
     --pad-bar: 15px 36px;
@@ -129,6 +137,7 @@
     --step-body: 16px;
     --step-role: 20px;
 
+    --pad-x: 18px;
     --pad-screen: 22px 18px 74px;
     --pad-title: 20px 20px 74px;
     --gap-title: 10px;

@@ -98,6 +98,28 @@ Both land on `<html>` as data attributes and become four numbers in
   transport buttons and drag-to-scrub on a wide screen. With JavaScript off,
   all nine screens are still reachable by swipe, wheel, arrow key and the
   play / resume / rewind links, which are real anchors.
+- **On a phone the *document* is that scroll container, deliberately.** Safari
+  and Chrome only collapse their own toolbars when the page scrolls. The tape
+  was a fixed `100dvh` box with the strip scrolling inside it, so the document
+  never moved and both browsers kept full-size chrome permanently — the tape sat
+  in a letterbox between them. Handing the scrolling to the document is what
+  lets them get out of the way, and it reclaims roughly 60–110px with nothing to
+  install. Above 900px it reverts to a fixed viewport with the strip scrolling
+  sideways inside it, because there the tape is dragged and there is no chrome
+  to reclaim.
+
+  Two things follow from that and must not be undone. The chrome and the wear
+  overlays are `position: fixed`, not absolute — on a phone the tape is nine
+  screens tall, so absolute would pin them to the top of the strip and scroll
+  them away with the first reel. And `html, body` use `min-height`, not
+  `height`: `height: 100%` would cap the document at one screen and the snapping
+  would have nothing to scroll.
+- **`viewport-fit=cover`, with `env(safe-area-inset-*)` behind it.** The page
+  paints to the physical edges — behind the notch, under the rounded corners —
+  and the padding on the screens, the progress bar, the transport and the rail
+  each take `max(design value, inset)` so nothing readable or pressable ends up
+  under that furniture. On a flat screen every inset is 0 and the `max()` falls
+  back to exactly the design's own numbers.
 - **Motion is additive, with one deliberate exception.** Every animation
   decorates a layout that is already complete, so the reduced-motion
   kill-switch in `global.css` can disable them all. The exception is the end
