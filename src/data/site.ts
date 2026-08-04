@@ -41,9 +41,14 @@ export const site = {
   description:
     'TODO: 1–2 sentences for search results and link previews. Her LinkedIn summary opens "As a Quality Associate at Highspring, contributed to global policy compliance by…" — get the full sentence from her and use it.',
 
-  /** Current role, shown in the hero. Both confirmed from LinkedIn. */
-  role: 'Quality Associate',
-  organisation: 'Highspring',
+  /**
+   * Current role, shown in the hero.
+   *
+   * Her LinkedIn still lists Highspring — it predates this move and has not
+   * been updated. Genpact, from 22 May 2026, is current.
+   */
+  role: 'Accounts Receivable, Order to Cash',
+  organisation: 'Genpact',
   location: 'Delhi, India',
 
   /**

@@ -83,9 +83,12 @@ const socials = site.socials.filter((s) => !s.href.startsWith('TODO'));
   }
 
   .contact__socials a {
+    display: inline-block;
     color: var(--ink);
     font-weight: 600;
     text-underline-offset: 0.2em;
+    /* Padded to a comfortable tap target rather than bare 20px text. */
+    padding-block: 0.6rem;
   }
 
   .contact__note {

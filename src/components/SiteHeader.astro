@@ -52,6 +52,9 @@ const initials = site.name
   }
 
   .monogram {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
     font-family: var(--font-display);
     font-weight: 700;
     font-size: var(--step-1);
@@ -72,9 +75,11 @@ const initials = site.name
   }
 
   .nav a {
+    display: inline-block;
     color: var(--ink-muted);
     text-decoration: none;
-    padding-block: 0.25rem;
+    /* Roomier than it looks — these are tap targets on tablets. */
+    padding-block: 0.55rem;
     border-bottom: 2px solid transparent;
   }
 
@@ -95,8 +100,9 @@ const initials = site.name
   .theme-toggle {
     display: grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    /* 44px — the minimum comfortable touch target. */
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 999px;
     border: 1px solid var(--rule);
     background-color: var(--paper-raised);

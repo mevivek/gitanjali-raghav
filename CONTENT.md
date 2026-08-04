@@ -55,12 +55,19 @@ with, what changed because she was there. Numbers if there are any.
 
 | File | Lane | Status |
 |---|---|---|
-| `2020-vaco-binary.md` | career | Needs title, dates, description |
-| `2023-genpact.md` | career | Needs title, dates, description |
+| `2015-mjpru.md` | career | Dates confirmed; needs the degree subject |
+| `2022-highspring.md` | career | Title confirmed; needs start year and description |
+| `2026-genpact.md` | career | Start date confirmed; needs description |
 | `2024-by-the-sea.md` | life | Draft — inferred from Instagram, confirm |
 | `2026-making-things.md` | life | Draft — inferred from Instagram, confirm |
 
 To add a year, add a file. Nothing else needs changing.
+
+> **Note on employers.** Highspring and Vaco Binary Semantics are the same
+> company: Vaco Holdings rebranded on 31 March 2025 and Vaco Binary Semantics
+> became Highspring India. Both names will appear on her CV, so the entry
+> carries both. Genpact, from 22 May 2026, is the current role — her LinkedIn
+> has not caught up with the move yet.
 
 ## 3. Life cards — `src/content/life/*.md`
 
@@ -109,10 +116,12 @@ This is the whole list. Nothing here can be looked up — it has to come from he
 - [ ] Whether `she/her` is right
 
 **Career**
-- [ ] Genpact: title, start date, and two or three things she's genuinely proud of
-- [ ] Vaco Binary Semantics: title, dates, what she did
-- [ ] Anything before Vaco Binary
-- [ ] Education — degrees, institutions, years
+- [ ] Genpact: her formal job title, and what she owns within Order to Cash
+- [ ] Highspring / Vaco Binary Semantics: the year she joined, and what she did
+- [ ] Anything before that
+- [ ] What she studied at MJPRU — LinkedIn lists the university, not the subject
+- [ ] The two earlier education entries (2013–2015, 2012–2013) — LinkedIn
+      returned these with the institution names blank
 - [ ] Certifications, awards, recognitions
 - [ ] Skills, tools, languages spoken
 
