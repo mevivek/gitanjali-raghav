@@ -6,14 +6,22 @@
  * pulled all four from Google Fonts; these are the same faces, served from
  * our own origin.
  *
- * Latin subsets only. Rozha One also ships Devanagari and Caveat ships
- * Cyrillic; nothing on the tape uses either, and loading them would double
- * the font weight for glyphs that never render. The Hindi on the tape — the six
- * song titles on reel 07 and the tracks named on reel 06 — is transliterated
- * into Latin script, which is how she writes it.
+ * Latin subsets only. Rozha One and Tiro Devanagari Hindi both also ship
+ * Devanagari, and Caveat ships Cyrillic; nothing on the tape uses either, and
+ * loading them would multiply the font weight for glyphs that never render. The
+ * Hindi on the tape — the six song titles on reel 07 and the tracks named on
+ * reel 06 — is transliterated into Latin script, which is how she writes it.
+ *
+ * Tiro Devanagari Hindi is the body serif, added by the third handoff, and it is
+ * worth saying plainly that it is here for its *Latin* — which is a proper
+ * old-style text serif, drawn to sit beside the Devanagari rather than as an
+ * afterthought. That is exactly what a paragraph on this tape wants, and the
+ * name is a coincidence of the family rather than a reason. Same OFL-1.1 licence
+ * as the other four faces.
  */
 @import '@fontsource/anton/latin-400.css';
 @import '@fontsource/rozha-one/latin-400.css';
+@import '@fontsource/tiro-devanagari-hindi/latin-400.css';
 @import '@fontsource/vt323/latin-400.css';
 
 /*
@@ -338,6 +346,33 @@ a:hover {
   to {
     transform: scale(1) rotate(4deg);
     opacity: 0.88;
+  }
+}
+
+/*
+ * And the big one: the verdict slammed across the whole certificate once every
+ * condition has been examined.
+ *
+ * It needs its own keyframes rather than reusing the pass stamp above, because it
+ * is centred with `translate(-50%, -50%)` — and a `transform` keyframe replaces
+ * the whole property, so borrowing one that only sets scale and rotate would drop
+ * the centring and fling the stamp off the corner of the card. It also settles at
+ * full opacity, where the small stamps sit at 0.88: this one carries its own
+ * translucent paper behind the type, so it does not need thinning as well.
+ */
+@keyframes tape-stamp-over {
+  from {
+    transform: translate(-50%, -50%) scale(2.3) rotate(-16deg);
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1) rotate(-9deg);
+    opacity: 1;
   }
 }
 

@@ -10,6 +10,47 @@ const { index } = Astro.props;
 const osdHidden = look.osd ? undefined : true;
 
 const vars = [`--accent: ${sideA.accent}`].join('; ');
+
+/** m:ss, as an inlay card writes a running time. */
+const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+const recorded = sideA.tracks.reduce((total, track) => total + track.sec, 0);
+
+/*
+ * Where each track sits along the side, as a percentage of the whole side — not
+ * of the six tracks. That is the difference between a card that claims 45 minutes
+ * and has 45 minutes on it and one with a blank tail, and the blank tail is the
+ * truth here: the six songs come to 25:42 of a 45:00 side. See the note on
+ * `sideSeconds` in src/data/tape.ts.
+ */
+const fill = (template: string, values: Record<string, string>) =>
+  template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? '');
+
+const sideLength = mmss(sideA.sideSeconds);
+const readoutIdle = fill(sideA.readoutIdle, { recorded: mmss(recorded) });
+
+let running = 0;
+const segments = sideA.tracks.map((track) => {
+  const at = running;
+  running += track.sec;
+  return {
+    n: track.n,
+    line: track.line,
+    dur: mmss(track.sec),
+    /** Percentages, so the strip needs no measuring at runtime. */
+    width: `${((track.sec / sideA.sideSeconds) * 100).toFixed(2)}%`,
+    head: `${((at / sideA.sideSeconds) * 100).toFixed(2)}%`,
+    /* The readout wants the position as a timecode, not as a percentage. */
+    readout: fill(sideA.readoutPlaying, { at: mmss(at), side: sideLength }),
+  };
+});
+
+/** Handed to the script so nothing has to be recomputed on a tap. */
+const payload = segments.map((segment) => ({
+  head: segment.head,
+  note: segment.line,
+  readout: segment.readout,
+}));
 ---
 
 <section
@@ -18,7 +59,13 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
   data-screen
   data-active="false"
   data-sidea
-  data-copy={JSON.stringify(sideA.lines)}
+  data-copy={JSON.stringify({
+    lines: sideA.lines,
+    hands: sideA.hands,
+    stripIdle: sideA.stripIdle,
+    readoutIdle,
+    tracks: payload,
+  })}
   style={vars}
   aria-label={`Reel ${sideA.num} of ${reelCount} — ${sideA.label}`}
 >
@@ -27,112 +74,306 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
     <span class="reel__osd-tc">{sideA.tc}</span>
   </div>
 
-  <h2 class="heading">{sideA.title}</h2>
-
-  {/* The paper inlay card, stuck in slightly crooked like the cassette label. */}
-  <div class="inlay">
-    <div class="inlay__head">
-      <span class="inlay__title">{sideA.inlayTitle}</span>
-      <span class="inlay__len">{sideA.inlayLength}</span>
+  {/*
+    The paper inlay card, stuck in slightly crooked. The third handoff turned
+    what was a plain list on a card into the actual object: a printed spine along
+    the top, the side's name and its noise-reduction code, a position strip
+    showing where each song sits along the tape, and running times down the right.
+  */}
+  <div class="inlay" data-nodrag>
+    <div class="spine">
+      <span class="spine__title">{sideA.inlaySpine}</span>
+      <span class="spine__side">{sideA.inlaySide}</span>
     </div>
 
-    {/*
-      Six lines, all filled in. The card used to carry three lyrics and three
-      deliberately blank rules; it now names the songs instead, so there is
-      nothing left to leave empty — and nothing quoted that belongs to
-      somebody else. See the note on `sideA` in src/data/tape.ts.
-    */}
-    <ol class="tracks">
-      {
-        sideA.tracks.map((track, i) => (
-          <li class="track">
-            {/*
-              A real button, so the list is walkable by keyboard and each
-              line's pressed state is announced. Hidden without script,
-              since it would do nothing — the lines still read as a list.
-            */}
-            <button
-              class="track__play"
-              type="button"
-              aria-pressed="false"
-              data-sidea-play={i}
-              data-nodrag
-            >
-              <span class="track__n">{track.n}</span>
-              <span class="track__line">{track.line}</span>
-              <span class="vu" aria-hidden="true">
-                <i /><i /><i />
-              </span>
-            </button>
+    <div class="inlay__body">
+      <div class="inlay__head">
+        <span class="inlay__names">
+          <span class="inlay__title">{sideA.title}</span>
+          <span class="inlay__note">{sideA.inlayNote}</span>
+        </span>
 
-            <span class="track__static" aria-hidden="true">
-              <span class="track__n">{track.n}</span>
-              <span class="track__line">{track.line}</span>
-            </span>
-          </li>
-        ))
-      }
-    </ol>
+        <span class="inlay__meta">
+          <span class="inlay__code">{sideA.inlayCode}</span>
+          <span class="inlay__readout" data-sidea-readout>{readoutIdle}</span>
+        </span>
+      </div>
+
+      {/*
+        The position strip. Deliberately decoration rather than a second set of
+        controls: the rows below already play a track, and putting the same six
+        actions on the strip too would double the tab stops without adding
+        anything a keyboard user could not already reach. So it is aria-hidden and
+        the rows are the control.
+
+        The segments are sized against the whole 45-minute side, which is why they
+        stop about four fifths of the way along — the rest of the side is blank,
+        and her hand at the foot of the card says so.
+      */}
+      <div class="strip-block" aria-hidden="true">
+        <div class="strip">
+          {segments.map((segment) => <span class="seg" style={`width: ${segment.width}`}>{segment.n}</span>)}
+          <span class="strip__head" data-sidea-head></span>
+        </div>
+
+        <p class="strip__scale">
+          <span>0:00</span>
+          <span class="strip__note" data-sidea-note>{sideA.stripIdle}</span>
+          <span>{sideLength}</span>
+        </p>
+      </div>
+
+      <ol class="tracks">
+        {
+          segments.map((segment, i) => (
+            <li class="track">
+              {/*
+                A real button, so the list is walkable by keyboard and each
+                line's pressed state is announced. Hidden without script,
+                since it would do nothing — the lines still read as a list.
+              */}
+              <button
+                class="track__play"
+                type="button"
+                aria-pressed="false"
+                data-sidea-play={i}
+                data-nodrag
+              >
+                <span class="track__n">{segment.n}</span>
+                <span class="track__line">{segment.line}</span>
+                <span class="vu" aria-hidden="true">
+                  <i /><i /><i />
+                </span>
+                <span class="track__dur">{segment.dur}</span>
+              </button>
+
+              <span class="track__static" aria-hidden="true">
+                <span class="track__n">{segment.n}</span>
+                <span class="track__line">{segment.line}</span>
+                <span class="track__dur">{segment.dur}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <p class="inlay__hand" data-sidea-hand>{sideA.hands.idle}</p>
+    </div>
   </div>
 
+  {/*
+    Kept, though the bundle dropped it. This is the sentence that says the six
+    titles were her captions, which is the whole reason the card can name the
+    songs without quoting a word of them — see the note on `sideA` in
+    src/data/tape.ts. It is not decoration.
+  */}
   <p class="reel__line" data-sidea-line>{sideA.lines.idle}</p>
 </section>
 
 <style>
   .screen--sidea {
     justify-content: safe center;
-    overflow-y: auto;
+    /* See the long note on .screen--interval in tape.css: the internal scroll
+       only exists on a short window, because a nested scroller with nothing to
+       scroll can still swallow a swipe on iOS. */
+    overflow: clip;
     background: radial-gradient(120% 90% at 50% 0%, #2b1c33 0%, #150c1c 52%, #08040d 100%);
-  }
-
-  .heading {
-    flex: 0 0 auto;
-    font-family: var(--font-display);
-    font-size: var(--step-int);
-    font-weight: 400;
-    line-height: 0.8;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
-    color: var(--tape-gold);
-    text-shadow:
-      3px 0 0 var(--tape-black),
-      -3px 0 0 rgb(255 46 136 / 60%);
   }
 
   .inlay {
     flex: 0 0 auto;
-    padding: 12px 12px 10px;
-    border-radius: 4px;
-    background: linear-gradient(var(--tape-label), var(--tape-label-deep));
-    box-shadow: 0 14px 34px rgb(0 0 0 / 55%);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 18px 44px rgb(0 0 0 / 60%);
     transform: rotate(-0.5deg);
+  }
+
+  /* ---------------------------------------------------------------- spine */
+
+  /*
+   * The strip printed along the folded edge of a real inlay card, which is the
+   * only part of it you can read with the cassette in the case.
+   */
+  .spine {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5px 11px;
+    background: linear-gradient(#e6d3ac, #dcc79c);
+    border-bottom: 1px dashed rgb(35 20 44 / 40%);
+    font-family: var(--font-osd);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .spine__title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #6d5a3d;
+  }
+
+  .spine__side {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: var(--tape-label-mute);
+  }
+
+  /* ----------------------------------------------------------- the card */
+
+  .inlay__body {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    padding: 14px 14px 13px;
+    background: linear-gradient(#f6ead3, #ecdcbb);
   }
 
   .inlay__head {
     display: flex;
-    align-items: baseline;
+    align-items: flex-end;
     justify-content: space-between;
-    gap: 10px;
-    padding-bottom: 7px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid rgb(35 20 44 / 25%);
+    gap: 12px;
+  }
+
+  .inlay__names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .inlay__title {
-    font-family: var(--font-hand);
-    font-weight: 700;
-    font-size: 22px;
-    line-height: 1;
+    font-family: var(--font-display);
+    font-size: 38px;
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
     color: var(--tape-label-ink);
   }
 
-  .inlay__len {
+  .inlay__note {
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--tape-label-mute);
+  }
+
+  .inlay__meta {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-family: var(--font-osd);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: right;
+    color: var(--tape-label-mute);
+  }
+
+  .inlay__code {
+    padding: 1px 5px;
+    border: 1px solid rgb(35 20 44 / 45%);
+    border-radius: 2px;
+    white-space: nowrap;
+    color: var(--tape-label-ink);
+  }
+
+  .inlay__readout {
+    white-space: nowrap;
+  }
+
+  /* ------------------------------------------------------------- the strip */
+
+  .strip-block {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .strip {
+    position: relative;
+    height: 24px;
+    display: flex;
+    border: 1px solid rgb(35 20 44 / 50%);
+    border-radius: 2px;
+    overflow: hidden;
+    /*
+     * The unrecorded tail of the side shows through as bare tape — hatched since
+     * the fourth handoff, which reads as unexposed stock rather than as a flat
+     * panel somebody forgot to fill in.
+     */
+    background: repeating-linear-gradient(135deg, #cdbb95 0 5px, #d8c8a4 5px 10px);
+  }
+
+  .seg {
+    flex: 0 0 auto;
+    min-width: 0;
+    display: grid;
+    place-items: center;
+    height: 100%;
+    border-right: 1px solid rgb(35 20 44 / 30%);
+    background-color: rgb(246 234 211 / 65%);
     font-family: var(--font-osd);
     font-size: 12px;
     letter-spacing: 0.1em;
     color: var(--tape-label-mute);
-    white-space: nowrap;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
   }
+
+  .seg[data-playing='true'] {
+    background-color: var(--tape-stamp-fail);
+    color: #f6ead3;
+  }
+
+  .strip__head {
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    left: 0;
+    width: 2px;
+    background-color: var(--tape-stamp-fail);
+    box-shadow: 0 0 6px rgb(194 69 44 / 80%);
+    /* Parked at the head of the side and faint until a track is playing. */
+    opacity: 0.25;
+    transition:
+      left 0.3s ease,
+      opacity 0.3s ease;
+  }
+
+  .strip__scale {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-family: var(--font-osd);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a08a6a;
+  }
+
+  .strip__note {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--tape-label-mute);
+  }
+
+  /* ------------------------------------------------------------- the rows */
 
   .tracks {
     margin: 0;
@@ -141,41 +382,55 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
   }
 
   .track {
-    border-bottom: 1px dashed rgb(35 20 44 / 22%);
+    border-bottom: 1px dotted rgb(35 20 44 / 28%);
   }
 
   .track__n {
     flex: 0 0 auto;
-    font-family: var(--font-osd);
-    font-size: var(--osd-md);
-    letter-spacing: 0.1em;
+    width: 17px;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1;
     color: var(--tape-label-mute);
   }
 
   .track__line {
     flex: 1 1 auto;
     min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     font-family: var(--font-hand);
     font-weight: 600;
     font-size: 21px;
-    line-height: 1.1;
+    line-height: 1.12;
     color: var(--tape-label-ink);
     text-align: left;
+  }
+
+  .track__dur {
+    flex: 0 0 auto;
+    font-family: var(--font-osd);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--tape-label-mute);
   }
 
   .track__play {
     display: flex;
     width: 100%;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 2px;
+    align-items: baseline;
+    gap: 9px;
+    padding: 7px 1px;
     border: 0;
     background: transparent;
     cursor: pointer;
   }
 
-  .track__play[aria-pressed='true'] .track__line {
-    color: #c2452c;
+  .track__play[aria-pressed='true'] .track__line,
+  .track__play[aria-pressed='true'] .track__dur {
+    color: var(--tape-stamp-fail);
   }
 
   .track__play:hover .track__line {
@@ -184,14 +439,14 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
   }
 
   .track__play:focus-visible {
-    outline: 2px solid #c2452c;
+    outline: 2px solid var(--tape-stamp-fail);
     outline-offset: 2px;
     border-radius: 2px;
   }
 
   /*
    * Without script the buttons come out and this plain copy stands in, so the
-   * lyrics still read as a track list rather than as dead controls.
+   * card still reads as a track list rather than as dead controls.
    */
   .track__play {
     display: none;
@@ -199,9 +454,9 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
 
   .track__static {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 2px;
+    align-items: baseline;
+    gap: 9px;
+    padding: 7px 1px;
   }
 
   :global(html.js) .track__play {
@@ -212,6 +467,16 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
     display: none;
   }
 
+  .inlay__hand {
+    font-family: var(--font-hand);
+    font-weight: 600;
+    font-size: 19px;
+    line-height: 1.16;
+    color: #a0553f;
+    transform: rotate(-0.8deg);
+    transform-origin: left center;
+  }
+
   /* ------------------------------------------------------------ vu meter */
 
   .vu {
@@ -219,7 +484,7 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 15px;
+    height: 13px;
     /* Holds the row height steady whether or not a track is playing. */
     visibility: hidden;
   }
@@ -231,7 +496,7 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
   .vu i {
     width: 3px;
     height: 100%;
-    background-color: #c2452c;
+    background-color: var(--tape-stamp-fail);
     transform-origin: bottom;
     /* Something to see under reduced motion, where they do not twitch. */
     transform: scaleY(0.55);
@@ -251,14 +516,78 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
       animation-duration: 0.9s;
     }
   }
+
+  @media (min-width: 900px) {
+    /* The card is a physical object; it should not grow with the panel. */
+    .inlay {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+  }
+
+  /* Landscape only — see the note on .screen--interval in tape.css. */
+  @media (orientation: landscape) and (max-height: 700px) {
+    .screen--sidea {
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+  }
+
+  @media (max-height: 700px) {
+    .inlay__body {
+      gap: 8px;
+      padding: 11px 12px 10px;
+    }
+
+    .inlay__title {
+      font-size: 30px;
+    }
+
+    .strip {
+      height: 20px;
+    }
+
+    .track__play,
+    .track__static {
+      padding: 5px 1px;
+    }
+
+    .track__line {
+      font-size: 19px;
+    }
+
+    .inlay__hand {
+      font-size: 17px;
+    }
+
+    /* The paragraph is the first thing to go; the card explains itself. */
+    .reel__line {
+      display: none;
+    }
+  }
 </style>
 
 <script>
+  /* Copy via data attribute, not an import — see the note in SaltWater.astro. */
   const screen = document.querySelector<HTMLElement>('[data-sidea]');
 
   if (screen) {
-    const copy = JSON.parse(screen.dataset.copy ?? '{}') as { idle: string; playing: string };
-    const line = screen.querySelector<HTMLElement>('[data-sidea-line]')!;
+    type Row = { head: string; note: string; readout: string };
+
+    const copy = JSON.parse(screen.dataset.copy ?? '{}') as {
+      lines: { idle: string; playing: string };
+      hands: { idle: string; playing: string };
+      stripIdle: string;
+      readoutIdle: string;
+      tracks: Row[];
+    };
+
+    const line = screen.querySelector<HTMLElement>('[data-sidea-line]');
+    const hand = screen.querySelector<HTMLElement>('[data-sidea-hand]')!;
+    const head = screen.querySelector<HTMLElement>('[data-sidea-head]')!;
+    const note = screen.querySelector<HTMLElement>('[data-sidea-note]')!;
+    const readout = screen.querySelector<HTMLElement>('[data-sidea-readout]')!;
+    const segs = [...screen.querySelectorAll<HTMLElement>('.seg')];
     const buttons = [...screen.querySelectorAll<HTMLButtonElement>('[data-sidea-play]')];
 
     let playing = -1;
@@ -272,6 +601,7 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
         // Pressing the playing track stops it, so there is a way back to
         // silence without hunting for another control.
         playing = playing === i ? -1 : i;
+        const row = copy.tracks[playing];
 
         buttons.forEach((other) =>
           other.setAttribute(
@@ -280,7 +610,18 @@ const vars = [`--accent: ${sideA.accent}`].join('; ');
           ),
         );
 
-        line.textContent = playing >= 0 ? copy.playing : copy.idle;
+        segs.forEach((seg, n) => {
+          seg.dataset.playing = String(n === playing);
+        });
+
+        // The playhead parks at the head of the side when nothing is playing.
+        head.style.left = row ? row.head : '0%';
+        head.style.opacity = row ? '1' : '0.25';
+
+        note.textContent = row ? row.note : copy.stripIdle;
+        readout.textContent = row ? row.readout : copy.readoutIdle;
+        hand.textContent = row ? copy.hands.playing : copy.hands.idle;
+        if (line) line.textContent = row ? copy.lines.playing : copy.lines.idle;
       });
     });
   }

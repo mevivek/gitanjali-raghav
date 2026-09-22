@@ -9,40 +9,94 @@ only the things that will bite you.
 
 The tape is live at <https://mevivek.dev/gitanjali-raghav>. **Eleven screens**: a
 title card, seven reels that are each interactive in their own way, an interval
-for the day job, that interval's b-side, and end credits.
+for the day job, that interval's b-side, and end credits. Plus a 404, which is
+the only page that is not part of the strip.
 
-**A second design handoff was applied on 2026-08-04** and is what took it from
-nine screens to eleven. It added reel 06 (Playback — tap on the beat) and the
-interval's b-side (a QA form she runs on herself), renumbered Side A to reel 07,
-rewrote the title card's heading and the interval's rows, replaced the piano with
-interaction blips, and narrowed the wide panel to 560px with sprockets and a
-bezel around it. Three things in that bundle were deliberately **not** taken:
-its `grain: 46` / `osd: true` defaults, its desktop contact sheet (an alternate
-layout the designer built but did not select), and its `B.Sc` against the
-university — see below. Check `git log` before assuming a difference from the
-bundle is an oversight.
+**A third design handoff was applied on 2026-08-04**, the same day as the
+second. It is the largest so far and it changed the look of the tape rather than
+its shape — the screen count did not move. What was taken:
 
-**Three things are waiting on her, and none of them are code.** Do not decide
-any of them on her behalf:
+- **The title card is a film poster.** The drawn cassette is gone — shell,
+  spools, REC dot, paper label, "that's me". In its place a full-bleed crop of
+  `red-and-gold.jpg`, her name in gold script, the headline left-aligned, a
+  billing block, and one gold "play the tape" key.
+- **Reels 01–03 are full bleed**, 04–06 keep their framed panel. That mix is in
+  the bundle and is deliberate — see the long note in `src/styles/tape.css`.
+- **Body copy is a serif** (Tiro Devanagari Hindi, latin subset, for its Latin).
+  The readouts keep VT323, so the machine and the person are now set differently.
+- **Reel 07 is a real inlay card** with a proportional tape-position strip.
+- **The b-side is a censor certificate** — U/A rating, particulars, "conditions
+  of certification", press-the-stamp, and a verdict slammed across it.
+- **The transport grew two spools** that wind between each other as you move.
+  They replaced the eleven-segment progress bar *and* the phone's edge rail,
+  both of which are gone.
+- **Grain is per-screen**: `look.grain` dropped 80 → 14 and a `wear` curve
+  multiplies it, so the head and tail of the tape are scuffed and the middle is
+  clean.
+- **A real photograph for reel 06**, at last. See below.
+- **A 404 page**, in the cold open's untuned blue.
+
+**A fourth handoff followed the same day**, and it is small by comparison. The
+interval became a cinema foyer — a lit marquee with twelve pulsing bulbs over a
+brass-framed "today's programme" board, job titles moved off the serif onto the
+display face, and the screen darkened around them so the two read as lit. The end
+credits' two social buttons became slug lines (*distributed by* / *for
+enquiries*). Side A's spine initialled her name, its blank tail gained a hatch,
+and the certificate's margin notes now fade in rather than switching on. The
+counter's last stop moved 47:55 → **45:00**, because the poster's billing block
+says "running time 45 min" and the counter was the one thing contradicting it.
+
+Three of that bundle's changes were fixes we had already made independently —
+sizing Side A's strip against the whole side, holding the certificate's note
+height so stamping does not shunt the card, and giving the verdict stamp its own
+keyframe so the centring survives. Worth knowing, because it means the bundle and
+this repo are converging rather than fighting.
+
+**It also brought a 15MB `garden.mp4`**, which now plays under the end credits —
+see "The video, and the three things that stop it loading" below.
+
+Seven things in the third bundle were deliberately **not** taken. Check `git log`
+before assuming a difference from a bundle is an oversight:
+
+1. `osd: true` — asked for by all three handoffs, declined all three times.
+2. **The title card's top strip** (`home video` / `e-180 · side a`). It was
+   dropped on purpose in `5cb2778` and the bundle put it back. Still dropped.
+3. **Reel 05 opening at 14°** instead of −4°.
+4. **Single-sheet snow.** Reel 05 runs three depth layers here, on purpose.
+5. **`B.Sc · Rohilkhand University`** — third time asked, still nothing
+   confirms it.
+6. **The desktop contact sheet** and **the desktop "cheeks"** (side deck panels
+   with a spool and lamps). Both are alternates the designer built but did not
+   select — the bundle's own default is `desk: 'strip'`, which is what we have.
+7. Its `role="button"` divs, its pointer-drag temperature dial, and its global
+   Space-is-next keybinding. We keep real buttons, a range input, and arrow keys
+   scoped to the track — Space is reel 02's throttle.
+
+**Two things are waiting on her, and neither is code.** Do not decide either on
+her behalf:
 
 1. **`approved: false` in `src/data/site.ts`** keeps every page `noindex`. It
    flips when she has seen the site and wants to be findable. Hers to say.
 2. **Reel 04's "posted · 10.7k" badge names her follower count.** Nobody has
    asked whether she is happy with that on a public page. One string in
    `src/data/tape.ts`.
-3. **A headshot, and this is now the most visible gap on the site.**
-   `portrait.jpg` is her Instagram avatar at 320×320 — the lowest-resolution
-   image here. It was shown at ~284px in the cassette window and in the share
-   image, where it holds. **Reel 06 now fills a whole screen with the same
-   file** — ~420 CSS px on a phone, ~600 on a desktop — so it is upscaled 2–3×
-   and is plainly the softest thing on the tape. Anything 1000px+ is the single
-   biggest upgrade available and needs only a file swap (then re-render `og.jpg`
-   and bump `ASSET_VERSION`). If she supplies one, that fixes three places.
+
+**The headshot gap is closed.** It was the third item on this list for two
+sessions. The third handoff brought a 3120×4160 photograph — delivered three times
+under three names, all byte-identical — committed once as `playback-portrait.jpg`,
+and reel 06 uses it **at its full frame**: a whole standing figure in a café, not a
+headshot. It was briefly a 1080×1350 head-and-shoulders crop, on the reasoning that
+the reel is about her face; the full frame was chosen instead. If you are wondering
+why the reel's key-light glow is aimed off-centre and tight, that is why — a glow
+centred on this frame lights the room rather than her, and the light coming up on
+her is the whole mechanic. **`portrait.jpg`, the 320×320 avatar that used to do
+three jobs, is now used nowhere** — the poster has no cassette window and the share
+image is a poster. It is left on disk, like `palace.jpg`.
 
 `CONTENT.md` has the longer list of smaller unknowns — her Highspring start
-year, what she studied at MJPRU. On that last one: **the second handoff wrote
-`B.Sc` and it was not adopted.** Nothing confirms it. Do not let a later bundle
-quietly put a guessed qualification on a real person's page.
+year, what she studied at MJPRU. On that last one: **two handoffs have now
+written `B.Sc` and it has been declined twice.** Nothing confirms it. Do not let
+a later bundle quietly put a guessed qualification on a real person's page.
 
 **One open question from the last session.** The reels used to show a sliver of
 their neighbours on iOS Safari. It was fixed by measuring `visualViewport.height`
@@ -52,6 +106,84 @@ symptom — so **if a sliver is still showing on a real iPhone, that fix is the
 place to start.** Whether the bleed is even along the tape or grows the further
 along you are tells you which half is wrong: even means the height, growing means
 the re-snap is not firing.
+
+## Nested scrollers swallow swipes on iOS
+
+Four screens can scroll internally — the interval, Side A, the b-side and the title
+card's plate — as a safety net for a landscape phone. **That scroll now exists only
+in landscape, and gating it was a bug fix, not a tidy-up.**
+
+Reported from a real device: on the b-side, swiping sometimes did nothing and you had
+to lift your finger and try again. The cause is that a nested scroll container on iOS
+can claim a vertical gesture *even when it has nothing to scroll*, and then absorb it
+instead of letting it move the tape. Measuring content against available space at
+320×568, 360×640, 375×667, 390×844 and 430×932 showed all four screens fit in portrait
+with room to spare — so the scroller was pure liability on every phone held normally.
+
+They are `overflow: clip` above 700px tall and in portrait, `overflow-y: auto` only in
+landscape under 700px. Three things to keep in mind:
+
+- **`clip`, not `hidden` or `auto`.** `clip` does not create a scroll container, so it
+  cannot capture a gesture. `hidden` still does.
+- **Both axes together.** A `clip` on one axis with `visible` on the other computes
+  back to a scroll container and undoes the fix.
+- **The gate is `(orientation: landscape) and (max-height: 700px)`, not height alone.**
+  A 375×667 iPhone SE is under 700px while being held perfectly normally.
+
+This could not be reproduced in Chromium here — the swipe works every time at every
+size — so if it recurs, this is the mechanism to look at first, and the fix to check
+is whether some new content has made one of these screens overflow in portrait.
+
+## The video, and the three things that stop it loading
+
+`public/video/garden.mp4` — 15MB, H.264, one video track and no audio — plays under
+the end credits, graded almost to black. It is the only moving picture on the tape.
+
+**It is more than three times the weight of everything else here** (the rest of the
+build is ~4.4MB), so it is gated three ways, all in `EndCredits.astro`:
+
+1. **Reduced motion** — never loaded at all.
+2. **A metered or 2g connection** — never loaded, the same `saveData`/`effectiveType`
+   test `TapePrefetch` makes before warming the photographs. That rule exists for
+   images the visitor will probably look at; it applies with more force to 15MB of
+   decoration.
+3. **Not until you get there** — the `src` is set by the script when the credits
+   become the screen in front, and playback pauses when they stop being it. Verified:
+   zero requests for it on the title card, and it only fetches on arrival. Nobody who
+   leaves before the end of the tape pays for it.
+
+**It could not be watched in this container, and still has not been.** Chromium here
+has no H.264 decoder (`canPlayType('video/mp4; codecs="avc1.42E01E"')` returns
+empty) and Playwright's ffmpeg cannot demux MP4, so `play()` rejects with
+`MEDIA_ERR_SRC_NOT_SUPPORTED` and the screen falls back to its own gradient. That
+fallback is deliberate and it is what any browser without the codec gets — but it
+also means **the footage has never been reviewed for who else is in it.** Every
+photograph on this site was individually approved and four were turned down because
+someone other than her was recognisable. That check is still outstanding for this
+file. Watch it on a real device before the site is made findable.
+
+Its URL carries `?v=ASSET_VERSION`, and for this file that is not only about stale
+content. **Cloudflare will cache a 404 for the path just as happily as the video.**
+It did: the URL was checked once before GitHub Pages had finished publishing the
+file, and the resulting 404 was then served under the bare path — `cf-cache-status:
+HIT`, `content-type: text/html`, 5815 bytes, which is `404.html` — for four hours,
+with no way to purge it from here. Do not request a newly deployed asset's URL until
+Pages is serving it, and if you must, use a throwaway query string. Bumping the
+version is the only lever if it happens.
+
+**Its grade is set from a contrast requirement, not by eye**, since it cannot be
+viewed here. `--footage-lum` and the scrim's two stops in EndCredits.astro put the
+worst-case backdrop — a pure-white frame — at about 0.19 relative luminance, which
+buys the cream credits ≈4:1 and the gold ≈3:1. The bundle's own numbers came out near
+0.09, which was reported from a real device as too dark to see the footage at all;
+these roughly double it, and much above 0.2 the credits stop clearing AA. A light
+background cannot be compensated for with lighter text — there is nothing above white
+to move to. The small muted labels are additionally lifted to `--tape-body` while
+video is playing, because they are the smallest and dimmest type on the screen.
+
+If it ever needs to be smaller, the shape is a few seconds of VP9/WebM with an H.264
+fallback at a few hundred KB rather than the 15MB master — and note this container
+cannot re-encode it either, for the same codec reason.
 
 ## Branches and deploying
 
@@ -110,11 +242,11 @@ around them. `dvh` is the no-script fallback; `svh` and `lvh` are both wrong her
 ## Three things that are easy to get wrong
 
 **No client-side `<script>` may import `src/data/tape.ts`.** That module imports
-fifteen photographs. Pulling it into the client bundle's module graph makes the
-build emit all fifteen originals as assets — 2.6MB that nothing references —
-even though Vite tree-shakes the bindings back out of the JS. Pass what a script
-needs on a `data-` attribute instead; every reel already does this — including
-the table of tape positions, which rides on the transport counter.
+every photograph the tape uses. Pulling it into the client bundle's module graph
+makes the build emit all of those originals as assets — megabytes that nothing
+references — even though Vite tree-shakes the bindings back out of the JS. Pass
+what a script needs on a `data-` attribute instead; every reel already does this,
+as do the tape-position and wear tables, which ride on the transport counter.
 
 That rule is also why **sound is asked for with an event, not a function call**:
 a reel does
@@ -123,8 +255,9 @@ a reel does
 would drag the data module into a second bundle; a global would need a
 load order. The event needs neither, and no-ops if the chrome's script never ran.
 
-**Bump `ASSET_VERSION` in `src/layouts/Base.astro` when you change `og.jpg`,
-`favicon.svg` or `apple-touch-icon.png`.** Cloudflare fronts `mevivek.dev` and
+**Bump `ASSET_VERSION` in `src/data/site.ts` when you change `og.jpg`,
+`favicon.svg`, `apple-touch-icon.png` or `video/garden.mp4`.** (It moved out of
+`Base.astro` once the video needed the same number.) Cloudflare fronts `mevivek.dev` and
 serves images with `max-age=14400` — four hours. Astro's own output is
 content-hashed and immune; these three live in `public/` under fixed names, so
 replacing one in place leaves the old file being served while the HTML (cached
@@ -140,8 +273,19 @@ resolve a relative path against, so that one must stay absolute.
 
 `public/og.jpg` is a picture of the title card, generated from
 `scripts/og-template.html` and committed. It does not rebuild itself. Change the
-headline or the intro and the share image still shows the old wording until it
-is re-rendered — and `site.description` and `og:image:alt` quote it too.
+headline or the billing block and the share image still shows the old wording
+until it is re-rendered — and `og:image:alt` describes the picture in words, so
+that has to move with it. (It said "a VHS cassette labelled 'geetanjali raghav'"
+for one commit longer than it was true.)
+
+**The whole title card is driven off one number.** `--step-poster` in
+`tokens.css` is `min(13.5% of the panel width, 17% of its height, 92px)`, and her
+name, the handwritten line, the gap between blocks and the billing type are all
+fractions of it. So the poster scales as one object — but it also means a change
+to any one of those sizes should be a change to its fraction, not a new hard
+number. The height term is what keeps the plate on screen in landscape; the plate
+also scrolls internally as a last resort, and the "swipe up" hint is dropped
+under 700px tall because it lands under the transport.
 
 To re-render it there is no need to add Playwright to this project — the
 container already has Chromium at
@@ -165,24 +309,44 @@ Related, and it cost a debugging round: **the first `measure()` call ends in
 front.** So the landing screen has to be settled *before* `measure()` runs, or a
 deep link lands correctly and then slides back to the title card a frame later.
 
+## Two tables that must stay eleven long
+
+`positions` and `wear` in `src/data/tape.ts` are both indexed by screen, and both
+have to stay `screenCount` entries long. They ride to the client on the transport
+counter's `data-` attributes, because **no client script may import
+`src/data/tape.ts`** (see below).
+
+`positions` is the timecode the counter shows. `wear` is the grain multiplier, and
+a short table is survivable rather than fatal — `index.astro` leaves `--wear`
+alone for a screen the table does not cover, so the grain holds its last value
+instead of clearing. A wrong-length `positions` is worse: the counter simply stops
+updating past the end.
+
 ## Outstanding, and not ours to decide
 
 - **`approved: false` in `src/data/site.ts` keeps every page `noindex`.** Do not
   flip it. It is a deliberate human decision and it is hers.
 - **Reel 04's "posted · 10.7k" badge names her follower count** and she has not
   been asked about it. Do not add anything else of that kind without asking.
+- **The b-side now prints her name as a signature** in handwriting, on a mock
+  government certificate. It is a joke signature on a joke document and it reads
+  as one, but it is still her name in a hand on a public page — it is one string
+  (`qualityCheck.signature`) if she would rather it were initials or a scrawl.
 - Four photographs were turned down because someone other than her was
   recognisable in them. Nobody can consent by proxy — ask the people in them
-  first. `palace.jpg` is in the repo but unused by the current cut; leave it.
+  first. `palace.jpg` and `portrait.jpg` are both in the repo and unused by the
+  current cut; leave them.
 
 ## Two more that cost time last session
 
 **The build emits no `.js` files, and that is correct.** Every component script
-is standalone and small enough that Astro inlines them into `index.html` (70KB,
-16KB gzipped — it was 48KB before the second handoff added two screens and the
-blips). `find dist -name '*.js'` returning nothing is not a broken build. The
-built weight is otherwise unchanged: 38 WebP variants, ~3.2MB, because the
-photographs and their widths did not move.
+is standalone and small enough that Astro inlines them into the HTML (76KB for
+`index.html`, 8KB for the 404 — it was 48KB before the second handoff added two
+screens and the blips). `find dist -name '*.js'` returning nothing is not a broken
+build. The rest: 43 WebP variants and ~4.4MB, up from 38 and 3.2MB because reel 06
+finally has a photograph worth generating widths for — and it is the one image not
+capped at 1080, so it alone accounts for six of those variants and about 1MB. See
+the note in Playback.astro for why.
 
 **Browser UI colour is not something the page controls.** `theme-color` and
 `color-scheme: dark` are both set and correct. iOS Safari honours them; **Chrome

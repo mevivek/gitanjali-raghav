@@ -4,13 +4,22 @@
  * The site is one thing: a Bollywood-VHS home-video tape. It is always dark —
  * there is no light theme, because a cassette on a CRT does not have one.
  *
- * The palette is five colours over three near-blacks:
+ * The palette is eight colours over three near-blacks:
  *   --tape-cream   the text
- *   --tape-pink    reels 03/04/06, the REC dot, the active progress segment
+ *   --tape-pink    reel 06, the spool that fills as the tape runs
+ *   --tape-orange  reel 03
+ *   --tape-coral   reel 04
  *   --tape-cyan    reel 01, the "now showing" chip, the focus ring
  *   --tape-ice     reel 05, the interval's b-side
- *   --tape-gold    reels 02/07, the interval, every link
- *   --tape-mauve   everything muted
+ *   --tape-gold    reel 02, the title card, the interval, every link
+ *   --tape-brass   reel 07, where the accent is ink on paper rather than a lit
+ *                  readout and the tape's gold reads too bright
+ *   --tape-muted   everything muted, in two strengths
+ *
+ * Orange, coral and brass arrived with the third handoff. Reels 03, 04 and 06
+ * were all the same pink before it, which made the middle of the tape read as
+ * one long reel; the three new accents are what separate them.
+ *
  * Change those and the tape reskins. Per-reel gradients live in
  * src/data/tape.ts, next to the copy they belong to.
  *
@@ -29,41 +38,57 @@
   /* text */
   --tape-cream: #f6efe6;
   --tape-body: #d3c6de;
-  --tape-body-dim: #c9b8d6;
   --tape-muted: #8a7799;
   --tape-muted-dim: #6f5b80;
 
   /* accents */
   --tape-pink: #ff2e88;
+  --tape-orange: #ff8a3d;
+  --tape-coral: #ff5c7a;
   --tape-cyan: #3ee0e8;
   --tape-ice: #8fe8f2;
   --tape-gold: #ffc53d;
+  --tape-brass: #e8c96a;
 
-  /* chrome — cassette shell, control borders, bezel */
+  /* chrome — control borders, the transport, the wide bezel */
   --tape-edge: #4a3560;
-  --tape-shell: #2e2340;
-  --tape-shell-deep: #17101f;
   /*
-   * Two paper stocks, and they are not interchangeable: the cassette label and
-   * the interval's b-side form are printed on the brighter one, the inlay card
-   * on the plainer. Every paper surface on the tape is a gradient between two
-   * of these four.
+   * The warm paper stock: reel 07's inlay card, and the "please rewind" sticker
+   * on the credits. Every warm paper surface on the tape is a gradient between
+   * two of these four. It used to cover the b-side and the cassette label too —
+   * the b-side is on its own stock below now, and the cassette is gone.
    */
-  --tape-label: #f4e7cf;
   --tape-label-bright: #f7ecd8;
-  --tape-label-shade: #e3cfa6;
   --tape-label-deep: #e9d8b4;
   --tape-label-ink: #23142c;
   --tape-label-mute: #8a6b3d;
+  /*
+   * And a fifth stock, which is not a paper the tape prints on but the card the
+   * censor board staples to the front of a print: a green-grey security paper
+   * with near-black-green ink. The interval's b-side is the only thing that uses
+   * it, and it should not read as the same stock as the inlay card.
+   */
+  --tape-cert: #eceada;
+  --tape-cert-shade: #ddd9bd;
+  --tape-cert-ink: #1c2a1e;
+  --tape-cert-mute: #6d7a66;
+  --tape-cert-faint: #5e6b57;
+  /* The stamp pad: pass in the certificate's own ink, fail in red. */
+  --tape-stamp-fail: #c2452c;
 
-  /* the interval is the one screen that leaves the purple behind */
-  --int-near: #7a0f3d;
-  --int-mid: #3a0a22;
-  --int-far: #14060f;
-  --int-hand: #ffd9e7;
+  /*
+   * The interval is the one screen that leaves the purple behind. Darkened by the
+   * fourth handoff, which turned it into a cinema foyer: a lit marquee and a
+   * backlit programme board only read as lit if the room around them is dim.
+   */
+  --int-near: #5c0b2e;
+  --int-mid: #2c0719;
+  --int-far: #12050e;
   --int-org: #e3a8c2;
   --int-years: #b78a9f;
-  --int-body: #f0c9d8;
+  --int-body: #f4d5e0;
+  /* The marquee's frame and the programme board's brass surround. */
+  --int-brass: #c9a24c;
 
   /* focus ring — cyan clears AA on every background the tape uses */
   --focus: #8fe8f2;
@@ -73,14 +98,39 @@
   --font-hand: 'Caveat Variable', 'Segoe Script', cursive;
   --font-serif: 'Rozha One', Georgia, 'Times New Roman', serif;
   --font-osd: 'VT323', ui-monospace, 'Courier New', monospace;
+  /*
+   * The paragraphs. Every reel's body copy used to be set in VT323 — the same
+   * face as the timecodes and the readouts — which made the tape's furniture and
+   * the one place it actually talks to you look like the same thing. The third
+   * handoff put the paragraphs into a text serif, and the readouts kept the
+   * monospace, so now the machine and the person are set differently.
+   *
+   * `--font-serif` above is Rozha One and stays where it is: it is a display
+   * face, used for the names on the credit roll, and it would be unreadable at
+   * 16px. It set the interval's job titles too until the fourth handoff turned
+   * that screen into a letter board and moved them onto the display face.
+   */
+  --font-body: 'Tiro Devanagari Hindi', Georgia, 'Times New Roman', serif;
 
   /* type sizes — phone */
-  --step-h1: clamp(34px, 10.5vw, 50px);
   --step-h2: clamp(34px, 11vw, 54px);
   --step-int: clamp(52px, 17vw, 88px);
   --step-hand: 25px;
-  --step-body: 17px;
-  --step-role: 24px;
+  --step-body: 16px;
+  --step-role: 19px;
+
+  /*
+   * The poster headline on the title card, and the one size on the tape that is
+   * measured against the height as well as the width. A poster has to fit its
+   * sheet: the billing block and the play key sit under the headline, so on a
+   * short window the type has to come down or the bottom of the card goes off
+   * the screen. The design took `min(13.5% of the panel width, 17% of its
+   * height, 92px)`, which is what this is.
+   *
+   * Everything else on the card is a fraction of this one number, so the whole
+   * poster scales as a unit.
+   */
+  --step-poster: min(13.5vw, calc(var(--screen-h, 100dvh) * 0.17), 92px);
 
   /* layout — phone */
   --panel-w: 100%;
@@ -93,11 +143,8 @@
   --pad-x: 20px;
   --pad-screen: 28px 20px 84px;
   --pad-title: 30px 24px 88px;
-  --pad-bar: 11px 15px;
   --pad-transport: 0 15px 16px;
-  --gap-title: 14px;
   --gap-reel: 13px;
-  --cassette-w: min(66vw, 258px);
 
   /* the tape's own furniture, same at every size */
   --osd-sm: 13px;
@@ -119,22 +166,20 @@
  */
 @media (min-width: 900px) {
   :root {
-    --step-h1: clamp(52px, 5.4vw, 82px);
     --step-h2: clamp(46px, 5.2vw, 76px);
     --step-int: clamp(62px, 8.4vw, 118px);
     --step-hand: 28px;
-    --step-body: 19px;
-    --step-role: 28px;
+    --step-body: 18px;
+    --step-role: 22px;
+    /* 13.5% of the panel, which is itself min(44vw, 560px). */
+    --step-poster: min(5.94vw, 75.6px, calc(var(--screen-h, 100dvh) * 0.17), 92px);
 
     --panel-w: min(44vw, 560px);
     --pad-x: 36px;
     --pad-screen: 44px 36px 88px;
     --pad-title: 44px 44px 88px;
-    --pad-bar: 15px 36px;
     --pad-transport: 0 36px 20px;
-    --gap-title: 18px;
     --gap-reel: 13px;
-    --cassette-w: 300px;
   }
 }
 
@@ -145,18 +190,15 @@
  */
 @media (max-height: 700px) {
   :root {
-    --step-h1: clamp(30px, 6vw, 40px);
     --step-h2: clamp(28px, 5vw, 38px);
     --step-int: clamp(40px, 8vw, 58px);
     --step-hand: 21px;
-    --step-body: 16px;
-    --step-role: 20px;
+    --step-body: 14px;
+    --step-role: 16px;
 
     --pad-x: 18px;
     --pad-screen: 22px 18px 74px;
     --pad-title: 20px 20px 74px;
-    --gap-title: 10px;
     --gap-reel: 9px;
-    --cassette-w: min(58vw, 210px);
   }
 }

@@ -80,7 +80,7 @@ const creditsIndex = reelCount + 3;
    * without a line of this the site still swipes between reels, scrolls with
    * a wheel, takes arrow keys and Page Up/Down once focused, and moves when
    * you click play, resume tape or rewind. What script adds is knowing *which*
-   * reel is in front — which is what the dimming, the progress segments, the
+   * reel is in front — which is what the dimming, the spools, the grain, the
    * running timecode, the credits roll, reel 06's beat and the interval's clock
    * all need — plus the two transport keys, drag-to-scrub on a wide screen, and
    * keeping the URL pointed at the reel you are looking at.
@@ -89,7 +89,6 @@ const creditsIndex = reelCount + 3;
   const screens = [...document.querySelectorAll<HTMLElement>('[data-screen]')];
 
   if (track && screens.length) {
-    const segs = [...document.querySelectorAll<HTMLElement>('[data-seg]')];
     const counter = document.querySelector<HTMLElement>('[data-tape-counter]');
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -97,19 +96,24 @@ const creditsIndex = reelCount + 3;
     const wide = window.matchMedia('(min-width: 900px)');
 
     /*
-     * Where the counter says the tape is, screen by screen. Read off the
-     * counter's own data attribute rather than recomputed here: it used to be
-     * the same arithmetic written twice, which is one copy too many, and the
-     * numbers now come from the timecodes each screen prints on itself. Not
-     * imported, because importing src/data/tape.ts would pull fifteen
-     * photographs into this bundle's module graph.
+     * The two per-screen tables: where the counter says the tape is, and how worn
+     * each screen is. Both are read off the counter's own data attributes rather
+     * than recomputed here — the timecodes come from what each screen prints on
+     * itself, and the wear curve is a deliberate shape rather than a formula. Not
+     * imported, because importing src/data/tape.ts would pull every photograph
+     * into this bundle's module graph.
      */
-    let positions: string[] = [];
-    try {
-      positions = JSON.parse(counter?.dataset.tapePositions ?? '[]');
-    } catch {
-      positions = [];
-    }
+    const table = <T,>(raw: string | undefined, fallback: T[]): T[] => {
+      try {
+        const parsed = JSON.parse(raw ?? '');
+        return Array.isArray(parsed) ? parsed : fallback;
+      } catch {
+        return fallback;
+      }
+    };
+
+    const positions = table<string>(counter?.dataset.tapePositions, []);
+    const wear = table<number>(counter?.dataset.tapeWear, []);
 
     let current = 0;
 
@@ -124,12 +128,23 @@ const creditsIndex = reelCount + 3;
         screen.style.setProperty('--dist', String(n - i));
       });
 
-      // Both indicators are in the DOM — one per orientation — so every
-      // segment is updated and CSS decides which set is visible.
-      segs.forEach((seg) => {
-        const n = Number(seg.dataset.seg);
-        seg.dataset.state = n === i ? 'now' : n < i ? 'seen' : 'todo';
-      });
+      const root = document.documentElement;
+
+      /*
+       * How far along the tape we are, 0 to 1. The two spools on the transport
+       * read this: the supply hub shrinks as the take-up hub grows. It replaced an
+       * eleven-segment bar and rail — see the note at the head of TapeChrome.
+       */
+      const last = screens.length - 1;
+      root.style.setProperty('--tape-pos', last > 0 ? (i / last).toFixed(4) : '0');
+
+      /*
+       * And how scuffed this screen is. The grain overlay multiplies its base
+       * opacity by this, so the head and tail of the tape are worn and the middle
+       * is clean. Left alone if the table is missing or short, which leaves the
+       * grain at its flat base rather than clearing it.
+       */
+      if (wear[i] !== undefined) root.style.setProperty('--wear', String(wear[i]));
 
       if (counter && positions[i]) counter.textContent = positions[i];
     }

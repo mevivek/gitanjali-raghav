@@ -198,23 +198,44 @@ html[data-osd='off'] {
 /* ------------------------------------------------------------ the screens */
 
 /*
- * The title card and the interval centre their contents and scroll internally
- * if a short window cannot hold them — losing the bottom of the interval on
- * a landscape phone would take the day job with it. Side A and the interval's
- * b-side do the same thing from inside their own components, because both are
- * a single paper card that has to stay whole.
+ * FOUR SCREENS CENTRE THEIR CONTENTS AND CAN SCROLL INTERNALLY — the interval,
+ * Side A, the interval's b-side and the title card's plate. The last three set it
+ * up inside their own components; this is the interval's, and the rule below is
+ * what governs all four.
+ *
+ * **The internal scroll only exists on a short window, and that is the fix for a
+ * real bug.** It is a safety net for a landscape phone, where losing the bottom of
+ * the interval would take the day job with it. On a phone held normally nothing on
+ * any of these screens overflows — measured at 375×667, 390×844 and 430×932 — so
+ * the scroller had nothing to scroll and was pure liability: on iOS, a nested
+ * scroll container can claim a vertical gesture even with zero scrollable extent,
+ * and then swallow it instead of letting it move the tape. That is what "sometimes
+ * swiping on the b-side does nothing" was. You had to lift your finger and swipe
+ * again, because the gesture had gone to a scroller that could not move.
+ *
+ * So `overflow: clip` above 700px tall — which, unlike `hidden` or `auto`, does not
+ * create a scroll container at all and therefore cannot capture anything — and
+ * `auto` below it, where the content genuinely needs somewhere to go. Both axes
+ * have to be set together: a `clip` on one axis with `visible` on the other
+ * computes back to a scroll container, which would defeat the whole point.
+ *
+ * The gate is **landscape and short**, not short alone. A 375×667 iPhone SE is under
+ * 700px tall while being held perfectly normally, and it does not need the scroller
+ * either: measured content against available space at 320×568, 360×640, 375×667 and
+ * 390×844, all three of these screens fit with room to spare in portrait. Only a
+ * phone turned sideways genuinely runs out of room, so only a phone turned sideways
+ * gets a scroll container.
  */
-.screen--title,
 .screen--interval {
   justify-content: safe center;
-  overflow-y: auto;
+  overflow: clip;
 }
 
-.screen--title {
-  align-items: center;
-  gap: var(--gap-title);
-  padding: var(--pad-title);
-  background: radial-gradient(120% 90% at 50% 6%, #26122f 0%, #0e0715 54%, #08040d 100%);
+@media (orientation: landscape) and (max-height: 700px) {
+  .screen--interval {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
 
 .screen--interval {
@@ -235,13 +256,30 @@ html[data-osd='off'] {
 /* ------------------------------------------------------ the reel skeleton */
 
 /*
- * Every reel is built the same way — a readout strip, a photograph in a frame
- * with its caption sunk into the bottom, a row of controls, a paragraph — and
- * then does something completely different inside it. These are the parts they
- * share; anything a single reel invents lives in that reel's own component.
+ * Every reel is built the same way — a readout strip, a photograph with its
+ * caption sunk into the bottom, a row of controls, a paragraph — and then does
+ * something completely different inside it. These are the parts they share;
+ * anything a single reel invents lives in that reel's own component.
  *
  * Global for the same reason as the strip above: seven components render these
  * classes, and scoped styles cannot be shared across components.
+ *
+ * THERE ARE TWO KINDS OF REEL, and the third handoff is what split them.
+ *
+ *   `.screen--bleed` reels 01–03. The photograph is the screen: edge to edge,
+ *                    behind the readout and under the words, with scrims doing
+ *                    the work the frame's shadow used to do.
+ *   `.reel__frame`   reels 04–06. The photograph sits in a bordered panel with
+ *                    air around it, which is what the wide layout's sprockets
+ *                    and bezel were narrowed to 560px to frame.
+ *
+ * That mix is deliberate rather than a migration half-finished. The first three
+ * reels are the ones you meet, and full bleed is what makes a phone feel like it
+ * is showing a film rather than a page; by reel 04 the tape has established
+ * itself and can afford to put its photographs behind glass, which is also when
+ * the reels start needing furniture around the frame — a slate, a thermometer, a
+ * dressing-room mirror's bulbs — that wants somewhere to sit that is not on top
+ * of her.
  */
 .reel__osd {
   flex: 0 0 auto;
@@ -316,19 +354,6 @@ html.js .screen--reel[data-active='false'] .reel__frame {
   background: linear-gradient(to top, rgb(8 4 13 / 93%) 0%, rgb(8 4 13 / 36%) 36%, transparent 64%);
 }
 
-/* The burnt-in readout, top left. */
-.reel__stamp {
-  position: absolute;
-  left: 12px;
-  top: 10px;
-  z-index: 4;
-  font-family: var(--font-osd);
-  font-size: 15px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #fff;
-  text-shadow: 0 1px 3px #000;
-}
 
 .reel__caption {
   position: absolute;
@@ -364,14 +389,21 @@ html.js .screen--reel[data-active='false'] .reel__frame {
   transform: rotate(-1.2deg);
 }
 
+/*
+ * The paragraph — the one place on the tape where she is talking rather than the
+ * machine reporting. Set in a text serif since the third handoff; it was VT323,
+ * the same face as the timecodes and the odometer, which made her voice and the
+ * deck's readouts look like the same kind of object. No extra tracking now
+ * either: a serif at 16px is drawn with its own spacing and letter-spacing only
+ * loosens it.
+ */
 .reel__line {
   flex: 0 0 auto;
-  max-width: 46ch;
-  font-family: var(--font-osd);
+  max-width: 42ch;
+  font-family: var(--font-body);
   font-size: var(--step-body);
-  line-height: 1.4;
-  letter-spacing: 0.03em;
-  color: var(--tape-body);
+  line-height: 1.52;
+  color: #ded3e6;
 }
 
 /*
@@ -394,6 +426,148 @@ html.js .reel__controls {
  */
 [data-nodrag] {
   touch-action: manipulation;
+}
+
+/* ------------------------------------------------- full-bleed reels (01–03) */
+
+/*
+ * The photograph is the screen. There is no frame, so the screen's own padding
+ * moves inside onto the plate — and the `padding` shorthand here is deliberate,
+ * because it has to reset the safe-area left/right the `.screen` rules above set.
+ * The plate puts them back on itself.
+ */
+.screen--bleed {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  transition: opacity 0.55s ease;
+}
+
+/*
+ * A bleed reel dims as a whole rather than dimming a frame inside itself, and it
+ * does not scale back — there is no border to shrink away from, so a scale would
+ * just show the black behind it. Gated on `html.js` for the same reason as every
+ * other `data-active` rule: nothing maintains the attribute without script, and
+ * without the gate every reel but the first would be stuck at 42%.
+ */
+html.js .screen--bleed[data-active='false'] {
+  opacity: 0.42;
+}
+
+.bleed__photo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--photo-pos, 50% 50%);
+}
+
+/*
+ * Two sheets over the photograph. The scrim is doing the job the framed reels
+ * get from `.reel__sink` plus the frame's own drop shadow: it has to hold white
+ * type at the bottom and a burnt-in stamp at the top, and stay out of the way
+ * across the middle where her face usually is.
+ */
+.bleed__scrim,
+.bleed__scan {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.bleed__scrim {
+  background: linear-gradient(
+    to bottom,
+    rgb(8 4 13 / 72%) 0%,
+    rgb(8 4 13 / 13%) 16%,
+    transparent 35%,
+    rgb(8 4 13 / 62%) 66%,
+    rgb(8 4 13 / 97%) 100%
+  );
+}
+
+.bleed__scan {
+  background: var(--scanline);
+  opacity: var(--scan-op, 0);
+}
+
+/*
+ * The plate carries the words and nothing else. It is `pointer-events: none` so
+ * that the whole photograph stays pressable through it — reels 01 and 03 have an
+ * interactive surface underneath at z-index 2 — and the blocks that hold real
+ * controls turn pointer events back on for themselves.
+ */
+.bleed__plate {
+  position: relative;
+  z-index: 5;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad-screen);
+  padding-left: max(var(--pad-x), env(safe-area-inset-left));
+  padding-right: max(var(--pad-x), env(safe-area-inset-right));
+  pointer-events: none;
+}
+
+/* Pushes the words to the bottom without either end having to be positioned. */
+.bleed__gap {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.bleed__words {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-reel);
+  pointer-events: auto;
+}
+
+/* Title and aside sit together, tighter than the gap between blocks. */
+.bleed__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * The top row: the reel number on the left, the burnt-in camera stamp on the
+ * right. The two are gated differently on purpose — the reel number and timecode
+ * are the on-screen display and answer to `look.osd`, while the stamp is always
+ * visible, because on reel 03 it is the date of the occasion you just picked and
+ * hiding it would remove a response to something the visitor did.
+ */
+.bleed__top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-osd);
+  font-size: var(--osd-md);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 85%);
+}
+
+.bleed__top > * {
+  white-space: nowrap;
+}
+
+.bleed__reel {
+  color: var(--accent);
+  opacity: var(--osd-op, 0);
+}
+
+.bleed__stamp {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e8dfd6;
 }
 
 /* --------------------------------------------------------- in front / not */

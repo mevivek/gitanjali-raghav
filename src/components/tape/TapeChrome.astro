@@ -1,17 +1,19 @@
 ---
-import { positions, screenCount, sound, timecode } from '../../data/tape';
+import { positions, sound, timecode, wear } from '../../data/tape';
 
 /*
- * Everything that floats over the tape rather than travelling with it: the
- * progress segments, the film furniture on a wide screen, and the transport at
- * the bottom.
+ * Everything that floats over the tape rather than travelling with it: the film
+ * furniture on a wide screen, and the transport at the bottom.
  *
- * Two progress indicators, one per orientation. The bar across the top belongs
- * to the wide layout where the tape runs sideways; the rail up the right-hand
- * edge belongs to the phone, where it reads as tape remaining. Only one is ever
- * displayed.
+ * There used to be two progress indicators here as well — an eleven-segment bar
+ * across the top for the wide layout and a matching rail up the right-hand edge
+ * of a phone. The third handoff took both out and gave the job to the two spools
+ * either side of the counter, which wind between each other as you move along the
+ * tape. That is a better fit for the conceit and it fixed something: the bar was
+ * gated on `look.osd`, so on a wide screen with the display off there was no
+ * indicator at all, while the rail was ungated and always there. One indicator
+ * that is always visible replaces two that disagreed.
  */
-const segments = Array.from({ length: screenCount }, (_, i) => i);
 ---
 
 {/*
@@ -26,14 +28,6 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
 <div class="bezel" aria-hidden="true"></div>
 <span class="sprocket sprocket--top" aria-hidden="true"></span>
 <span class="sprocket sprocket--bottom" aria-hidden="true"></span>
-
-<div class="bar" aria-hidden="true">
-  {segments.map((i) => <span class="seg" data-seg={i} data-state={i === 0 ? 'now' : 'todo'} />)}
-</div>
-
-<div class="rail" aria-hidden="true">
-  {segments.map((i) => <span class="seg" data-seg={i} data-state={i === 0 ? 'now' : 'todo'} />)}
-</div>
 
 <div class="transport">
   {/*
@@ -50,15 +44,34 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   </button>
 
   {/*
-    The counter carries the whole table of tape positions, because the script
-    in index.astro needs to know where every screen sits and must not import
-    src/data/tape.ts to find out — see the note at the foot of this file.
+    The counter carries both per-screen tables — where the tape is, and how worn
+    each screen is — because the script in index.astro needs them and must not
+    import src/data/tape.ts to find out. See the note at the foot of this file.
+
+    The two spools either side are the tape's position indicator, and they replaced
+    an eleven-segment bar and rail. `--tape-pos` runs 0 to 1 along the tape and the
+    script sets it on the root; the left spool's hub shrinks as the right one's
+    grows, which is what a cassette actually does while it plays. `aria-hidden`
+    because the timecode between them says the same thing in words.
   */}
-  <p class="counter">
-    <span class="sr-only">Tape position</span>
-    <span data-tape-counter data-tape-positions={JSON.stringify(positions)}>{timecode(0)}</span
-    ><span class="counter__caret" aria-hidden="true">_</span>
-  </p>
+  <div class="counter">
+    <span class="spool" aria-hidden="true">
+      <span class="spool__hub spool__hub--supply"></span>
+    </span>
+
+    <p class="counter__read">
+      <span class="sr-only">Tape position</span>
+      <span
+        data-tape-counter
+        data-tape-positions={JSON.stringify(positions)}
+        data-tape-wear={JSON.stringify(wear)}>{timecode(0)}</span
+      ><span class="counter__caret" aria-hidden="true">_</span>
+    </p>
+
+    <span class="spool" aria-hidden="true">
+      <span class="spool__hub spool__hub--take"></span>
+    </span>
+  </div>
 
   <button class="key" type="button" data-tape-next aria-label="Next reel">
     <span class="key__glyph key__glyph--narrow" aria-hidden="true">&#9660;</span>
@@ -161,71 +174,6 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     }
   }
 
-  /* -------------------------------------------------------------- segments */
-
-  .bar,
-  .rail {
-    position: fixed;
-    z-index: 6;
-    pointer-events: none;
-  }
-
-  .bar {
-    left: 0;
-    right: 0;
-    top: 0;
-    display: none;
-    gap: 3px;
-    padding: var(--pad-bar);
-    /* Clear of the notch, for the same reason as the transport. */
-    padding-top: max(11px, env(safe-area-inset-top));
-    /* The bar is part of the on-screen display; the rail is not. */
-    opacity: var(--osd-op, 0);
-  }
-
-  .rail {
-    right: max(7px, env(safe-area-inset-right));
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .bar .seg {
-    flex: 1 1 0;
-    height: 3px;
-  }
-
-  .rail .seg {
-    width: 3px;
-    height: 16px;
-  }
-
-  .seg {
-    border-radius: 2px;
-    background-color: rgb(255 255 255 / 14%);
-    transition: background-color 0.35s ease;
-  }
-
-  .seg[data-state='seen'] {
-    background-color: rgb(255 197 61 / 55%);
-  }
-
-  .seg[data-state='now'] {
-    background-color: var(--tape-pink);
-  }
-
-  @media (min-width: 900px) {
-    .bar {
-      display: flex;
-    }
-
-    .rail {
-      display: none;
-    }
-  }
-
   /* ------------------------------------------------------------- transport */
 
   .transport {
@@ -317,9 +265,17 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
   }
 
   .counter {
-    min-width: 112px;
-    padding: 11px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 12px;
+  }
+
+  .counter__read {
+    min-width: 92px;
     text-align: center;
+    font-family: var(--font-osd);
     font-size: var(--osd-lg);
     letter-spacing: 0.16em;
     color: var(--tape-gold);
@@ -334,6 +290,64 @@ const segments = Array.from({ length: screenCount }, (_, i) => i);
     .counter__caret {
       animation: tape-blink 1.1s steps(1) infinite;
     }
+  }
+
+  /* --------------------------------------------------------------- spools */
+
+  /*
+   * The tape's position, and the one indicator that is always visible whatever
+   * `look.osd` is set to. The supply spool empties as the take-up spool fills, so
+   * how far along you are is legible at a glance without reading the timecode
+   * between them — which is what the segment bar and rail used to be for.
+   */
+  .spool {
+    position: relative;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border: 2px dashed rgb(246 239 230 / 32%);
+    border-radius: 999px;
+  }
+
+  /*
+   * The teeth turn, and at different rates, because a playing deck's two spools
+   * are never in step. Decoration only — the hub sizes below carry the meaning,
+   * so reduced motion loses nothing.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .spool:first-child {
+      animation: tape-spool 9s linear infinite;
+    }
+
+    .spool:last-child {
+      animation: tape-spool 13s linear infinite reverse;
+    }
+  }
+
+  /*
+   * `--tape-pos` is 0 at the title card and 1 at the credits; index.astro sets it
+   * on the root as the tape moves. 13px is the widest a hub gets, which is just
+   * inside the 22px ring.
+   */
+  .spool__hub {
+    border-radius: 999px;
+    transition:
+      width 0.55s ease,
+      height 0.55s ease;
+  }
+
+  .spool__hub--supply {
+    width: calc(13px * (1 - var(--tape-pos, 0)));
+    height: calc(13px * (1 - var(--tape-pos, 0)));
+    background-color: rgb(255 197 61 / 85%);
+  }
+
+  .spool__hub--take {
+    width: calc(13px * var(--tape-pos, 0));
+    height: calc(13px * var(--tape-pos, 0));
+    background-color: rgb(255 46 136 / 85%);
   }
 </style>
 

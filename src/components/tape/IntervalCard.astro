@@ -26,6 +26,15 @@ const osdHidden = look.osd ? undefined : true;
 const rows = [
   ...work.map((job) => ({
     role: job.role,
+    /*
+     * The full former company name, not the bundle's abbreviated "ex-Vaco
+     * Binary". The board ellipses this line when it will not fit, which is the
+     * right way round: the markup keeps the name the company actually has — so a
+     * screen reader and anyone who copies the text get it in full — and only the
+     * pixels give way. Shortening a real employer's name to fit a layout is the
+     * same class of change as the guessed degree in work.ts, and gets the same
+     * answer.
+     */
     org: job.note ? `${job.company} · ${job.note}` : job.company,
     years: job.years,
     status: job.current === true ? interval.nowBadge : interval.endedBadge,
@@ -41,6 +50,9 @@ const rows = [
     kind: 'archive',
   })),
 ];
+
+/** The bulbs along the top and bottom of the marquee. */
+const bulbs = Array.from({ length: 12 }, (_, i) => i);
 
 /** MM:SS, which is what the countdown starts on. */
 const opening = `${String(Math.floor(interval.seconds / 60)).padStart(2, '0')}:${String(
@@ -66,47 +78,69 @@ const opening = `${String(Math.floor(interval.seconds / 60)).padStart(2, '0')}:$
     <span class="kicker__tag">{interval.screenTag}</span>
   </p>
 
-  <div class="head">
-    <h2 class="heading">{interval.heading}</h2>
+  {/*
+    The foyer: a lit marquee over the programme board. The fourth handoff moved
+    this screen out of the tape's own idiom and into the building the tape is
+    pretending to be shown in — which is the right place for the one screen that
+    admits to being about a job, because it is the only screen where she is not on
+    camera.
+  */}
+  <div class="foyer">
+    <div class="marquee">
+      {/*
+        Two rows of bulbs, staggered so the marquee ripples rather than blinking
+        as one. Pure decoration, and the pulse is the only motion on this screen
+        that reduced motion switches off with nothing lost.
+      */}
+      <span class="marquee__bulbs marquee__bulbs--top" aria-hidden="true">
+        {bulbs.map((i) => <i style={`--delay: ${(i * 0.11).toFixed(2)}s`} />)}
+      </span>
+      <span class="marquee__bulbs marquee__bulbs--bottom" aria-hidden="true">
+        {bulbs.map((i) => <i style={`--delay: ${(i * 0.11).toFixed(2)}s`} />)}
+      </span>
 
-    {/*
-      A three-minute countdown, for the joke — nothing waits on it. Not
-      aria-live: it would announce a new time every second, which is noise, and
-      it is readable on demand like any other text. It only runs while this is
-      the screen in front, so it does not quietly empty out four reels away.
-    */}
-    <p class="clock" data-interval-clock>
-      <span data-interval-label>{interval.clockLabel}</span>
-      <span class="clock__time" data-interval-time>{opening}</span>
-    </p>
+      <h2 class="heading">{interval.heading}</h2>
 
-    <p class="hand">{interval.hand}</p>
-  </div>
+      {/*
+        A three-minute countdown, for the joke — nothing waits on it. Not
+        aria-live: it would announce a new time every second, which is noise, and
+        it is readable on demand like any other text. It only runs while this is
+        the screen in front, so it does not quietly empty out four reels away.
+      */}
+      <p class="clock" data-interval-clock>
+        <span data-interval-label>{interval.clockLabel}</span>
+        <span class="clock__time" data-interval-time>{opening}</span>
+      </p>
+    </div>
 
-  <div class="listing">
-    <p class="listing__head" aria-hidden="true">
-      <span>{interval.columnRole}</span>
-      <span>{interval.columnYears}</span>
-    </p>
+    <div class="board">
+      <span class="board__channels" aria-hidden="true"></span>
 
-    <ol class="rows">
-      {
-        rows.map((row) => (
-          <li class="row">
-            <span class="row__what">
-              <span class="row__role">{row.role}</span>
-              <span class="row__org">{row.org}</span>
-            </span>
-            <span class="row__when">
-              <span class="chip" data-kind={row.kind}>
-                {row.status}
-              </span>
-              <span class="row__years">{row.years}</span>
-            </span>
-          </li>
-        ))
-      }
-    </ol>
+      <div class="board__inner">
+        <p class="board__head">
+          <span class="board__title">{interval.boardTitle}</span>
+          <span class="board__screen">{interval.boardScreen}</span>
+        </p>
+
+        <ol class="rows">
+          {
+            rows.map((row) => (
+              <li class="row" data-kind={row.kind}>
+                <span class="row__dot" aria-hidden="true"></span>
+                <span class="row__what">
+                  <span class="row__role">{row.role}</span>
+                  <span class="row__org">{row.org}</span>
+                </span>
+                <span class="row__when">
+                  <span class="row__years">{row.years}</span>
+                  <span class="row__status">{row.status}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
   </div>
 
   <p class="body">{interval.body}</p>
@@ -152,44 +186,94 @@ const opening = `${String(Math.floor(interval.seconds / 60)).padStart(2, '0')}:$
     color: var(--int-org);
   }
 
-  /* ----------------------------------------------------------------- head */
+  /* -------------------------------------------------------------- the foyer */
 
-  .head {
+  .foyer {
     flex: 0 0 auto;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-reel);
+  }
+
+  /* ------------------------------------------------------------ the marquee */
+
+  .marquee {
+    position: relative;
+    flex: 0 0 auto;
+    padding: 16px 22px 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    text-align: center;
+    gap: 3px;
+    border: 3px solid var(--int-brass);
+    border-radius: 3px;
+    background: linear-gradient(#4a0a24, #2a0614);
+    box-shadow:
+      0 0 32px rgb(255 197 61 / 22%),
+      inset 0 0 24px rgb(0 0 0 / 60%);
+  }
+
+  .marquee__bulbs {
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .marquee__bulbs--top {
+    top: 5px;
+  }
+
+  .marquee__bulbs--bottom {
+    bottom: 5px;
+  }
+
+  .marquee__bulbs i {
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background-color: #ffe9a8;
+    box-shadow: 0 0 6px var(--tape-gold);
+  }
+
+  /* Staggered, so the marquee ripples rather than blinking as one unit. */
+  @media (prefers-reduced-motion: no-preference) {
+    .marquee__bulbs i {
+      animation: tape-pulse 1.4s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
   }
 
   .heading {
     font-family: var(--font-display);
     font-size: var(--step-int);
     font-weight: 400;
-    line-height: 0.8;
-    letter-spacing: 0.02em;
+    line-height: 0.84;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--tape-gold);
-    /* Knocked out against the black, with a cold edge on the far side. */
-    text-shadow:
-      4px 0 0 var(--tape-black),
-      -4px 0 0 rgb(62 224 232 / 55%);
+    /* Lit from behind rather than knocked out — it is a bulb sign now. */
+    color: #ffe9a8;
+    text-shadow: 0 0 18px rgb(255 197 61 / 70%);
   }
 
   .clock {
     display: flex;
     align-items: baseline;
-    gap: 9px;
+    gap: 8px;
     font-family: var(--font-osd);
-    font-size: 15px;
-    letter-spacing: 0.22em;
+    font-size: 13px;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
     color: var(--int-org);
   }
 
   .clock__time {
-    font-size: 20px;
+    font-size: 19px;
     letter-spacing: 0.1em;
     color: var(--tape-gold);
     font-variant-numeric: tabular-nums;
@@ -206,37 +290,67 @@ const opening = `${String(Math.floor(interval.seconds / 60)).padStart(2, '0')}:$
     }
   }
 
-  .hand {
-    max-width: 30ch;
-    margin-top: 2px;
-    font-family: var(--font-hand);
-    font-weight: 600;
-    font-size: var(--step-hand);
-    line-height: 1.1;
-    color: var(--int-hand);
-    transform: rotate(-1deg);
+  /* -------------------------------------------------------------- the board */
+
+  /*
+   * A backlit programme board in a brass frame. The border is a gradient, which
+   * needs the two-background `padding-box`/`border-box` trick — a border cannot
+   * take a gradient directly.
+   */
+  .board {
+    position: relative;
+    flex: 0 0 auto;
+    padding: 13px 15px 14px;
+    border: 5px solid transparent;
+    border-radius: 3px;
+    background:
+      linear-gradient(#12100f, #12100f) padding-box,
+      linear-gradient(160deg, #6b5220, var(--int-brass) 46%, #6b5220) border-box;
+    box-shadow:
+      0 16px 40px rgb(0 0 0 / 62%),
+      inset 0 0 30px rgb(0 0 0 / 85%);
+    overflow: hidden;
   }
 
-  /* -------------------------------------------------------- the listing */
+  /* The horizontal channels a slot-in letter board is built from. */
+  .board__channels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 5%) 0 1px,
+      transparent 1px var(--channel, 36px)
+    );
+  }
 
-  .listing {
-    flex: 0 0 auto;
+  .board__inner {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
   }
 
-  .listing__head {
+  .board__head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
-    padding: 0 2px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgb(201 162 76 / 32%);
     font-family: var(--font-osd);
     font-size: 12px;
-    letter-spacing: 0.26em;
     text-transform: uppercase;
-    color: var(--int-years);
+  }
+
+  .board__title {
+    letter-spacing: 0.3em;
+    color: var(--int-brass);
+  }
+
+  .board__screen {
+    letter-spacing: 0.18em;
+    color: #7a6a55;
   }
 
   .rows {
@@ -245,112 +359,133 @@ const opening = `${String(Math.floor(interval.seconds / 60)).padStart(2, '0')}:$
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
   }
 
   /*
-   * Each row is a listing on a cinema board, with the board's own rule ruled
-   * straight through it. The rule is a pseudo-element rather than a border so
-   * it can cross the middle of the card; the two columns sit above it on their
-   * own stacking level.
-   */
-  /*
-   * Top-aligned, not centred. The design centred the two columns, which is
-   * right for a one-line title — but "Mahatma Jyotiba Phule Rohilkhand
-   * University" runs to three lines, and centring put its status chip beside the
-   * second line and its dates beside the third, as though they belonged to
-   * different rows. Level with the first line reads as one entry at any length.
-   * (The design also shortened that name to make it fit; the full one is what
-   * the institution is called, so the layout gives way instead.)
+   * Top-aligned, not centred. Centring is right for a one-line title — but
+   * "Mahatma Jyotiba Phule Rohilkhand University" runs to two or three lines, and
+   * centring put its dates beside the second line as though they belonged to a
+   * different row. Level with the first line reads as one entry at any length.
+   * (Both handoffs shortened that name to make it fit; the full one is what the
+   * institution is called, so the layout gives way instead.)
    */
   .row {
-    position: relative;
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 9px 11px;
-    border-radius: 2px;
-    background: linear-gradient(#2c0a1a, #1a0611);
-    box-shadow: inset 0 0 0 1px rgb(255 197 61 / 16%);
+    gap: 10px;
   }
 
-  .row::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 1px;
-    background-color: rgb(0 0 0 / 55%);
+  /* Lit red for what is showing now, dark brass for what has been. */
+  .row__dot {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    /* Sits on the cap height of the title rather than the top of its box. */
+    margin-top: 5px;
+    border-radius: 999px;
+    background-color: rgb(201 162 76 / 25%);
+  }
+
+  .row[data-kind='now'] .row__dot {
+    background-color: #ff3b3b;
+    box-shadow: 0 0 8px #ff3b3b;
+  }
+
+  .row[data-kind='ended'] .row__dot {
+    background-color: rgb(201 162 76 / 50%);
   }
 
   .row__what,
   .row__when {
-    position: relative;
     display: flex;
     flex-direction: column;
+    gap: 1px;
   }
 
   .row__what {
-    gap: 2px;
+    flex: 1 1 auto;
     min-width: 0;
   }
 
   .row__when {
     flex: 0 0 auto;
     align-items: flex-end;
-    gap: 3px;
-    /* Sits with the cap height of the title rather than its box. */
-    padding-top: 3px;
+    text-align: right;
   }
 
+  /*
+   * Slot-in board letters, so the display face rather than the serif the listing
+   * used. Deliberately not `nowrap`: the university's full name has to be allowed
+   * to take a second line.
+   */
   .row__role {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: var(--step-role);
-    line-height: 1.05;
-    color: var(--tape-cream);
+    line-height: 1.02;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff8e8;
   }
 
+  .row[data-kind='ended'] .row__role {
+    color: #e8e0cf;
+  }
+
+  .row[data-kind='archive'] .row__role {
+    color: #b8ae9b;
+  }
+
+  /*
+   * Allowed to wrap, where the bundle ellipsed it on one line. The bundle could
+   * afford `nowrap` because it had shortened the name to "ex-Vaco Binary"; this
+   * keeps "formerly Vaco Binary Semantics", and the recorded rule for that is the
+   * one the university name already set — the layout gives way to the name, not
+   * the other way round. An ellipsis is still a truncation, and there is room here.
+   */
   .row__org {
+    min-width: 0;
     font-family: var(--font-osd);
-    font-size: var(--osd-md);
+    font-size: 13px;
     letter-spacing: 0.1em;
-    color: var(--int-org);
+    text-transform: uppercase;
+    color: #9a8768;
+  }
+
+  .row__years,
+  .row__status {
+    font-family: var(--font-osd);
+    white-space: nowrap;
+    text-transform: uppercase;
   }
 
   .row__years {
-    font-family: var(--font-osd);
-    font-size: var(--osd-sm);
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-    color: var(--int-years);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: #c9a24c;
   }
 
-  .chip {
-    padding: 2px 7px;
-    border-radius: 2px;
-    font-family: var(--font-osd);
+  .row[data-kind='now'] .row__years {
+    color: #ffe9a8;
+  }
+
+  .row[data-kind='archive'] .row__years {
+    color: #9a8768;
+  }
+
+  .row__status {
     font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    white-space: nowrap;
+    letter-spacing: 0.14em;
+    color: #9a8768;
   }
 
-  /* Showing now, finished, and the one that is not a job at all. */
-  .chip[data-kind='now'] {
-    background-color: var(--tape-cyan);
-    color: var(--tape-black);
+  /* The one row that is on now gets the only warm colour on the board. */
+  .row[data-kind='now'] .row__status {
+    color: #ff5c5c;
   }
 
-  .chip[data-kind='ended'] {
-    background-color: rgb(255 197 61 / 18%);
-    color: var(--tape-gold);
-  }
-
-  .chip[data-kind='archive'] {
-    background-color: rgb(255 255 255 / 10%);
-    color: var(--int-org);
+  .row[data-kind='archive'] .row__status {
+    color: #7a6a55;
   }
 
   /* ---------------------------------------------------------------- words */
@@ -413,6 +548,47 @@ const opening = `${String(Math.floor(interval.seconds / 60)).padStart(2, '0')}:$
   @media (max-height: 700px) {
     /* The b-side is still one swipe away; the sentence about it is not vital. */
     .bside {
+      display: none;
+    }
+
+    /*
+     * The foyer is much taller than the centred heading and listing it replaced,
+     * and a landscape phone has about 290px to put it in. So on a short window the
+     * sign comes down a long way — a marquee reads as a marquee from its bulbs and
+     * its frame, not from the size of its type — and the paragraph goes, the same
+     * call reel 07 makes with its own paragraph. Losing the primary action below
+     * the fold would be worse than losing a line of commentary, and the board
+     * still says everything factual about the job.
+     */
+    .marquee {
+      padding: 10px 16px 9px;
+      gap: 1px;
+    }
+
+    .heading {
+      font-size: clamp(24px, 4vw, 32px);
+    }
+
+    /*
+     * And the board loses its own header. "Today's programme" is flavour — the
+     * brass frame and the channels already say what the thing is — where the three
+     * rows under it are the only facts on the screen.
+     */
+    .board__head {
+      display: none;
+    }
+
+    .board {
+      padding: 9px 12px 10px;
+      --channel: 30px;
+    }
+
+    .board__inner,
+    .rows {
+      gap: 6px;
+    }
+
+    .body {
       display: none;
     }
   }

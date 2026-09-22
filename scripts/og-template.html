@@ -1,26 +1,46 @@
 <!doctype html>
 <!--
-  Source for public/og.png — the 1200×630 image shown when the URL is shared.
+  Source for public/og.jpg — the 1200×630 image shown when the URL is shared.
 
   It is a still life of the tape's own title card rather than a separate piece
   of art, so a link preview looks like the page it opens. Fonts and the
   photograph are pulled straight out of the repository, so this renders
   identically to the site.
 
-  To regenerate after changing the copy: open this file in a browser, size the
-  window to exactly 1200×630, and screenshot — or drive it headlessly:
+  THE TITLE CARD IS NOW A POSTER, and this was redrawn to match. It used to be a
+  drawn cassette beside three lines of type, because that is what the card was;
+  the third handoff replaced the cassette with a full-bleed photograph and a
+  billing block, so this did too. The one difference is the shape: the card is
+  portrait and a share image is 1200×630, so the plate sits in the left third
+  rather than across the bottom — a lobby card rather than a one-sheet.
 
-    node -e "const {chromium}=require('playwright');(async()=>{
-      const b=await chromium.launch();
-      const p=await b.newPage({viewport:{width:1200,height:630}});
-      await p.goto('file://'+process.cwd()+'/scripts/og-template.html');
-      await p.waitForTimeout(600);
-      await p.screenshot({path:'public/og.png'});
-      await b.close();})()"
+  Whatever changes here, `og:image:alt` in src/layouts/Base.astro describes this
+  image in words and has to be changed with it.
+
+  To regenerate after changing the copy: open this file in a browser, size the
+  window to exactly 1200×630, and screenshot — or drive it headlessly with the
+  Chromium already in the container (no need to add Playwright to this project;
+  install it into a scratch directory with PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 and
+  point executablePath at /opt/pw-browsers/chromium-1194/chrome-linux/chrome):
+
+    const b = await chromium.launch({ executablePath: CHROMIUM });
+    const p = await b.newPage({ viewport: { width: 1200, height: 630 } });
+    await p.goto('file://' + process.cwd() + '/scripts/og-template.html');
+    await p.waitForTimeout(600);
+    await p.screenshot({ path: 'public/og.jpg', type: 'jpeg', quality: 86 });
+
+  JPEG rather than PNG on purpose: the picture is mostly a photograph and a
+  gradient, and the PNG of it was 896KB against 86KB here — above the size at
+  which WhatsApp quietly declines to render a preview at all.
 
   Playwright is deliberately not a dependency of this project — the image
   changes about as often as the headline does, so it is generated once and
   committed rather than built on every deploy.
+
+  AND BUMP `ASSET_VERSION` in src/layouts/Base.astro when you replace og.jpg.
+  Slack, WhatsApp and LinkedIn cache a preview against the image URL more or
+  less indefinitely, so a redrawn image under an unchanged name goes on showing
+  the old headline to everyone who has already shared the link.
 -->
 <html lang="en">
   <head>
@@ -60,200 +80,113 @@
         position: relative;
         width: 1200px;
         height: 630px;
-        display: flex;
-        align-items: center;
-        gap: 58px;
-        padding: 0 72px;
-        background: radial-gradient(120% 90% at 50% 6%, #26122f 0%, #0e0715 54%, #08040d 100%);
-      }
-
-      /* ------------------------------------------------------- the cassette */
-
-      .cassette {
-        position: relative;
-        flex: 0 0 auto;
-        width: 430px;
-        aspect-ratio: 5 / 3.5;
-        padding: 13px;
-        display: flex;
-        flex-direction: column;
-        gap: 11px;
-        border-radius: 12px;
-        background: linear-gradient(160deg, #2b1c3a, #170e22 58%, #0d0813);
-        box-shadow:
-          0 30px 70px rgb(0 0 0 / 75%),
-          inset 0 1px 0 rgb(255 255 255 / 12%),
-          inset 0 0 0 1px #4a3560;
-        transform: rotate(-1.3deg);
-      }
-
-      .window {
-        position: relative;
-        flex: 1 1 auto;
-        min-height: 64%;
-        border-radius: 4px;
         overflow: hidden;
-        background: #0a0610;
-        box-shadow: inset 0 0 0 1px rgb(62 224 232 / 30%);
+        background: #08040d;
       }
 
-      /* The spools, parked — a still image cannot show them turning. */
-      .spool {
-        position: absolute;
-        top: 50%;
-        width: 27%;
-        aspect-ratio: 1;
-        margin-top: -13.5%;
-        border-radius: 999px;
-        box-shadow: inset 0 0 0 5px rgb(8 4 13 / 50%);
-      }
+      /* ----------------------------------------------------- the photograph */
 
-      .spool--left {
-        left: 8%;
-        border: 7px dashed rgb(246 239 230 / 50%);
-      }
-
-      .spool--right {
-        right: 8%;
-        border: 7px dashed rgb(246 239 230 / 34%);
-      }
-
-      .window img {
+      /*
+       * Reel 03's Diwali photograph, cropped the same way the title card crops
+       * it — into her face and the bangles stacked against it. The source is
+       * square and this frame is 1.9:1, so the vertical position is what does
+       * the work.
+       */
+      .card > img {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: 50% 6%;
-        filter: saturate(1.5) contrast(1.1) brightness(0.95);
+        object-position: 62% 12%;
+        filter: saturate(1.45) contrast(1.14) brightness(0.84);
       }
 
-      .bleed {
+      /*
+       * Two scrims. The first darkens the left third so the type has something
+       * to sit on; the second is the same top-and-bottom shading the card uses,
+       * which keeps the photograph from ending abruptly at the edges.
+       */
+      .scrim {
         position: absolute;
         inset: 0;
-        mix-blend-mode: screen;
         background: linear-gradient(
-          90deg,
-          rgb(255 46 136 / 24%),
-          transparent 32%,
-          transparent 68%,
-          rgb(62 224 232 / 24%)
+          100deg,
+          rgb(8 4 13 / 96%) 0%,
+          rgb(8 4 13 / 92%) 34%,
+          rgb(8 4 13 / 55%) 56%,
+          rgb(8 4 13 / 12%) 82%,
+          rgb(8 4 13 / 4%) 100%
         );
       }
 
-      .rec {
+      .shade {
         position: absolute;
-        left: 13px;
-        top: 11px;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgb(8 4 13 / 55%) 0%,
+          rgb(8 4 13 / 6%) 26%,
+          rgb(8 4 13 / 30%) 70%,
+          rgb(8 4 13 / 80%) 100%
+        );
+      }
+
+      /* The tape's mis-registered colour bleed, as on every screen. */
+      .bleed {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          96deg,
+          rgb(255 46 136 / 14%),
+          transparent 40%,
+          transparent 62%,
+          rgb(62 224 232 / 14%)
+        );
+      }
+
+      /* ----------------------------------------------------------- the plate */
+
+      .plate {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 66%;
+        padding: 0 64px 58px;
         display: flex;
-        align-items: center;
-        gap: 8px;
-        font-family: 'VT323', monospace;
-        font-size: 20px;
-        letter-spacing: 0.12em;
-        color: #fff;
-        text-shadow: 0 1px 3px #000;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
       }
 
-      .rec i {
-        width: 11px;
-        height: 11px;
-        border-radius: 999px;
-        background: #ff2e88;
-      }
-
-      .scribble {
-        position: absolute;
-        right: 13px;
-        bottom: 9px;
+      .name {
         font-family: 'Caveat Variable', cursive;
         font-weight: 700;
-        font-size: 29px;
+        font-size: 42px;
+        line-height: 1;
         color: #ffc53d;
-        transform: rotate(-4deg);
-        text-shadow: 0 2px 6px #000;
-      }
-
-      /* Two lines, since the second handoff added what the tape used to be
-         called and struck it out. */
-      .label {
-        flex: 0 0 auto;
-        padding: 7px 14px 9px;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        border-radius: 4px;
-        background: linear-gradient(#f7ecd8, #e3cfa6);
-        transform: rotate(-0.5deg);
-        box-shadow: 0 2px 8px rgb(0 0 0 / 50%);
-      }
-
-      .label__line {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .label__name {
-        font-family: 'Caveat Variable', cursive;
-        font-weight: 700;
-        font-size: 28px;
-        line-height: 1.1;
-        white-space: nowrap;
-        color: #23142c;
-      }
-
-      .label__code {
-        font-family: 'VT323', monospace;
-        font-size: 16px;
-        letter-spacing: 0.14em;
-        color: #8a6b3d;
-      }
-
-      .label__was {
-        font-family: 'VT323', monospace;
-        font-size: 15px;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-        color: #a08a6a;
-      }
-
-      .label__was s {
-        text-decoration: line-through;
-      }
-
-      .label__was span {
-        color: #8a6b3d;
-      }
-
-      /* ----------------------------------------------------------- the type */
-
-      .words {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+        transform: rotate(-1.6deg);
+        transform-origin: left center;
+        text-shadow: 0 2px 10px rgb(0 0 0 / 70%);
       }
 
       /*
        * Three lines, and the middle one is her handwriting rather than another
-       * line of stencil — which is the change the second handoff made to the
-       * heading, and the reason this image had to be redrawn.
+       * line of stencil. Left-aligned, as the poster sets them.
        */
       h1 {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        font-size: 84px;
+        font-size: 96px;
         font-weight: 400;
-        line-height: 0.82;
+        line-height: 0.8;
       }
 
       h1 b {
         font-family: 'Anton', Impact, sans-serif;
         font-weight: 400;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.025em;
         text-transform: uppercase;
         color: #f6efe6;
         text-shadow:
@@ -272,29 +205,38 @@
         font-style: normal;
         font-family: 'Caveat Variable', cursive;
         font-weight: 700;
-        font-size: 0.78em;
-        line-height: 0.9;
+        font-size: 0.62em;
+        line-height: 0.92;
         color: #ffc53d;
-        transform: rotate(-2.5deg);
-        margin: -0.04em 0 -0.06em;
+        transform: rotate(-2.2deg);
+        transform-origin: left center;
+        margin: -0.02em 0 -0.04em 0.06em;
       }
 
-      .intro {
-        max-width: 26ch;
-        font-family: 'VT323', monospace;
-        font-size: 27px;
-        line-height: 1.35;
-        letter-spacing: 0.04em;
-        color: #c9b8d6;
+      /* The billing block, under a gold hairline, as a poster prints it. */
+      .bill {
+        align-self: stretch;
+        padding-top: 14px;
+        border-top: 1px solid rgb(255 197 61 / 40%);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
 
-      .name {
-        margin-top: 6px;
+      .bill p {
         font-family: 'VT323', monospace;
         font-size: 21px;
-        letter-spacing: 0.22em;
+        line-height: 1.32;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
-        color: #6f5b80;
+      }
+
+      .bill .reels {
+        color: #f0d3b8;
+      }
+
+      .bill .footer {
+        color: #a5919b;
       }
 
       /* --------------------------------------------------------- tape wear */
@@ -303,7 +245,11 @@
         position: absolute;
         inset: 0;
         pointer-events: none;
-        opacity: 0.5;
+        /*
+         * Heavier than a reel, because the title card is the head of the tape and
+         * the wear curve peaks there — see `wear` in src/data/tape.ts.
+         */
+        opacity: 0.34;
         mix-blend-mode: overlay;
         background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/></filter><rect width="140" height="140" filter="url(%23n)"/></svg>');
       }
@@ -312,31 +258,26 @@
 
   <body>
     <div class="card">
-      <div class="cassette">
-        <div class="window">
-          <img src="../src/assets/photos/portrait.jpg" alt="" />
-          <div class="bleed"></div>
-          <span class="spool spool--left"></span>
-          <span class="spool spool--right"></span>
-          <div class="rec"><i></i>REC</div>
-          <div class="scribble">that's me</div>
-        </div>
-        <div class="label">
-          <span class="label__line">
-            <b class="label__name">geetanjali raghav</b>
-            <span class="label__code">E-180</span>
-          </span>
-          <span class="label__line label__was">
-            <s>portfolio_final_v3</s>
-            <span>2019 &mdash; 2026</span>
-          </span>
-        </div>
-      </div>
+      <img src="../src/assets/photos/red-and-gold.jpg" alt="" />
+      <div class="shade"></div>
+      <div class="scrim"></div>
+      <div class="bleed"></div>
 
-      <div class="words">
+      <div class="plate">
+        <p class="name">geetanjali raghav</p>
+
         <h1><b>No plot,</b><em>just good</em><b class="flip">footage</b></h1>
-        <p class="intro">Seven reels. Salt water, hill roads, one motorcycle, a song.</p>
-        <p class="name">Geetanjali Raghav</p>
+
+        <div class="bill">
+          <p class="reels">
+            in seven reels &middot; salt water &middot; two wheels &middot; any excuse &middot; take
+            four &middot; cold air &middot; playback &middot; side a
+          </p>
+          <p class="footer">
+            filmed on location in delhi, the hills and the sea &middot; one interval &middot;
+            running time 45 min &middot; u/a
+          </p>
+        </div>
       </div>
 
       <div class="grain"></div>
